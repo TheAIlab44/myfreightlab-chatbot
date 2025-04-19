@@ -130,7 +130,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await res.json();
       loader.remove();
-      appendMessage(data.reply || "Je n'ai pas compris la réponse 🤖", "bot-message");
+      console.log("Réponse de n8n :", data);
+      appendMessage(data.answer || data.reply || "Je n'ai pas compris la réponse 🤖", "bot-message");
+
     } catch (error) {
       loader.remove();
       appendMessage("Erreur de connexion au serveur", "bot-message");
