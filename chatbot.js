@@ -130,8 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await res.json();
       loader.remove();
-      console.log("Réponse de n8n :", data);
-      appendMessage(data.answer || data.reply || "Je n'ai pas compris la réponse 🤖", "bot-message");
+      appendMessage(data.output || "Je n'ai pas compris la réponse 🤖", "bot-message");
 
     } catch (error) {
       loader.remove();
