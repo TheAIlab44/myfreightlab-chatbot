@@ -137,4 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
       appendMessage("Erreur de connexion au serveur", "bot-message");
     }
   });
+ userInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") sendBtn.click();
+    });
 });
