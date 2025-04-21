@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch(webhookURL, {
         method: "POST",
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ question: text }),
         headers: { "Content-Type": "application/json" },
       });
 
