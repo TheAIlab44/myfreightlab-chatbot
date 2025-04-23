@@ -5,57 +5,42 @@ document.addEventListener("DOMContentLoaded", () => {
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
     <style>
-      #chat-wrapper {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        height: 90vh;
-        width: 80vw;
-        margin: 0 auto;
-        background: #f9fbfc;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid #d3dce6;
-        font-family: 'Inter', sans-serif;
-        position: relative;
-      }
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* réduit l’espace entre les messages */
+    background-color: #f9fbfc;
+    align-items: center;
+  }
 
-      #chat {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1.2rem;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-        background-color: #f9fbfc;
-        align-items: center;
-      }
+  .message {
+    padding: 12px 16px; /* réduit l’espace interne */
+    border-radius: 18px;
+    max-width: 80%;
+    font-size: 15px; /* légèrement réduit */
+    white-space: normal;
+    line-height: 1.5; /* plus compact mais encore lisible */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    animation: fadeInUp 0.6s ease-out both;
+    animation-delay: 0.1s;
+  }
 
-      .message {
-        padding: 18px 20px;
-        border-radius: 18px;
-        max-width: 80%;
-        font-size: 16px;
-        white-space: normal;
-        line-height: 1.8;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        animation: fadeInUp 1s ease-out both;
-        animation-delay: 0.2s;
-      }
+  .user-message {
+    align-self: flex-start;
+    background-color: #e0f2ff;
+    color: #00497a;
+    border-bottom-right-radius: 0;
+  }
 
-      .user-message {
-        align-self: flex-start;
-        background-color: #e0f2ff;
-        color: #00497a;
-        border-bottom-right-radius: 0;
-      }
-
-      .bot-message {
-        align-self: flex-end;
-        background-color: #ffffff;
-        color: #222;
-        border-bottom-left-radius: 0;
-      }
+  .bot-message {
+    align-self: flex-end;
+    background-color: #ffffff;
+    color: #222;
+    border-bottom-left-radius: 0;
+  }
 
       .loading-dots::after {
         content: "";
