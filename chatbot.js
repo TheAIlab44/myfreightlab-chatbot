@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
 #resetBtn {
   position: absolute;
   top: 16px;
-  right: 24px;
+  left: 24px; /* ✅ passe à gauche */
   background: #fff;
   border: 1px solid #d3dce6;
   color: #0077c8;
