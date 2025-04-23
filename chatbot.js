@@ -28,34 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
         background-color: #f9fbfc;
       }
 
-      .message-wrapper {
-        display: flex;
-        align-items: flex-end;
-        gap: 8px;
-      }
-
-      .message-wrapper.user {
-        justify-content: flex-end;
-        flex-direction: row-reverse;
-      }
-
-      .message-wrapper.bot {
-        justify-content: flex-start;
-      }
-
-      .avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background-color: #00478a;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        color: white;
-        font-weight: bold;
-      }
-
       .message {
         padding: 14px 18px;
         border-radius: 18px;
@@ -151,13 +123,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const sendBtn = wrapper.querySelector("#sendBtn");
 
   function saveChatToLocalStorage() {
-    const messages = Array.from(chat.querySelectorAll(".message")).map(msg => {
-      const wrapper = msg.closest(".message-wrapper");
-      return {
-        role: wrapper && wrapper.classList.contains("user") ? "user" : "bot",
-        content: msg.innerText
-      };
-    });
+    const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
+      role: msg.classList.contains("user-message") ? "user" : "bot",
+      content: msg.innerText
+    }));
     localStorage.setItem("chatHistory", JSON.stringify(messages));
   }
 
@@ -169,41 +138,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function appendMessage(message, className) {
-    const wrapperDiv = document.createElement("div");
-    wrapperDiv.className = `message-wrapper ${className.includes("user") ? "user" : "bot"}`;
-
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-    avatar.innerText = className.includes("user") ? "👤" : "🤖";
-
     const msg = document.createElement("div");
     msg.className = `message ${className}`;
     msg.innerText = message;
-
-    wrapperDiv.appendChild(avatar);
-    wrapperDiv.appendChild(msg);
-    chat.appendChild(wrapperDiv);
+    chat.appendChild(msg);
     chat.scrollTop = chat.scrollHeight;
     saveChatToLocalStorage();
   }
 
   function appendLoading() {
-    const wrapperDiv = document.createElement("div");
-    wrapperDiv.className = "message-wrapper bot";
-
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-    avatar.innerText = "🤖";
-
     const loader = document.createElement("div");
     loader.className = "message bot-message loading loading-dots";
-    loader.innerText = "Le bot réfléchit";
-
-    wrapperDiv.appendChild(avatar);
-    wrapperDiv.appendChild(loader);
-    chat.appendChild(wrapperDiv);
+    loader.innerText = "Je réféchis";
+    chat.appendChild(loader);
     chat.scrollTop = chat.scrollHeight;
-    return wrapperDiv;
+    return loader;
   }
 
   loadChatFromLocalStorage();
