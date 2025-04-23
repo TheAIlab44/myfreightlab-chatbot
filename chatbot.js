@@ -5,127 +5,138 @@ document.addEventListener("DOMContentLoaded", () => {
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
     <style>
-  #chat-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    height: 80vh;
-    width: 100%;
-    max-width: 900px; /* 💡 Limite de largeur */
-    margin: 0 auto; /* 💡 Centre le wrapper */
-    background: #f9fbfc;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #d3dce6;
-    font-family: 'Poppins', 'Rubik', sans-serif; /* 💡 Harmonisation */
-  }
+      #chat-wrapper {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        height: 80vh;
+        width: 100%;
+        max-width: 1024px;
+        margin: 0 auto;
+        background: #f9fbfc;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #d3dce6;
+        font-family: 'Inter', sans-serif;
+      }
 
-  #chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1.2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    background-color: #f9fbfc;
-  }
+      #chat {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        background-color: #f9fbfc;
+      }
 
-  .message {
-    padding: 18px 20px;
-    border-radius: 18px;
-    max-width: 80%;
-    font-size: 15.5px;
-    white-space: normal;
-    line-height: 1.8;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  }
+      .message {
+        padding: 18px 20px;
+        border-radius: 18px;
+        max-width: 80%;
+        font-size: 16px;
+        white-space: normal;
+        line-height: 1.8;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        animation: fadeInUp 0.4s ease-in-out both;
+      }
 
-  .user-message {
-    align-self: flex-end;
-    background-color: #e0f2ff;
-    color: #00497a;
-    border-bottom-right-radius: 0;
-  }
+      .user-message {
+        align-self: flex-end;
+        background-color: #e0f2ff;
+        color: #00497a;
+        border-bottom-right-radius: 0;
+      }
 
-  .bot-message {
-    align-self: flex-start;
-    background-color: #ffffff;
-    color: #222;
-    border-bottom-left-radius: 0;
-  }
+      .bot-message {
+        align-self: flex-start;
+        background-color: #ffffff;
+        color: #222;
+        border-bottom-left-radius: 0;
+      }
 
-  .loading-dots::after {
-    content: "";
-    display: inline-block;
-    width: 1em;
-    text-align: left;
-    animation: dots 1.2s steps(4, end) infinite;
-  }
+      .loading-dots::after {
+        content: "";
+        display: inline-block;
+        width: 1em;
+        text-align: left;
+        animation: dots 1.2s steps(4, end) infinite;
+      }
 
-  @keyframes dots {
-    0%, 20% { content: ""; }
-    40% { content: "."; }
-    60% { content: ".."; }
-    80%, 100% { content: "..."; }
-  }
+      @keyframes dots {
+        0%, 20% { content: ""; }
+        40% { content: "."; }
+        60% { content: ".."; }
+        80%, 100% { content: "..."; }
+      }
 
-  #input-area {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    border-top: 1px solid #e0e0e0;
-    background-color: #fff;
-    gap: 10px;
-  }
+      @keyframes fadeInUp {
+        0% {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-  #userInput {
-    flex: 1;
-    padding: 10px 14px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 15px;
-    background-color: #fcfcfc;
-    outline: none;
-    font-family: inherit;
-    transition: all 0.2s ease;
-  }
+      #input-area {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-top: 1px solid #e0e0e0;
+        background-color: #fff;
+        gap: 10px;
+      }
 
-  #userInput:focus {
-    border-color: #0077c8;
-    box-shadow: 0 0 0 2px rgba(0,119,200,0.15);
-  }
+      #userInput {
+        flex: 1;
+        padding: 10px 14px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 15px;
+        background-color: #fcfcfc;
+        outline: none;
+        font-family: inherit;
+        transition: all 0.2s ease;
+      }
 
-  #sendBtn {
-    padding: 10px 14px;
-    background-color: #0077c8;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-  }
+      #userInput:focus {
+        border-color: #0077c8;
+        box-shadow: 0 0 0 2px rgba(0,119,200,0.15);
+      }
 
-  #sendBtn::after {
-    content: " ➤";
-    font-size: 16px;
-    margin-left: 6px;
-  }
+      #sendBtn {
+        padding: 10px 14px;
+        background-color: #0077c8;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: background-color 0.3s ease;
+      }
 
-  #sendBtn:hover {
-    background-color: #005fa1;
-  }
-</style>
+      #sendBtn::after {
+        content: "➤";
+        font-size: 18px;
+      }
+
+      #sendBtn:hover {
+        background-color: #005fa1;
+      }
+    </style>
 
     <div id="chat"></div>
     <div id="input-area">
       <input type="text" id="userInput" placeholder="Pose ta question ici..." />
-      <button id="sendBtn">Envoyer</button>
+      <button id="sendBtn"></button>
     </div>
   `;
 
@@ -138,12 +149,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const sendBtn = wrapper.querySelector("#sendBtn");
 
   function formatTextToHTML(text) {
-    // Convertit les sauts de ligne et liste Markdown de base en HTML lisible
     return text
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // gras
-      .replace(/^\s*[-•]\s/gm, "• ") // puces
-      .replace(/\n{2,}/g, "<br><br>") // paragraphes
-      .replace(/\n/g, "<br>"); // retours simples
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/^\s*[-•]\s/gm, "• ")
+      .replace(/\n{2,}/g, "<br><br>")
+      .replace(/\n/g, "<br>");
   }
 
   function saveChatToLocalStorage() {
@@ -207,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "On continue ensemble sur ce sujet ?"
       ];
       const randomReply = friendlyReplies[Math.floor(Math.random() * friendlyReplies.length)];
-      const finalReply = (data.output || "Je n'ai pas compris la réponse 🙇") + "\n\n" + randomReply;
+      const finalReply = (data.output || "Je n'ai pas compris la réponse 🤖") + "\n\n" + randomReply;
 
       appendMessage(finalReply, "bot-message");
 
