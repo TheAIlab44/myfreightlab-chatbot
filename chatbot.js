@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
         justify-content: flex-end;
         height: 80vh;
         width: 100%;
-        max-width: 1024px;
+        max-width: 1200px;
         margin: 0 auto;
         background: #f9fbfc;
         border-radius: 12px;
@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function appendLoading() {
     const loader = document.createElement("div");
     loader.className = "message bot-message loading loading-dots";
-    loader.innerText = "Je cherche la meilleure réponse pour toi";
+    loader.innerText = "Je réfléchis";
     chat.appendChild(loader);
     chat.scrollTop = chat.scrollHeight;
     return loader;
@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "On continue ensemble sur ce sujet ?"
       ];
       const randomReply = friendlyReplies[Math.floor(Math.random() * friendlyReplies.length)];
-      const finalReply = (data.output || "Je n'ai pas compris la réponse 🤖") + "\n\n" + randomReply;
+      const finalReply = (data.output || "Je n'ai pas compris la réponse 🙇") + "\n\n" + randomReply;
 
       appendMessage(finalReply, "bot-message");
 
