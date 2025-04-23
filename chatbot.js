@@ -141,22 +141,22 @@ document.addEventListener("DOMContentLoaded", () => {
         background-color: #005fa1;
       }
 
-      #resetBtn {
-       position: absolute;
-       top: 10px;
-       right: 20px;
-       background: #fff;
-       border: 1px solid #d3dce6;
-       color: #0077c8;
-       font-size: 14px;
-       padding: 6px 12px;
-       border-radius: 20px;
-       font-weight: 500;
-       cursor: pointer;
-       z-index: 10;
-       display: flex;
-       align-items: center;
-       gap: 6px;
+  #resetBtn {
+  position: absolute;
+  top: -12px;         /* ✅ plus haut qu'avant */
+  right: -12px;       /* ✅ un peu plus à droite */
+  background: #fff;
+  border: 1px solid #d3dce6;
+  color: #0077c8;
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -164,6 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
   background-color: #0077c8;
   color: white;
 }
+
 
 
       #resetBtn:hover {
