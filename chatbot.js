@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    height: 80vh;
+    height: 90vh;
     width: 80vw; /* ✅ largeur élargie */
     margin: 0 auto;
     background: #f9fbfc;
