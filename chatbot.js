@@ -31,10 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
       .message {
         padding: 14px 18px;
         border-radius: 18px;
-        max-width: 80%;
+        max-width: 85%;
         font-size: 15px;
-        white-space: pre-line;
-        line-height: 1.5;
+        white-space: pre-wrap;
+        line-height: 1.6;
         box-shadow: 0 2px 6px rgba(0,0,0,0.05);
       }
 
@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveChatToLocalStorage() {
     const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
       role: msg.classList.contains("user-message") ? "user" : "bot",
-      content: msg.innerText
+      content: msg.innerHTML // on sauvegarde HTML ici
     }));
     localStorage.setItem("chatHistory", JSON.stringify(messages));
   }
@@ -133,14 +133,18 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadChatFromLocalStorage() {
     const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
     history.forEach(msg => {
-      appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message");
+      appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message", true);
     });
   }
 
-  function appendMessage(message, className) {
+  function appendMessage(message, className, isHTML = false) {
     const msg = document.createElement("div");
     msg.className = `message ${className}`;
-    msg.innerText = message;
+    if (isHTML) {
+      msg.innerHTML = message;
+    } else {
+      msg.innerHTML = message.replace(/\n/g, "<br>");
+    }
     chat.appendChild(msg);
     chat.scrollTop = chat.scrollHeight;
     saveChatToLocalStorage();
@@ -149,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function appendLoading() {
     const loader = document.createElement("div");
     loader.className = "message bot-message loading loading-dots";
-    loader.innerText = "Je réféchis";
+    loader.innerText = "Je cherche la meilleure réponse pour toi";
     chat.appendChild(loader);
     chat.scrollTop = chat.scrollHeight;
     return loader;
@@ -183,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "On continue ensemble sur ce sujet ?"
       ];
       const randomReply = friendlyReplies[Math.floor(Math.random() * friendlyReplies.length)];
-      const finalReply = (data.output || "Je n'ai pas compris la réponse 🤖") + "\n\n" + randomReply;
+      const finalReply = (data.output || "Je n'ai pas compris la réponse 🤖") + "<br><br>" + randomReply;
 
       appendMessage(finalReply, "bot-message");
 
