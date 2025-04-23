@@ -24,31 +24,31 @@ document.addEventListener("DOMContentLoaded", () => {
         padding: 1rem;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
         background-color: #f9fbfc;
       }
 
       .message {
-        padding: 14px 18px;
+        padding: 18px 20px;
         border-radius: 18px;
         max-width: 85%;
-        font-size: 15px;
-        white-space: pre-wrap;
-        line-height: 1.6;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        font-size: 16px;
+        white-space: normal;
+        line-height: 1.8;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       }
 
       .user-message {
         align-self: flex-end;
-        background-color: #e3f0ff;
-        color: #003366;
+        background-color: #e0f2ff;
+        color: #00497a;
         border-bottom-right-radius: 0;
       }
 
       .bot-message {
         align-self: flex-start;
         background-color: #ffffff;
-        color: #333;
+        color: #222;
         border-bottom-left-radius: 0;
       }
 
@@ -69,47 +69,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
       #input-area {
         display: flex;
-        padding: 12px;
+        padding: 10px 16px;
         border-top: 1px solid #e0e0e0;
         background-color: #fff;
+        gap: 10px;
       }
 
       #userInput {
         flex: 1;
-        padding: 12px;
+        padding: 10px 14px;
         border: 1px solid #ccc;
         border-radius: 10px;
         font-size: 15px;
-        background-color: #fefefe;
+        background-color: #fcfcfc;
         outline: none;
         transition: all 0.2s ease;
       }
 
       #userInput:focus {
-        border-color: #0066cc;
-        box-shadow: 0 0 0 2px rgba(0,102,204,0.15);
+        border-color: #0077c8;
+        box-shadow: 0 0 0 2px rgba(0,119,200,0.15);
       }
 
       #sendBtn {
-        margin-left: 12px;
-        padding: 12px 20px;
-        background-color: #00478a;
+        padding: 10px 16px;
+        background-color: #0077c8;
         color: white;
         border: none;
         border-radius: 10px;
         font-weight: 600;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         transition: background-color 0.3s ease;
       }
 
       #sendBtn:hover {
-        background-color: #0060b5;
+        background-color: #005fa1;
+      }
+
+      #sendBtn::after {
+        content: " ✈️";
       }
     </style>
 
     <div id="chat"></div>
     <div id="input-area">
-      <input type="text" id="userInput" placeholder="Ex : Quel est le coût du fret maritime ?" />
+      <input type="text" id="userInput" placeholder="Pose ta question ici..." />
       <button id="sendBtn">Envoyer</button>
     </div>
   `;
@@ -122,10 +129,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
 
+  function formatTextToHTML(text) {
+    // Convertit les sauts de ligne et liste Markdown de base en HTML lisible
+    return text
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // gras
+      .replace(/^\s*[-•]\s/gm, "• ") // puces
+      .replace(/\n{2,}/g, "<br><br>") // paragraphes
+      .replace(/\n/g, "<br>"); // retours simples
+  }
+
   function saveChatToLocalStorage() {
     const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
       role: msg.classList.contains("user-message") ? "user" : "bot",
-      content: msg.innerHTML // on sauvegarde HTML ici
+      content: msg.innerHTML
     }));
     localStorage.setItem("chatHistory", JSON.stringify(messages));
   }
@@ -140,11 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function appendMessage(message, className, isHTML = false) {
     const msg = document.createElement("div");
     msg.className = `message ${className}`;
-    if (isHTML) {
-      msg.innerHTML = message;
-    } else {
-      msg.innerHTML = message.replace(/\n/g, "<br>");
-    }
+    msg.innerHTML = isHTML ? message : formatTextToHTML(message);
     chat.appendChild(msg);
     chat.scrollTop = chat.scrollHeight;
     saveChatToLocalStorage();
@@ -187,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "On continue ensemble sur ce sujet ?"
       ];
       const randomReply = friendlyReplies[Math.floor(Math.random() * friendlyReplies.length)];
-      const finalReply = (data.output || "Je n'ai pas compris la réponse 🤖") + "<br><br>" + randomReply;
+      const finalReply = (data.output || "Je n'ai pas compris la réponse 🙇") + "\n\n" + randomReply;
 
       appendMessage(finalReply, "bot-message");
 
