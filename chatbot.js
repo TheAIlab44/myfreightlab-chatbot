@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (confirm("Souhaites-tu démarrer une nouvelle conversation ?")) {
       localStorage.removeItem("chatHistory");
       chat.innerHTML = "";
-      appendMessage("Nouvelle session démarrée. Pose-moi ta première question 😊", "bot-message");
+      appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
     }
   });
 
