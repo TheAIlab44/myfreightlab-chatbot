@@ -142,24 +142,36 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       #resetBtn {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: transparent;
-        border: none;
-        color: #0077c8;
-        font-size: 20px;
-        cursor: pointer;
-        z-index: 10;
-        transition: color 0.3s ease;
-      }
+       position: absolute;
+       top: 10px;
+       right: 20px;
+       background: #fff;
+       border: 1px solid #d3dce6;
+       color: #0077c8;
+       font-size: 14px;
+       padding: 6px 12px;
+       border-radius: 20px;
+       font-weight: 500;
+       cursor: pointer;
+       z-index: 10;
+       display: flex;
+       align-items: center;
+       gap: 6px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#resetBtn:hover {
+  background-color: #0077c8;
+  color: white;
+}
+
 
       #resetBtn:hover {
         color: #005fa1;
       }
     </style>
 
-    <button id="resetBtn" title="Nouveau chat">♻️</button>
+    <button id="resetBtn" title="Nouveau chat">♻️ Nouveau chat</button>
     <div id="chat"></div>
     <div id="input-area">
       <input type="text" id="userInput" placeholder="Pose ta question ici..." />
