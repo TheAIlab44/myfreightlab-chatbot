@@ -141,31 +141,30 @@ document.addEventListener("DOMContentLoaded", () => {
         background-color: #005fa1;
       }
 
-  #resetBtn {
+#resetBtn {
   position: absolute;
-  top: -12px;         /* ✅ plus haut qu'avant */
-  right: -12px;       /* ✅ un peu plus à droite */
+  top: 16px;
+  right: 24px;
   background: #fff;
   border: 1px solid #d3dce6;
   color: #0077c8;
-  font-size: 14px;
-  padding: 6px 12px;
-  border-radius: 20px;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 14px;
   font-weight: 500;
   cursor: pointer;
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  gap: 5px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
 }
 
 #resetBtn:hover {
   background-color: #0077c8;
   color: white;
 }
-
-
 
       #resetBtn:hover {
         color: #005fa1;
