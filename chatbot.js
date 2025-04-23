@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
 
-  // Create wrapper
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
@@ -12,10 +11,11 @@ document.addEventListener("DOMContentLoaded", () => {
         justify-content: flex-end;
         height: 80vh;
         width: 100%;
-        background: #fff;
+        background: #f9fbfc;
         border-radius: 12px;
         overflow: hidden;
-        border: 1px solid #ccc;
+        border: 1px solid #d3dce6;
+        font-family: 'Inter', sans-serif;
       }
 
       #chat {
@@ -24,32 +24,81 @@ document.addEventListener("DOMContentLoaded", () => {
         padding: 1rem;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
+        background-color: #f9fbfc;
+      }
+
+      .message-wrapper {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+      }
+
+      .message-wrapper.user {
+        justify-content: flex-end;
+        flex-direction: row-reverse;
+      }
+
+      .message-wrapper.bot {
+        justify-content: flex-start;
+      }
+
+      .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #00478a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: white;
+        font-weight: bold;
       }
 
       .message {
-        padding: 12px 16px;
-        border-radius: 12px;
-        max-width: 85%;
-        line-height: 1.4;
+        padding: 14px 18px;
+        border-radius: 18px;
+        max-width: 80%;
         font-size: 15px;
         white-space: pre-line;
+        line-height: 1.5;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
       }
 
       .user-message {
         align-self: flex-end;
-        background-color: #e1ecf9;
+        background-color: #e3f0ff;
+        color: #003366;
+        border-bottom-right-radius: 0;
       }
 
       .bot-message {
         align-self: flex-start;
-        background-color: #f0f0f0;
+        background-color: #ffffff;
+        color: #333;
+        border-bottom-left-radius: 0;
+      }
+
+      .loading-dots::after {
+        content: "";
+        display: inline-block;
+        width: 1em;
+        text-align: left;
+        animation: dots 1.2s steps(4, end) infinite;
+      }
+
+      @keyframes dots {
+        0%, 20% { content: ""; }
+        40% { content: "."; }
+        60% { content: ".."; }
+        80%, 100% { content: "..."; }
       }
 
       #input-area {
         display: flex;
         padding: 12px;
-        border-top: 1px solid #ddd;
+        border-top: 1px solid #e0e0e0;
         background-color: #fff;
       }
 
@@ -57,8 +106,16 @@ document.addEventListener("DOMContentLoaded", () => {
         flex: 1;
         padding: 12px;
         border: 1px solid #ccc;
-        border-radius: 8px;
+        border-radius: 10px;
         font-size: 15px;
+        background-color: #fefefe;
+        outline: none;
+        transition: all 0.2s ease;
+      }
+
+      #userInput:focus {
+        border-color: #0066cc;
+        box-shadow: 0 0 0 2px rgba(0,102,204,0.15);
       }
 
       #sendBtn {
@@ -67,14 +124,14 @@ document.addEventListener("DOMContentLoaded", () => {
         background-color: #00478a;
         color: white;
         border: none;
-        border-radius: 8px;
-        font-weight: bold;
+        border-radius: 10px;
+        font-weight: 600;
         cursor: pointer;
+        transition: background-color 0.3s ease;
       }
 
-      .loading {
-        font-style: italic;
-        opacity: 0.6;
+      #sendBtn:hover {
+        background-color: #0060b5;
       }
     </style>
 
@@ -93,16 +150,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
 
-  // 🔄 Sauvegarde du chat
   function saveChatToLocalStorage() {
-    const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
-      role: msg.classList.contains("user-message") ? "user" : "bot",
-      content: msg.innerText
-    }));
+    const messages = Array.from(chat.querySelectorAll(".message")).map(msg => {
+      const wrapper = msg.closest(".message-wrapper");
+      return {
+        role: wrapper && wrapper.classList.contains("user") ? "user" : "bot",
+        content: msg.innerText
+      };
+    });
     localStorage.setItem("chatHistory", JSON.stringify(messages));
   }
 
-  // 🔁 Restauration du chat
   function loadChatFromLocalStorage() {
     const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
     history.forEach(msg => {
@@ -110,30 +168,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 💬 Affichage message
   function appendMessage(message, className) {
+    const wrapperDiv = document.createElement("div");
+    wrapperDiv.className = `message-wrapper ${className.includes("user") ? "user" : "bot"}`;
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.innerText = className.includes("user") ? "👤" : "🤖";
+
     const msg = document.createElement("div");
     msg.className = `message ${className}`;
     msg.innerText = message;
-    chat.appendChild(msg);
+
+    wrapperDiv.appendChild(avatar);
+    wrapperDiv.appendChild(msg);
+    chat.appendChild(wrapperDiv);
     chat.scrollTop = chat.scrollHeight;
     saveChatToLocalStorage();
   }
 
-  // ⏳ Message temporaire
   function appendLoading() {
+    const wrapperDiv = document.createElement("div");
+    wrapperDiv.className = "message-wrapper bot";
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.innerText = "🤖";
+
     const loader = document.createElement("div");
-    loader.className = "message bot-message loading";
-    loader.innerText = "Le bot réfléchit 🤔...";
-    chat.appendChild(loader);
+    loader.className = "message bot-message loading loading-dots";
+    loader.innerText = "Le bot réfléchit";
+
+    wrapperDiv.appendChild(avatar);
+    wrapperDiv.appendChild(loader);
+    chat.appendChild(wrapperDiv);
     chat.scrollTop = chat.scrollHeight;
-    return loader;
+    return wrapperDiv;
   }
 
-  // ▶️ Chargement initial
   loadChatFromLocalStorage();
 
-  // 📩 Envoi de la question
   sendBtn.addEventListener("click", async () => {
     const text = userInput.value.trim();
     if (!text) return;
@@ -170,7 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ⌨️ Entrée clavier = envoi
   userInput.addEventListener("keypress", function (e) {
     if (e.key === "Enter") sendBtn.click();
   });
