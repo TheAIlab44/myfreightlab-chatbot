@@ -1,7 +1,5 @@
-// chatbot.js
-
 document.addEventListener("DOMContentLoaded", () => {
- const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
+  const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
 
   // Create wrapper
   const wrapper = document.createElement("div");
@@ -95,23 +93,47 @@ document.addEventListener("DOMContentLoaded", () => {
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
 
+  // 🔄 Sauvegarde du chat
+  function saveChatToLocalStorage() {
+    const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
+      role: msg.classList.contains("user-message") ? "user" : "bot",
+      content: msg.innerText
+    }));
+    localStorage.setItem("chatHistory", JSON.stringify(messages));
+  }
+
+  // 🔁 Restauration du chat
+  function loadChatFromLocalStorage() {
+    const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
+    history.forEach(msg => {
+      appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message");
+    });
+  }
+
+  // 💬 Affichage message
   function appendMessage(message, className) {
     const msg = document.createElement("div");
     msg.className = `message ${className}`;
     msg.innerText = message;
     chat.appendChild(msg);
     chat.scrollTop = chat.scrollHeight;
+    saveChatToLocalStorage();
   }
 
+  // ⏳ Message temporaire
   function appendLoading() {
     const loader = document.createElement("div");
     loader.className = "message bot-message loading";
-    loader.innerText = "Rédaction en cours...";
+    loader.innerText = "Le bot réfléchit 🤔...";
     chat.appendChild(loader);
     chat.scrollTop = chat.scrollHeight;
     return loader;
   }
 
+  // ▶️ Chargement initial
+  loadChatFromLocalStorage();
+
+  // 📩 Envoi de la question
   sendBtn.addEventListener("click", async () => {
     const text = userInput.value.trim();
     if (!text) return;
@@ -130,14 +152,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await res.json();
       loader.remove();
-      appendMessage(data.output || "Je n'ai pas compris la réponse 🤖", "bot-message");
+
+      const friendlyReplies = [
+        "Tu veux que je te détaille ça ? 😊",
+        "Si tu veux un exemple concret, je peux t’en donner un !",
+        "Dis-moi si tu veux approfondir un point 🔍",
+        "On continue ensemble sur ce sujet ?"
+      ];
+      const randomReply = friendlyReplies[Math.floor(Math.random() * friendlyReplies.length)];
+      const finalReply = (data.output || "Je n'ai pas compris la réponse 🤖") + "\n\n" + randomReply;
+
+      appendMessage(finalReply, "bot-message");
 
     } catch (error) {
       loader.remove();
       appendMessage("Erreur de connexion au serveur", "bot-message");
     }
   });
- userInput.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") sendBtn.click();
-    });
+
+  // ⌨️ Entrée clavier = envoi
+  userInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") sendBtn.click();
+  });
 });
