@@ -125,6 +125,18 @@ document.addEventListener("DOMContentLoaded", () => {
     align-items: center;
     justify-content: center;
   }
+  
+  #sendBtn::before {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 10px solid white;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  transform: translateX(1px);
+}
+
 
   #sendBtn:hover {
     background-color: #005fa1;
