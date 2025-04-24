@@ -4,7 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
+
     <style>
+      /* Styles du chatbot + prompts */
       #chat {
         flex: 1;
         overflow-y: auto;
@@ -15,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
         background-color: #f9fbfc;
         align-items: center;
       }
-
       .message {
         padding: 12px 16px;
         border-radius: 18px;
@@ -25,28 +26,19 @@ document.addEventListener("DOMContentLoaded", () => {
         line-height: 1.5;
         box-shadow: 0 2px 6px rgba(0,0,0,0.03);
         animation: fadeInUp 0.6s ease-out both;
-        animation-delay: 0.1s;
       }
-
       .user-message {
         align-self: flex-start;
         background-color: #e0f2ff;
         color: #00497a;
         border-bottom-right-radius: 0;
       }
-
       .bot-message {
         align-self: flex-end;
         background-color: #ffffff;
         color: #222;
         border-bottom-left-radius: 0;
       }
-
-      @keyframes fadeInUp {
-        0% { opacity: 0; transform: translateY(10px); }
-        100% { opacity: 1; transform: translateY(0); }
-      }
-
       #input-area {
         display: flex;
         justify-content: space-between;
@@ -56,7 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
         background-color: #fff;
         gap: 10px;
       }
-
       #userInput {
         flex: 1;
         padding: 10px 14px;
@@ -66,8 +57,8 @@ document.addEventListener("DOMContentLoaded", () => {
         background-color: #fcfcfc;
         outline: none;
         font-family: inherit;
+        transition: all 0.2s ease;
       }
-
       #sendBtn {
         width: 46px;
         height: 46px;
@@ -81,7 +72,6 @@ document.addEventListener("DOMContentLoaded", () => {
         align-items: center;
         justify-content: center;
       }
-
       #sendBtn::before {
         content: "";
         display: inline-block;
@@ -91,12 +81,84 @@ document.addEventListener("DOMContentLoaded", () => {
         border-top: 6px solid transparent;
         border-bottom: 6px solid transparent;
       }
+
+      .floating-toggle {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        background-color: #0073e6;
+        color: white;
+        padding: 10px;
+        border-radius: 8px 0 0 8px;
+        cursor: pointer;
+        z-index: 10000;
+        font-weight: bold;
+        box-shadow: -2px 0 6px rgba(0,0,0,0.1);
+      }
+
+      .dynamic-sidebar {
+        position: fixed;
+        top: 0;
+        right: -300px;
+        width: 300px;
+        height: 100vh;
+        background-color: #ffffff;
+        border-left: 2px solid #ccc;
+        box-shadow: -4px 0 10px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s ease-in-out;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .dynamic-sidebar.open {
+        right: 0;
+      }
+
+      .sidebar-header {
+        background-color: #0073e6;
+        color: white;
+        padding: 15px;
+        font-weight: bold;
+        font-size: 16px;
+        text-align: center;
+      }
+
+      .sidebar-content {
+        padding: 15px;
+        overflow-y: auto;
+        flex-grow: 1;
+      }
+
+      .prompt {
+        background: #f4f4f4;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 6px;
+        cursor: grab;
+        font-size: 14px;
+      }
+
+      .prompt:hover {
+        background: #e6f0ff;
+      }
     </style>
 
     <div id="chat"></div>
     <div id="input-area">
       <input type="text" id="userInput" placeholder="Pose ta question ici..." />
       <button id="sendBtn"></button>
+    </div>
+    <div class="floating-toggle" id="togglePrompt">💬</div>
+    <div class="dynamic-sidebar" id="promptPanel">
+      <div class="sidebar-header">💡 Idées de prompts</div>
+      <div class="sidebar-content">
+        <div class="prompt" draggable="true">Optimiser les itinéraires vers l’Europe</div>
+        <div class="prompt" draggable="true">Analyser les coûts de transport par saison</div>
+        <div class="prompt" draggable="true">Anticiper les frais douaniers par pays</div>
+        <div class="prompt" draggable="true">Calculer l’empreinte carbone d’un trajet</div>
+      </div>
     </div>
   `;
 
@@ -107,6 +169,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const chat = wrapper.querySelector("#chat");
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
+  const toggleBtn = wrapper.querySelector('#togglePrompt');
+  const sidebar = wrapper.querySelector('#promptPanel');
+  const prompts = wrapper.querySelectorAll('.prompt');
+
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+  });
+
+  prompts.forEach(prompt => {
+    prompt.addEventListener('click', () => {
+      userInput.value = prompt.textContent;
+      userInput.focus();
+    });
+
+    prompt.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', prompt.textContent);
+    });
+  });
+
+  userInput.addEventListener("dragover", e => e.preventDefault());
+
+  userInput.addEventListener("drop", e => {
+    e.preventDefault();
+    userInput.value = e.dataTransfer.getData("text");
+
+    const enterEvent = new KeyboardEvent("keypress", {
+      bubbles: true,
+      cancelable: true,
+      key: "Enter",
+      code: "Enter",
+      keyCode: 13
+    });
+    userInput.dispatchEvent(enterEvent);
+  });
 
   function formatTextToHTML(text) {
     return text
@@ -161,26 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Appui sur Entrée
-  userInput.addEventListener("keypress", function (e) {
+  userInput.addEventListener("keypress", e => {
     if (e.key === "Enter") sendBtn.click();
-  });
-
-  // Drag & drop vers input
-  userInput.addEventListener("dragover", (e) => e.preventDefault());
-
-  userInput.addEventListener("drop", (e) => {
-    e.preventDefault();
-    const text = e.dataTransfer.getData("text");
-    userInput.value = text;
-
-    const enterEvent = new KeyboardEvent("keypress", {
-      bubbles: true,
-      cancelable: true,
-      key: "Enter",
-      code: "Enter",
-      keyCode: 13
-    });
-    userInput.dispatchEvent(enterEvent);
   });
 });
