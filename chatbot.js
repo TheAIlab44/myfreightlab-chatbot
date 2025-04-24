@@ -220,9 +220,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("chat-container");
   if (!container) return;
   container.appendChild(wrapper);
-  loadChatFromLocalStorage();
 
   const chat = wrapper.querySelector("#chat");
+  loadChatFromLocalStorage();
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
   const resetBtn = wrapper.querySelector("#resetBtn");
@@ -230,8 +230,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const sidebar = wrapper.querySelector("#promptPanel");
   const prompts = wrapper.querySelectorAll(".prompt");
   const prompts = wrapper.querySelectorAll(".prompt");
-
-loadChatFromLocalStorage(); // ✅ Et là c’est bon !
 
 
   toggleBtn.addEventListener("click", () => {
