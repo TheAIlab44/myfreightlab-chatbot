@@ -1,3 +1,4 @@
+// === ChatBot MyFreightLab avec historique, prompts, sidebar fermable, et édition avant envoi ===
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
 
@@ -148,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     </style>
 
-    <button id="resetBtn">♻️ Nouveau chat</button>
+    <button id="resetBtn"> ✨Nouveau chat</button>
     <div id="chat"></div>
     <div id="input-area">
       <input type="text" id="userInput" placeholder="Pose ta question ici..." />
@@ -219,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("chat-container");
   if (!container) return;
   container.appendChild(wrapper);
+  loadChatFromLocalStorage();
 
   const chat = wrapper.querySelector("#chat");
   const userInput = wrapper.querySelector("#userInput");
@@ -238,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
       userInput.focus();
       sidebar.classList.remove("open");
     });
-    prompt.addEventListener("dragstart", (e) => {
+    prompt.addEventListener("dragstart", e => {
       e.dataTransfer.setData("text/plain", prompt.textContent);
     });
   });
@@ -252,6 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   resetBtn.addEventListener("click", () => {
+    localStorage.removeItem("chatHistory");
     chat.innerHTML = "";
     appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
   });
@@ -262,6 +265,22 @@ document.addEventListener("DOMContentLoaded", () => {
     msg.innerHTML = message;
     chat.appendChild(msg);
     chat.scrollTop = chat.scrollHeight;
+    saveChatToLocalStorage();
+  }
+
+  function saveChatToLocalStorage() {
+    const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
+      role: msg.classList.contains("user-message") ? "user" : "bot",
+      content: msg.innerHTML
+    }));
+    localStorage.setItem("chatHistory", JSON.stringify(messages));
+  }
+
+  function loadChatFromLocalStorage() {
+    const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
+    history.forEach(msg => {
+      appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message");
+    });
   }
 
   sendBtn.addEventListener("click", async () => {
