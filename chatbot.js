@@ -1,374 +1,144 @@
+// ✅ Chatbot.js complet avec prompts repliables, fermeture auto, injection drag&drop et icône ampoule
+
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
+
+  const promptCategories = [
+    {
+      title: "Opérations logistiques",
+      prompts: [
+        "Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?",
+        "Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?",
+        "Un hub à Rotterdam, c’est une bonne idée pour livrer l’Allemagne ?",
+        "Comment je peux gagner du temps sur mes transits intercontinentaux ?",
+        "Quels sont les pièges à éviter avec une chaîne logistique multi-clients ?"
+      ]
+    },
+    {
+      title: "Commerce international",
+      prompts: [
+        "J’exporte au Canada, tu me dis les formalités à prévoir ?",
+        "J’ai une import du Vietnam à simuler, tu peux me faire la déclaration douanière ?",
+        "FOB, CIF… tu me recommandes quoi comme Incoterm avec un fournisseur indien ?",
+        "J’ai besoin d’une instruction claire pour mon transitaire, tu peux me rédiger ça ?",
+        "C’est quoi les docs obligatoires pour un contrat CIF vers l’Afrique de l’Ouest ?"
+      ]
+    },
+    {
+      title: "Veille & analyses",
+      prompts: [
+        "Le conflit en mer Rouge, ça change quoi pour le fret ?",
+        "Tu peux me résumer les nouvelles règles UE sur la décarbonation du transport ?",
+        "Quels indicateurs je dois suivre pour anticiper une hausse de coûts logistiques ?",
+        "Tu peux me faire une analyse SWOT sur l’axe Europe–Asie centrale ?",
+        "Comment je lis les chiffres d’empreinte carbone d’un trajet multimodal ?"
+      ]
+    },
+    {
+      title: "Marché & tendances",
+      prompts: [
+        "C’est quoi les grandes tendances logistiques à suivre en 2025 ?",
+        "Y’a des innovations logistiques cools dans l’agroalimentaire ?",
+        "Tu m’expliques comment l’IA aide à mieux gérer les stocks ?",
+        "Comment les prix du transport maritime ont évolué depuis le COVID ?",
+        "Quels sont les marchés du fret à surveiller en ce moment ?"
+      ]
+    },
+    {
+      title: "Stratégie & gestion",
+      prompts: [
+        "T’as des idées pour faire baisser les coûts logistiques d’une PME ?",
+        "Tu peux me faire un tableau de bord avec les KPIs logistiques essentiels ?",
+        "Quels investissements je priorise dans ma supply chain sous pression ?",
+        "Tu m’aides à bâtir un plan B logistique en cas de crise géopolitique ?",
+        "Comment mieux bosser ensemble entre achats, logistique et commerce ?"
+      ]
+    },
+    {
+      title: "Cas pratiques & simulations",
+      prompts: [
+        "Je te balance une liasse documentaire, tu me fais le résumé ?",
+        "À partir de ces docs, tu peux me créer une fiche de transport ?",
+        "Et si mon conteneur est bloqué en douane, on fait quoi ?",
+        "Tu vérifies si mon dossier import-export est conforme aux règles UE ?",
+        "Tu peux me faire une synthèse des documents logistiques à traiter ?"
+      ]
+    }
+  ];
 
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
     <style>
-      #chat-wrapper {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        height: 90vh;
-        width: 80vw;
-        margin: 0 auto;
-        background: #f9fbfc;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid #d3dce6;
-        font-family: 'Inter', sans-serif;
-        position: relative;
-      }
-
-      #chat {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1.2rem;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-        background-color: #f9fbfc;
-        align-items: center;
-      }
-
-      .message {
-        padding: 18px 20px;
-        border-radius: 18px;
-        max-width: 80%;
-        font-size: 16px;
-        white-space: normal;
-        line-height: 1.8;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        animation: fadeInUp 1s ease-out both;
-        animation-delay: 0.2s;
-      }
-
-      .user-message {
-        align-self: flex-start;
-        background-color: #e0f2ff;
-        color: #00497a;
-        border-bottom-right-radius: 0;
-      }
-
-      .bot-message {
-        align-self: flex-end;
-        background-color: #ffffff;
-        color: #222;
-        border-bottom-left-radius: 0;
-      }
-
-      .loading-dots::after {
-        content: "";
-        display: inline-block;
-        width: 1em;
-        text-align: left;
-        animation: dots 1.2s steps(4, end) infinite;
-      }
-
-      @keyframes dots {
-        0%, 20% { content: ""; }
-        40% { content: "."; }
-        60% { content: ".."; }
-        80%, 100% { content: "..."; }
-      }
-
-      @keyframes fadeInUp {
-        0% { opacity: 0; transform: translateY(10px); }
-        100% { opacity: 1; transform: translateY(0); }
-      }
-
-      #input-area {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 16px;
-        border-top: 1px solid #e0e0e0;
-        background-color: #fff;
-        gap: 10px;
-      }
-
-      #userInput {
-        flex: 1;
-        padding: 10px 14px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        font-size: 15px;
-        background-color: #fcfcfc;
-        outline: none;
-        font-family: inherit;
-        transition: all 0.2s ease;
-      }
-
-      #userInput:focus {
-        border-color: #0077c8;
-        box-shadow: 0 0 0 2px rgba(0,119,200,0.15);
-      }
-
-      #sendBtn {
-        width: 46px;
-        height: 46px;
-        background-color: #0077c8;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        font-size: 18px;
-        font-weight: bold;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      #sendBtn::before {
-        content: "";
-        display: inline-block;
-        width: 0;
-        height: 0;
-        border-left: 10px solid white;
-        border-top: 6px solid transparent;
-        border-bottom: 6px solid transparent;
-        transform: translateX(1px);
-      }
-
-      #sendBtn:hover {
-        background-color: #005fa1;
-      }
-
-      #resetBtn {
-        position: absolute;
-        top: 16px;
-        left: 24px;
-        background: #fff;
-        border: 1px solid #d3dce6;
-        color: #0077c8;
-        font-size: 13px;
-        padding: 4px 10px;
-        border-radius: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        transition: all 0.2s ease;
-      }
-
-      #resetBtn:hover {
-        background-color: #0077c8;
-        color: white;
-      }
-
-      .dynamic-sidebar {
-        position: fixed;
-        top: 0;
-        right: -300px;
-        width: 300px;
-        height: 100vh;
-        background-color: #ffffff;
-        border-left: 2px solid #ccc;
-        box-shadow: -4px 0 10px rgba(0, 0, 0, 0.1);
-        transition: right 0.3s ease-in-out;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        font-family: sans-serif;
-      }
-
-      .dynamic-sidebar.open {
-        right: 0;
-      }
-
-      .sidebar-header {
-        background-color: #0073e6;
-        color: white;
-        padding: 15px;
-        font-weight: bold;
-        font-size: 16px;
-        text-align: center;
-      }
-
-      .sidebar-content {
-        padding: 15px;
-        overflow-y: auto;
-        flex-grow: 1;
-      }
-
-      .prompt {
-        background: #f4f4f4;
-        margin-bottom: 10px;
-        padding: 10px;
-        border-radius: 6px;
-        cursor: grab;
-        transition: background 0.2s;
-        font-size: 14px;
-        word-break: break-word;
-      }
-
-      .prompt:hover {
-        background: #e6f0ff;
-      }
-
-      .floating-toggle {
-        position: fixed;
-        top: 50%;
-        right: 0;
-        transform: translateY(-50%);
-        background-color: #0073e6;
-        color: white;
-        padding: 10px;
-        border-radius: 8px 0 0 8px;
-        cursor: pointer;
-        z-index: 10000;
-        font-weight: bold;
-        box-shadow: -2px 0 6px rgba(0,0,0,0.1);
-      }
+      .dynamic-sidebar.open { right: 0; }
+      .prompt-list { padding-left: 10px; }
+      .category-title { margin-top: 10px; font-weight: bold; cursor: pointer; }
+      .prompt { background: #f4f4f4; margin: 5px 0; padding: 8px; border-radius: 6px; cursor: grab; }
+      .prompt:hover { background: #e6f0ff; }
+      .floating-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: #0073e6; color: white; padding: 10px; border-radius: 8px 0 0 8px; cursor: pointer; z-index: 10000; font-weight: bold; }
+      .dynamic-sidebar { position: fixed; top: 0; right: -300px; width: 300px; height: 100vh; background: #fff; border-left: 2px solid #ccc; box-shadow: -4px 0 10px rgba(0,0,0,0.1); z-index: 9999; overflow-y: auto; padding: 15px; }
     </style>
-
-    <button id="resetBtn" title="Nouveau chat">♻️ Nouveau chat</button>
-    <div id="chat"></div>
-    <div id="input-area">
-      <input type="text" id="userInput" placeholder="Pose ta question ici..." />
-      <button id="sendBtn"></button>
-    </div>
-    <div class="floating-toggle" id="togglePrompt">💬</div>
+    <div class="floating-toggle" id="togglePrompt">💡</div>
     <div class="dynamic-sidebar" id="promptPanel">
-      <div class="sidebar-header">💡 Idées de prompts</div>
-      <div class="sidebar-content">
-        <div class="prompt" draggable="true">Optimiser les itinéraires vers l’Europe</div>
-        <div class="prompt" draggable="true">Analyser les coûts de transport par saison</div>
-        <div class="prompt" draggable="true">Anticiper les frais douaniers par pays</div>
-        <div class="prompt" draggable="true">Calculer l’empreinte carbone d’un trajet</div>
-      </div>
+      <div style="font-weight:bold;font-size:16px;margin-bottom:10px;">💡 Idées de prompts</div>
+      <div id="promptContent"></div>
     </div>
   `;
 
-  const container = document.getElementById("chat-container");
-  if (!container) return;
-  container.appendChild(wrapper);
+  document.body.appendChild(wrapper);
 
-  const chat = wrapper.querySelector("#chat");
-  const userInput = wrapper.querySelector("#userInput");
-  const sendBtn = wrapper.querySelector("#sendBtn");
-  const resetBtn = wrapper.querySelector("#resetBtn");
+  const userInput = document.querySelector('#userInput') || document.querySelector('textarea, input[type="text"]');
+  const sendBtn = document.querySelector('#sendBtn');
+  const sidebar = document.getElementById('promptPanel');
+  const toggleBtn = document.getElementById('togglePrompt');
 
-  const toggleBtn = wrapper.querySelector('#togglePrompt');
-  const sidebar = wrapper.querySelector('#promptPanel');
-  const prompts = wrapper.querySelectorAll('.prompt');
-
-  if (toggleBtn && sidebar) {
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-    });
-  }
-
-  prompts.forEach(prompt => {
-    prompt.addEventListener('click', () => {
-      userInput.value = prompt.textContent;
-      userInput.focus();
-    });
-    prompt.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('text/plain', prompt.textContent);
-    });
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
   });
 
-  if (userInput) {
-    userInput.addEventListener('dragover', e => e.preventDefault());
-    userInput.addEventListener('drop', e => {
-      e.preventDefault();
-      const text = e.dataTransfer.getData('text');
-      userInput.value = text;
-      sendBtn.click(); // Envoi direct au drop
-    });
-  }
+  const promptContainer = document.getElementById('promptContent');
 
-  function formatTextToHTML(text) {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/^\s*[-•]\s/gm, "• ")
-      .replace(/\n{2,}/g, "<br><br>")
-      .replace(/\n/g, "<br>");
-  }
+  promptCategories.forEach(category => {
+    const catBlock = document.createElement('div');
+    const title = document.createElement('div');
+    title.classList.add('category-title');
+    title.innerText = `▶️ ${category.title}`;
 
-  function saveChatToLocalStorage() {
-    const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
-      role: msg.classList.contains("user-message") ? "user" : "bot",
-      content: msg.innerHTML
-    }));
-    localStorage.setItem("chatHistory", JSON.stringify(messages));
-  }
+    const list = document.createElement('div');
+    list.classList.add('prompt-list');
+    list.style.display = 'none';
 
-  function loadChatFromLocalStorage() {
-    const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
-    history.forEach(msg => {
-      appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message", true);
-    });
-  }
+    category.prompts.forEach(text => {
+      const promptEl = document.createElement('div');
+      promptEl.className = 'prompt';
+      promptEl.draggable = true;
+      promptEl.innerText = text;
 
-  function appendMessage(message, className, isHTML = false) {
-    const msg = document.createElement("div");
-    msg.className = `message ${className}`;
-    msg.innerHTML = isHTML ? message : formatTextToHTML(message);
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
-    saveChatToLocalStorage();
-  }
-
-  function appendLoading() {
-    const loader = document.createElement("div");
-    loader.className = "message bot-message loading loading-dots";
-    loader.innerText = "Je réfléchis";
-    chat.appendChild(loader);
-    chat.scrollTop = chat.scrollHeight;
-    return loader;
-  }
-
-  resetBtn.addEventListener("click", () => {
-    if (confirm("Souhaites-tu démarrer une nouvelle conversation ?")) {
-      localStorage.removeItem("chatHistory");
-      chat.innerHTML = "";
-      appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
-    }
-  });
-
-  loadChatFromLocalStorage();
-
-  sendBtn.addEventListener("click", async () => {
-    const text = userInput.value.trim();
-    if (!text) return;
-    appendMessage(text, "user-message");
-    userInput.value = "";
-
-    const loader = appendLoading();
-
-    try {
-      const res = await fetch(webhookURL, {
-        method: "POST",
-        body: JSON.stringify({ question: text }),
-        headers: { "Content-Type": "application/json" },
+      promptEl.addEventListener('click', () => {
+        userInput.value = text;
+        userInput.focus();
       });
 
-      const data = await res.json();
-      loader.remove();
+      promptEl.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', text);
+        sidebar.classList.remove('open');
+      });
 
-      const friendlyReplies = [
-        "Tu veux que je te détaille ça ? 😊",
-        "Si tu veux un exemple concret, je peux t’en donner un !",
-        "Dis-moi si tu veux approfondir un point 🔍",
-        "On continue ensemble sur ce sujet ?"
-      ];
-      const randomReply = friendlyReplies[Math.floor(Math.random() * friendlyReplies.length)];
-      const finalReply = (data.output || "Je n'ai pas compris la réponse 🙇") + "\n\n" + randomReply;
+      list.appendChild(promptEl);
+    });
 
-      appendMessage(finalReply, "bot-message");
+    title.addEventListener('click', () => {
+      const isOpen = list.style.display === 'block';
+      document.querySelectorAll('.prompt-list').forEach(l => l.style.display = 'none');
+      document.querySelectorAll('.category-title').forEach(t => {
+        if (t.innerText.startsWith('▼')) t.innerText = t.innerText.replace('▼', '▶️');
+      });
+      list.style.display = isOpen ? 'none' : 'block';
+      title.innerText = isOpen ? `▶️ ${category.title}` : `▼ ${category.title}`;
+    });
 
-    } catch (error) {
-      loader.remove();
-      appendMessage("Erreur de connexion au serveur", "bot-message");
-    }
-  });
-
-  userInput.addEventListener("keypress", function (e) {
-    if (e.key === "Enter") sendBtn.click();
+    catBlock.appendChild(title);
+    catBlock.appendChild(list);
+    promptContainer.appendChild(catBlock);
   });
 });
