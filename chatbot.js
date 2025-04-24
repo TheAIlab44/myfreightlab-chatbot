@@ -144,24 +144,64 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
 
     <div class="floating-toggle" id="togglePrompt">💡</div>
-    <div class="dynamic-sidebar" id="promptPanel">
-      <div class="sidebar-header">💡 Idées de prompts</div>
-      <div class="sidebar-content">
-        <details open>
-          <summary>▼ Opérations logistiques</summary>
-          <div class="prompt" draggable="true">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
-          <div class="prompt" draggable="true">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
-          <div class="prompt" draggable="true">Un hub à Rotterdam, c’est une bonne idée pour livrer l’Allemagne ?</div>
-          <div class="prompt" draggable="true">Comment je peux gagner du temps sur mes transits intercontinentaux ?</div>
-          <div class="prompt" draggable="true">Quels sont les pièges à éviter avec une chaîne logistique multi-clients ?</div>
-        </details>
-        <details>
-          <summary>▶ Commerce international</summary>
-          <div class="prompt" draggable="true">Quels sont les incoterms les plus souvent utilisés en 2024 ?</div>
-          <div class="prompt" draggable="true">Est-ce qu’il y a des accords de libre-échange avec l’Inde ?</div>
-        </details>
-      </div>
-    </div>
+<div class="dynamic-sidebar" id="promptPanel">
+  <div class="sidebar-header">💡 Idées de prompts</div>
+  <div class="sidebar-content">
+    <details>
+      <summary>▶ Opérations logistiques</summary>
+      <div class="prompt" draggable="true">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
+      <div class="prompt" draggable="true">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
+      <div class="prompt" draggable="true">Un hub à Rotterdam, c’est une bonne idée pour livrer l’Allemagne ?</div>
+      <div class="prompt" draggable="true">Comment je peux gagner du temps sur mes transits intercontinentaux ?</div>
+      <div class="prompt" draggable="true">Quels sont les pièges à éviter avec une chaîne logistique multi-clients ?</div>
+    </details>
+
+    <details>
+      <summary>▶ Commerce international</summary>
+      <div class="prompt" draggable="true">Quels sont les incoterms les plus souvent utilisés en 2024 ?</div>
+      <div class="prompt" draggable="true">Est-ce qu’il y a des accords de libre-échange avec l’Inde ?</div>
+      <div class="prompt" draggable="true">Y a-t-il des sanctions qui pourraient bloquer certaines destinations ?</div>
+      <div class="prompt" draggable="true">Comment prévoir les droits de douane pour exporter en Afrique ?</div>
+      <div class="prompt" draggable="true">Comment profiter des accords UE–Canada ?</div>
+    </details>
+
+    <details>
+      <summary>▶ Veille & analyses</summary>
+      <div class="prompt" draggable="true">Quels sont les flux logistiques qui augmentent en ce moment ?</div>
+      <div class="prompt" draggable="true">Y a-t-il des risques géopolitiques à suivre de près ?</div>
+      <div class="prompt" draggable="true">Tu peux me sortir un résumé des dernières tendances logistiques ?</div>
+      <div class="prompt" draggable="true">Quels indicateurs économiques impacteront le fret maritime ?</div>
+      <div class="prompt" draggable="true">Donne-moi une analyse sur le marché Asie–Europe aujourd’hui</div>
+    </details>
+
+    <details>
+      <summary>▶ Marché & tendances</summary>
+      <div class="prompt" draggable="true">Quelles routes gagnent en popularité en 2024 ?</div>
+      <div class="prompt" draggable="true">Quels ports sont en train de monter en puissance ?</div>
+      <div class="prompt" draggable="true">Tu vois des ruptures ou innovations dans le transport cette année ?</div>
+      <div class="prompt" draggable="true">Y a-t-il une tendance vers le rail ou le fluvial ?</div>
+      <div class="prompt" draggable="true">Comment évoluent les attentes clients en matière de logistique ?</div>
+    </details>
+
+    <details>
+      <summary>▶ Stratégie & gestion</summary>
+      <div class="prompt" draggable="true">Tu peux m’aider à faire un benchmark de transporteurs ?</div>
+      <div class="prompt" draggable="true">Quelle est la meilleure stratégie pour mon service logistique ?</div>
+      <div class="prompt" draggable="true">Comment optimiser ma gestion des stocks entre 2 continents ?</div>
+      <div class="prompt" draggable="true">Faut-il mieux un entrepôt central ou plusieurs hubs ?</div>
+      <div class="prompt" draggable="true">Comment améliorer le service client dans la chaîne logistique ?</div>
+    </details>
+
+    <details>
+      <summary>▶ Cas pratiques & simulations</summary>
+      <div class="prompt" draggable="true">Je t’envoie un doc, tu peux me résumer les infos clés ?</div>
+      <div class="prompt" draggable="true">Peux-tu m’écrire une synthèse à partir de ces trois fichiers ?</div>
+      <div class="prompt" draggable="true">Tu peux créer une instruction transport depuis ce modèle ?</div>
+      <div class="prompt" draggable="true">Lis ce PDF et dis-moi s’il manque des infos critiques</div>
+      <div class="prompt" draggable="true">Peux-tu vérifier la cohérence de cette liasse documentaire ?</div>
+    </details>
+  </div>
+</div>
   `;
 
   const container = document.getElementById("chat-container");
