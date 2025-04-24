@@ -1,144 +1,245 @@
-// ✅ Chatbot.js complet avec prompts repliables, fermeture auto, injection drag&drop et icône ampoule
-
+// === ChatBot MyFreightLab avec sidebar intelligente et chatbot fonctionnel ===
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
-
-  const promptCategories = [
-    {
-      title: "Opérations logistiques",
-      prompts: [
-        "Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?",
-        "Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?",
-        "Un hub à Rotterdam, c’est une bonne idée pour livrer l’Allemagne ?",
-        "Comment je peux gagner du temps sur mes transits intercontinentaux ?",
-        "Quels sont les pièges à éviter avec une chaîne logistique multi-clients ?"
-      ]
-    },
-    {
-      title: "Commerce international",
-      prompts: [
-        "J’exporte au Canada, tu me dis les formalités à prévoir ?",
-        "J’ai une import du Vietnam à simuler, tu peux me faire la déclaration douanière ?",
-        "FOB, CIF… tu me recommandes quoi comme Incoterm avec un fournisseur indien ?",
-        "J’ai besoin d’une instruction claire pour mon transitaire, tu peux me rédiger ça ?",
-        "C’est quoi les docs obligatoires pour un contrat CIF vers l’Afrique de l’Ouest ?"
-      ]
-    },
-    {
-      title: "Veille & analyses",
-      prompts: [
-        "Le conflit en mer Rouge, ça change quoi pour le fret ?",
-        "Tu peux me résumer les nouvelles règles UE sur la décarbonation du transport ?",
-        "Quels indicateurs je dois suivre pour anticiper une hausse de coûts logistiques ?",
-        "Tu peux me faire une analyse SWOT sur l’axe Europe–Asie centrale ?",
-        "Comment je lis les chiffres d’empreinte carbone d’un trajet multimodal ?"
-      ]
-    },
-    {
-      title: "Marché & tendances",
-      prompts: [
-        "C’est quoi les grandes tendances logistiques à suivre en 2025 ?",
-        "Y’a des innovations logistiques cools dans l’agroalimentaire ?",
-        "Tu m’expliques comment l’IA aide à mieux gérer les stocks ?",
-        "Comment les prix du transport maritime ont évolué depuis le COVID ?",
-        "Quels sont les marchés du fret à surveiller en ce moment ?"
-      ]
-    },
-    {
-      title: "Stratégie & gestion",
-      prompts: [
-        "T’as des idées pour faire baisser les coûts logistiques d’une PME ?",
-        "Tu peux me faire un tableau de bord avec les KPIs logistiques essentiels ?",
-        "Quels investissements je priorise dans ma supply chain sous pression ?",
-        "Tu m’aides à bâtir un plan B logistique en cas de crise géopolitique ?",
-        "Comment mieux bosser ensemble entre achats, logistique et commerce ?"
-      ]
-    },
-    {
-      title: "Cas pratiques & simulations",
-      prompts: [
-        "Je te balance une liasse documentaire, tu me fais le résumé ?",
-        "À partir de ces docs, tu peux me créer une fiche de transport ?",
-        "Et si mon conteneur est bloqué en douane, on fait quoi ?",
-        "Tu vérifies si mon dossier import-export est conforme aux règles UE ?",
-        "Tu peux me faire une synthèse des documents logistiques à traiter ?"
-      ]
-    }
-  ];
 
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
     <style>
-      .dynamic-sidebar.open { right: 0; }
-      .prompt-list { padding-left: 10px; }
-      .category-title { margin-top: 10px; font-weight: bold; cursor: pointer; }
-      .prompt { background: #f4f4f4; margin: 5px 0; padding: 8px; border-radius: 6px; cursor: grab; }
-      .prompt:hover { background: #e6f0ff; }
-      .floating-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: #0073e6; color: white; padding: 10px; border-radius: 8px 0 0 8px; cursor: pointer; z-index: 10000; font-weight: bold; }
-      .dynamic-sidebar { position: fixed; top: 0; right: -300px; width: 300px; height: 100vh; background: #fff; border-left: 2px solid #ccc; box-shadow: -4px 0 10px rgba(0,0,0,0.1); z-index: 9999; overflow-y: auto; padding: 15px; }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+      * { font-family: 'Inter', sans-serif; }
+
+      #chat-wrapper {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        height: 90vh;
+        width: 80vw;
+        margin: 0 auto;
+        background: #f9fbfc;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #d3dce6;
+        position: relative;
+      }
+
+      #chat {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .message {
+        padding: 14px 18px;
+        border-radius: 18px;
+        max-width: 80%;
+        font-size: 15px;
+        line-height: 1.6;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        animation: fadeInUp 0.4s ease-out;
+      }
+
+      .user-message {
+        align-self: flex-start;
+        background: #e6f0ff;
+        color: #003366;
+        border-bottom-right-radius: 0;
+      }
+      .bot-message {
+        align-self: flex-end;
+        background: #fff;
+        color: #222;
+        border-bottom-left-radius: 0;
+      }
+
+      #input-area {
+        display: flex;
+        padding: 12px 16px;
+        border-top: 1px solid #ccc;
+        gap: 10px;
+        background: white;
+      }
+      #userInput {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        outline: none;
+        font-size: 15px;
+      }
+      #sendBtn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        background: #0077c8;
+        color: white;
+        cursor: pointer;
+      }
+
+      .dynamic-sidebar {
+        position: fixed;
+        top: 0;
+        right: -320px;
+        width: 320px;
+        height: 100vh;
+        background: #fff;
+        border-left: 1px solid #ddd;
+        box-shadow: -2px 0 6px rgba(0,0,0,0.05);
+        transition: right 0.3s ease-in-out;
+        z-index: 9999;
+      }
+      .dynamic-sidebar.open {
+        right: 0;
+      }
+      .sidebar-header {
+        padding: 16px;
+        background: #0077c8;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+      }
+      .sidebar-content {
+        padding: 10px;
+      }
+      .prompt {
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        cursor: grab;
+        font-size: 14px;
+      }
+
+      details summary {
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+        padding: 10px 0;
+      }
+      .floating-toggle {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        background-color: #0077c8;
+        color: white;
+        padding: 10px;
+        border-radius: 8px 0 0 8px;
+        cursor: pointer;
+        font-size: 20px;
+        z-index: 10000;
+      }
     </style>
+
+    <button id="resetBtn">♻️ Nouveau chat</button>
+    <div id="chat"></div>
+    <div id="input-area">
+      <input type="text" id="userInput" placeholder="Pose ta question ici..." />
+      <button id="sendBtn">▶</button>
+    </div>
+
     <div class="floating-toggle" id="togglePrompt">💡</div>
     <div class="dynamic-sidebar" id="promptPanel">
-      <div style="font-weight:bold;font-size:16px;margin-bottom:10px;">💡 Idées de prompts</div>
-      <div id="promptContent"></div>
+      <div class="sidebar-header">💡 Idées de prompts</div>
+      <div class="sidebar-content">
+        <details open>
+          <summary>▼ Opérations logistiques</summary>
+          <div class="prompt" draggable="true">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
+          <div class="prompt" draggable="true">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
+          <div class="prompt" draggable="true">Un hub à Rotterdam, c’est une bonne idée pour livrer l’Allemagne ?</div>
+          <div class="prompt" draggable="true">Comment je peux gagner du temps sur mes transits intercontinentaux ?</div>
+          <div class="prompt" draggable="true">Quels sont les pièges à éviter avec une chaîne logistique multi-clients ?</div>
+        </details>
+        <details>
+          <summary>▶ Commerce international</summary>
+          <div class="prompt" draggable="true">Quels sont les incoterms les plus souvent utilisés en 2024 ?</div>
+          <div class="prompt" draggable="true">Est-ce qu’il y a des accords de libre-échange avec l’Inde ?</div>
+        </details>
+      </div>
     </div>
   `;
 
-  document.body.appendChild(wrapper);
+  const container = document.getElementById("chat-container");
+  if (!container) return;
+  container.appendChild(wrapper);
 
-  const userInput = document.querySelector('#userInput') || document.querySelector('textarea, input[type="text"]');
-  const sendBtn = document.querySelector('#sendBtn');
-  const sidebar = document.getElementById('promptPanel');
-  const toggleBtn = document.getElementById('togglePrompt');
+  const chat = wrapper.querySelector("#chat");
+  const userInput = wrapper.querySelector("#userInput");
+  const sendBtn = wrapper.querySelector("#sendBtn");
+  const resetBtn = wrapper.querySelector("#resetBtn");
+  const toggleBtn = wrapper.querySelector("#togglePrompt");
+  const sidebar = wrapper.querySelector("#promptPanel");
+  const prompts = wrapper.querySelectorAll(".prompt");
 
-  toggleBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
   });
 
-  const promptContainer = document.getElementById('promptContent');
-
-  promptCategories.forEach(category => {
-    const catBlock = document.createElement('div');
-    const title = document.createElement('div');
-    title.classList.add('category-title');
-    title.innerText = `▶️ ${category.title}`;
-
-    const list = document.createElement('div');
-    list.classList.add('prompt-list');
-    list.style.display = 'none';
-
-    category.prompts.forEach(text => {
-      const promptEl = document.createElement('div');
-      promptEl.className = 'prompt';
-      promptEl.draggable = true;
-      promptEl.innerText = text;
-
-      promptEl.addEventListener('click', () => {
-        userInput.value = text;
-        userInput.focus();
-      });
-
-      promptEl.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', text);
-        sidebar.classList.remove('open');
-      });
-
-      list.appendChild(promptEl);
+  prompts.forEach(prompt => {
+    prompt.addEventListener("click", () => {
+      userInput.value = prompt.textContent;
+      userInput.focus();
     });
-
-    title.addEventListener('click', () => {
-      const isOpen = list.style.display === 'block';
-      document.querySelectorAll('.prompt-list').forEach(l => l.style.display = 'none');
-      document.querySelectorAll('.category-title').forEach(t => {
-        if (t.innerText.startsWith('▼')) t.innerText = t.innerText.replace('▼', '▶️');
-      });
-      list.style.display = isOpen ? 'none' : 'block';
-      title.innerText = isOpen ? `▶️ ${category.title}` : `▼ ${category.title}`;
+    prompt.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", prompt.textContent);
     });
+  });
 
-    catBlock.appendChild(title);
-    catBlock.appendChild(list);
-    promptContainer.appendChild(catBlock);
+  userInput.addEventListener("dragover", e => e.preventDefault());
+  userInput.addEventListener("drop", e => {
+    e.preventDefault();
+    const text = e.dataTransfer.getData("text");
+    userInput.value = text;
+    sidebar.classList.remove("open");
+    sendBtn.click();
+  });
+
+  resetBtn.addEventListener("click", () => {
+    chat.innerHTML = "";
+    appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
+  });
+
+  function appendMessage(message, className) {
+    const msg = document.createElement("div");
+    msg.className = `message ${className}`;
+    msg.innerHTML = message;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  sendBtn.addEventListener("click", async () => {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    appendMessage(text, "user-message");
+    userInput.value = "";
+
+    const loader = document.createElement("div");
+    loader.className = "message bot-message";
+    loader.innerHTML = "Je réfléchis...";
+    chat.appendChild(loader);
+
+    try {
+      const res = await fetch(webhookURL, {
+        method: "POST",
+        body: JSON.stringify({ question: text }),
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      loader.remove();
+      appendMessage(data.output || "Pas de réponse", "bot-message");
+    } catch (err) {
+      loader.remove();
+      appendMessage("Erreur de connexion", "bot-message");
+    }
+  });
+
+  userInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") sendBtn.click();
   });
 });
