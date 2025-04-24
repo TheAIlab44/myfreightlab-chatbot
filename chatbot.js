@@ -221,15 +221,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!container) return;
   container.appendChild(wrapper);
 
-  const chat = wrapper.querySelector("#chat");
-  loadChatFromLocalStorage();
-  const userInput = wrapper.querySelector("#userInput");
-  const sendBtn = wrapper.querySelector("#sendBtn");
-  const resetBtn = wrapper.querySelector("#resetBtn");
-  const toggleBtn = wrapper.querySelector("#togglePrompt");
-  const sidebar = wrapper.querySelector("#promptPanel");
-  const prompts = wrapper.querySelectorAll(".prompt");
-  const prompts = wrapper.querySelectorAll(".prompt");
+const chat = wrapper.querySelector("#chat");
+const userInput = wrapper.querySelector("#userInput");
+const sendBtn = wrapper.querySelector("#sendBtn");
+const resetBtn = wrapper.querySelector("#resetBtn");
+const toggleBtn = wrapper.querySelector("#togglePrompt");
+const sidebar = wrapper.querySelector("#promptPanel");
+const prompts = wrapper.querySelectorAll(".prompt");
+
+loadChatFromLocalStorage(); // ✅ Juste ici
+
 
 
   toggleBtn.addEventListener("click", () => {
