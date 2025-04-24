@@ -229,6 +229,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleBtn = wrapper.querySelector("#togglePrompt");
   const sidebar = wrapper.querySelector("#promptPanel");
   const prompts = wrapper.querySelectorAll(".prompt");
+  const prompts = wrapper.querySelectorAll(".prompt");
+
+loadChatFromLocalStorage(); // ✅ Et là c’est bon !
+
 
   toggleBtn.addEventListener("click", () => {
     sidebar.classList.toggle("open");
