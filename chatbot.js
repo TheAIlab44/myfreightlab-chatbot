@@ -81,17 +81,17 @@ document.addEventListener("DOMContentLoaded", () => {
         cursor: pointer;
       }
 
-      #resetBtn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: white;
-        border: 1px solid #ccc;
-        padding: 4px 8px;
-        border-radius: 12px;
-        cursor: pointer;
-        font-size: 13px;
-      }
+#resetBtn {
+  position: absolute;
+  top: 10px;
+  left: 10px; /* au lieu de right: 10px */
+  background: white;
+  border: 1px solid #ccc;
+  padding: 4px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
 
       .dynamic-sidebar {
         position: fixed;
