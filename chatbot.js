@@ -1,4 +1,3 @@
-// === ChatBot MyFreightLab avec sidebar intelligente et chatbot fonctionnel ===
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
 
@@ -83,26 +82,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       #resetBtn {
         position: absolute;
-        top: 16px;
-        right: 16px;
-        background: #fff;
-        border: 1px solid #d3dce6;
-        color: #0077c8;
-        font-size: 13px;
-        padding: 4px 10px;
-        border-radius: 14px;
-        font-weight: 500;
+        top: 10px;
+        right: 10px;
+        background: white;
+        border: 1px solid #ccc;
+        padding: 4px 8px;
+        border-radius: 12px;
         cursor: pointer;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        transition: all 0.2s ease;
-      }
-      #resetBtn:hover {
-        background-color: #0077c8;
-        color: white;
+        font-size: 13px;
       }
 
       .dynamic-sidebar {
@@ -145,12 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
         list-style: none;
         padding: 10px 0;
       }
-      details[open] > summary::before {
-        content: "\25BC ";
-      }
-      details:not([open]) > summary::before {
-        content: "\25B6 ";
-      }
 
       .floating-toggle {
         position: fixed;
@@ -178,7 +159,11 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="dynamic-sidebar" id="promptPanel">
       <div class="sidebar-header">💡 Idées de prompts</div>
       <div class="sidebar-content">
-        <!-- Tes catégories de prompts ici (inchangées) -->
+        <!-- Ajoute ici tous les <details> avec prompts -->
+        <details>
+          <summary>▶ Opérations logistiques</summary>
+          <div class="prompt" draggable="true">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
+        </details>
       </div>
     </div>
   `;
@@ -203,6 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
     prompt.addEventListener("click", () => {
       userInput.value = prompt.textContent;
       userInput.focus();
+      sidebar.classList.remove("open");
     });
     prompt.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("text/plain", prompt.textContent);
@@ -214,7 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     const text = e.dataTransfer.getData("text");
     userInput.value = text;
-    userInput.focus();
     sidebar.classList.remove("open");
   });
 
