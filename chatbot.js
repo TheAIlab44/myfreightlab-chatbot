@@ -301,7 +301,7 @@ loadChatFromLocalStorage(); // ✅ Juste ici
     try {
       const res = await fetch(webhookURL, {
         method: "POST",
-        body: JSON.stringify({ question: text }),
+        body: JSON.stringify({ question: text, user_id: 0,chat_id: 0 }),
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
