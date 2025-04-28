@@ -9,8 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("chat-container");
   if (!container) return;
 
-  const wrapper = document.createElement("div");
-  wrapper.id = "chat-wrapper";
+document.body.appendChild(wrapper);
 
   wrapper.innerHTML = `
     <style>
