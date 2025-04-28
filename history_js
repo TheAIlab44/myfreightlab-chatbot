@@ -1,46 +1,42 @@
-// === history.js : Sidebar Historique dynamique ===
+// === history.js TEST VISIBILITE ===
 
 // Création du bouton flottant
-const historyButton = document.createElement('div');
-historyButton.innerHTML = '🕑'; // Icône horloge
+const historyButton = document.createElement('button');
+historyButton.innerHTML = '🕑 Historique';
 historyButton.style.position = 'fixed';
-historyButton.style.top = '50%';
-historyButton.style.right = '20px'; // Bord droit, 20px de marge
-historyButton.style.transform = 'translateY(-50%)';
+historyButton.style.top = '100px'; // Plus haut pour ne pas être masqué
+historyButton.style.right = '30px';
 historyButton.style.background = '#00478a';
-historyButton.style.color = 'white';
-historyButton.style.padding = '12px';
-historyButton.style.borderRadius = '50%';
-historyButton.style.boxShadow = '2px 6px 10px rgba(0,0,0,0.2)';
+historyButton.style.color = '#fff';
+historyButton.style.border = 'none';
+historyButton.style.padding = '12px 20px';
+historyButton.style.borderRadius = '30px';
+historyButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+historyButton.style.zIndex = '10000'; // Max pour passer devant tout
 historyButton.style.cursor = 'pointer';
-historyButton.style.zIndex = '1000';
 document.body.appendChild(historyButton);
 
 // Création de la sidebar cachée au départ
 const historySidebar = document.createElement('div');
 historySidebar.style.position = 'fixed';
 historySidebar.style.top = '0';
-historySidebar.style.right = '-300px'; // Cachée au départ
+historySidebar.style.right = '-320px'; // caché
 historySidebar.style.width = '300px';
 historySidebar.style.height = '100%';
-historySidebar.style.background = 'white';
-historySidebar.style.borderLeft = '1px solid #ccc';
-historySidebar.style.boxShadow = '0 0 15px rgba(0,0,0,0.1)';
+historySidebar.style.background = '#fff';
+historySidebar.style.borderLeft = '2px solid #00478a';
+historySidebar.style.boxShadow = '0 0 20px rgba(0,0,0,0.2)';
 historySidebar.style.transition = 'right 0.3s ease';
-historySidebar.style.zIndex = '999';
+historySidebar.style.zIndex = '9999';
 historySidebar.innerHTML = `
-  <div style="padding: 20px; font-weight: bold; font-size: 18px; border-bottom: 1px solid #eee;">🗂️ Historique</div>
-  <div id="history-content" style="padding: 20px;">Aucun historique pour l'instant.</div>
+  <div style="padding:20px;font-size:18px;font-weight:bold;">🗂️ Historique</div>
+  <div id="history-content" style="padding:20px;">Aucun historique encore.</div>
 `;
 document.body.appendChild(historySidebar);
 
-// Fonction ouverture/fermeture
+// Toggle ouverture/fermeture
 let sidebarOpen = false;
 historyButton.addEventListener('click', () => {
-  if (sidebarOpen) {
-    historySidebar.style.right = '-300px';
-  } else {
-    historySidebar.style.right = '0';
-  }
+  historySidebar.style.right = sidebarOpen ? '-320px' : '0';
   sidebarOpen = !sidebarOpen;
 });
