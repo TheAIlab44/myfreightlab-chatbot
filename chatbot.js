@@ -1,12 +1,6 @@
 // === ChatBot MyFreightLab avec historique, prompts, sidebar fermable, et édition avant envoi ===
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
-  let user_id = window.user_id || 0;   // ID WordPress, 0 si absent
-let chat_id = generateChatId();      // Premier chat_id au chargement
-
-function generateChatId() {
-  return 'chat_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-}
 
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
@@ -262,12 +256,11 @@ loadChatFromLocalStorage(); // ✅ Juste ici
     sidebar.classList.remove("open");
   });
 
-resetBtn.addEventListener("click", () => {
-  localStorage.removeItem("chatHistory");
-  chat.innerHTML = "";
-  chat_id = generateChatId();  // <<< AJOUT ICI pour avoir un nouveau ID
-  appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
-});
+  resetBtn.addEventListener("click", () => {
+    localStorage.removeItem("chatHistory");
+    chat.innerHTML = "";
+    appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
+  });
 
   function appendMessage(message, className) {
     const msg = document.createElement("div");
@@ -306,12 +299,11 @@ resetBtn.addEventListener("click", () => {
     chat.appendChild(loader);
 
     try {
- const res = await fetch(webhookURL, {
-  method: "POST",
-  body: JSON.stringify({ question: text, user_id: user_id, chat_id: chat_id }),
-  headers: { "Content-Type": "application/json" },
-});
-
+      const res = await fetch(webhookURL, {
+        method: "POST",
+        body: JSON.stringify({ question: text, user_id: 0,chat_id: 0 }),
+        headers: { "Content-Type": "application/json" },
+      });
       const data = await res.json();
       loader.remove();
       appendMessage(data.output || "Pas de réponse", "bot-message");
