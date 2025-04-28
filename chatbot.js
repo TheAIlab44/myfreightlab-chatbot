@@ -1,6 +1,11 @@
-// === ChatBot MyFreightLab avec historique, prompts, sidebar fermable, et édition avant envoi ===
+// === ChatBot MyFreightLab avec user_id, chat_id, prompts, historique local et reset ===
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
+
+  // Simuler un user_id WordPress pour l'instant
+  let user_id = 123;
+  // Générer un chat_id unique
+  let chat_id = generateChatId();
 
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
@@ -8,148 +13,25 @@ document.addEventListener("DOMContentLoaded", () => {
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
       * { font-family: 'Inter', sans-serif; }
-
-      #chat-wrapper {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        height: 90vh;
-        width: 80vw;
-        margin: 0 auto;
-        background: #f9fbfc;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid #d3dce6;
-        position: relative;
-      }
-
-      #chat {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        align-items: center;
-      }
-
-      .message {
-        padding: 14px 18px;
-        border-radius: 18px;
-        max-width: 80%;
-        font-size: 15px;
-        line-height: 1.6;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        animation: fadeInUp 0.4s ease-out;
-      }
-
-      .user-message {
-        align-self: flex-start;
-        background: #e6f0ff;
-        color: #003366;
-        border-bottom-right-radius: 0;
-      }
-      .bot-message {
-        align-self: flex-end;
-        background: #fff;
-        color: #222;
-        border-bottom-left-radius: 0;
-      }
-
-      #input-area {
-        display: flex;
-        padding: 12px 16px;
-        border-top: 1px solid #ccc;
-        gap: 10px;
-        background: white;
-      }
-      #userInput {
-        flex: 1;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        outline: none;
-        font-size: 15px;
-      }
-      #sendBtn {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        border: none;
-        background: #0077c8;
-        color: white;
-        cursor: pointer;
-      }
-
-#resetBtn {
-  position: absolute;
-  top: 10px;
-  left: 10px; /* au lieu de right: 10px */
-  background: white;
-  border: 1px solid #ccc;
-  padding: 4px 8px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-      .dynamic-sidebar {
-        position: fixed;
-        top: 0;
-        right: -320px;
-        width: 320px;
-        height: 100vh;
-        background: #fff;
-        border-left: 1px solid #ddd;
-        box-shadow: -2px 0 6px rgba(0,0,0,0.05);
-        transition: right 0.3s ease-in-out;
-        z-index: 9999;
-      }
-      .dynamic-sidebar.open {
-        right: 0;
-      }
-      .sidebar-header {
-        padding: 16px;
-        background: #0077c8;
-        color: white;
-        font-weight: bold;
-        font-size: 16px;
-      }
-      .sidebar-content {
-        padding: 10px;
-      }
-      .prompt {
-        padding: 10px;
-        background: #f0f0f0;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        cursor: grab;
-        font-size: 14px;
-      }
-
-      details summary {
-        font-weight: 600;
-        cursor: pointer;
-        list-style: none;
-        padding: 10px 0;
-      }
-
-      .floating-toggle {
-        position: fixed;
-        top: 50%;
-        right: 0;
-        transform: translateY(-50%);
-        background-color: #0077c8;
-        color: white;
-        padding: 10px;
-        border-radius: 8px 0 0 8px;
-        cursor: pointer;
-        font-size: 20px;
-        z-index: 10000;
-      }
+      #chat-wrapper { display: flex; flex-direction: column; justify-content: flex-end; height: 90vh; width: 80vw; margin: 0 auto; background: #f9fbfc; border-radius: 12px; overflow: hidden; border: 1px solid #d3dce6; position: relative; }
+      #chat { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 16px; align-items: center; }
+      .message { padding: 14px 18px; border-radius: 18px; max-width: 80%; font-size: 15px; line-height: 1.6; box-shadow: 0 2px 6px rgba(0,0,0,0.05); animation: fadeInUp 0.4s ease-out; }
+      .user-message { align-self: flex-start; background: #e6f0ff; color: #003366; border-bottom-right-radius: 0; }
+      .bot-message { align-self: flex-end; background: #fff; color: #222; border-bottom-left-radius: 0; }
+      #input-area { display: flex; padding: 12px 16px; border-top: 1px solid #ccc; gap: 10px; background: white; }
+      #userInput { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; font-size: 15px; }
+      #sendBtn { width: 44px; height: 44px; border-radius: 50%; border: none; background: #0077c8; color: white; cursor: pointer; }
+      #resetBtn { position: absolute; top: 10px; left: 10px; background: white; border: 1px solid #ccc; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 13px; }
+      .dynamic-sidebar { position: fixed; top: 0; right: -320px; width: 320px; height: 100vh; background: #fff; border-left: 1px solid #ddd; box-shadow: -2px 0 6px rgba(0,0,0,0.05); transition: right 0.3s ease-in-out; z-index: 9999; }
+      .dynamic-sidebar.open { right: 0; }
+      .sidebar-header { padding: 16px; background: #0077c8; color: white; font-weight: bold; font-size: 16px; }
+      .sidebar-content { padding: 10px; }
+      .prompt { padding: 10px; background: #f0f0f0; border-radius: 6px; margin-bottom: 8px; cursor: grab; font-size: 14px; }
+      details summary { font-weight: 600; cursor: pointer; list-style: none; padding: 10px 0; }
+      .floating-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: #0077c8; color: white; padding: 10px; border-radius: 8px 0 0 8px; cursor: pointer; font-size: 20px; z-index: 10000; }
     </style>
 
-    <button id="resetBtn"> ✨Nouveau chat</button>
+    <button id="resetBtn">✨ Nouveau chat</button>
     <div id="chat"></div>
     <div id="input-area">
       <input type="text" id="userInput" placeholder="Pose ta question ici..." />
@@ -157,10 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
 
     <div class="floating-toggle" id="togglePrompt">💡</div>
-<div class="dynamic-sidebar" id="promptPanel">
-  <div class="sidebar-header">💡 Idées de prompts</div>
-  <div class="sidebar-content">
-    <details>
+    <div class="dynamic-sidebar" id="promptPanel">
+      <div class="sidebar-header">💡 Idées de prompts</div>
+      <div class="sidebar-content">
+           <details>
       <summary>▶ Opérations logistiques</summary>
       <div class="prompt" draggable="true">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
       <div class="prompt" draggable="true">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
@@ -213,25 +95,21 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="prompt" draggable="true">Lis ce PDF et dis-moi s’il manque des infos critiques</div>
       <div class="prompt" draggable="true">Peux-tu vérifier la cohérence de cette liasse documentaire ?</div>
     </details>
-  </div>
-</div>
+      </div>
+    </div>
   `;
 
-  const container = document.getElementById("chat-container");
-  if (!container) return;
-  container.appendChild(wrapper);
+  document.body.appendChild(wrapper);
 
-const chat = wrapper.querySelector("#chat");
-const userInput = wrapper.querySelector("#userInput");
-const sendBtn = wrapper.querySelector("#sendBtn");
-const resetBtn = wrapper.querySelector("#resetBtn");
-const toggleBtn = wrapper.querySelector("#togglePrompt");
-const sidebar = wrapper.querySelector("#promptPanel");
-const prompts = wrapper.querySelectorAll(".prompt");
+  const chat = wrapper.querySelector("#chat");
+  const userInput = wrapper.querySelector("#userInput");
+  const sendBtn = wrapper.querySelector("#sendBtn");
+  const resetBtn = wrapper.querySelector("#resetBtn");
+  const toggleBtn = wrapper.querySelector("#togglePrompt");
+  const sidebar = wrapper.querySelector("#promptPanel");
+  const prompts = wrapper.querySelectorAll(".prompt");
 
-loadChatFromLocalStorage(); // ✅ Juste ici
-
-
+  loadChatFromLocalStorage();
 
   toggleBtn.addEventListener("click", () => {
     sidebar.classList.toggle("open");
@@ -259,7 +137,41 @@ loadChatFromLocalStorage(); // ✅ Juste ici
   resetBtn.addEventListener("click", () => {
     localStorage.removeItem("chatHistory");
     chat.innerHTML = "";
+    chat_id = generateChatId(); // Nouveau chat_id au reset
     appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
+  });
+
+  sendBtn.addEventListener("click", async () => {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    appendMessage(text, "user-message");
+    userInput.value = "";
+
+    const loader = document.createElement("div");
+    loader.className = "message bot-message";
+    loader.innerHTML = "Je réfléchis...";
+    chat.appendChild(loader);
+
+    try {
+      const res = await fetch(webhookURL, {
+        method: "POST",
+        body: JSON.stringify({ question: text, user_id: user_id, chat_id: chat_id }),
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      loader.remove();
+      appendMessage(data.output || "Pas de réponse", "bot-message");
+    } catch (err) {
+      loader.remove();
+      appendMessage("Erreur de connexion", "bot-message");
+    }
+
+    saveChatToLocalStorage();
+  });
+
+  userInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendBtn.click();
   });
 
   function appendMessage(message, className) {
@@ -268,7 +180,6 @@ loadChatFromLocalStorage(); // ✅ Juste ici
     msg.innerHTML = message;
     chat.appendChild(msg);
     chat.scrollTop = chat.scrollHeight;
-    saveChatToLocalStorage();
   }
 
   function saveChatToLocalStorage() {
@@ -286,34 +197,7 @@ loadChatFromLocalStorage(); // ✅ Juste ici
     });
   }
 
-  sendBtn.addEventListener("click", async () => {
-    const text = userInput.value.trim();
-    if (!text) return;
-
-    appendMessage(text, "user-message");
-    userInput.value = "";
-
-    const loader = document.createElement("div");
-    loader.className = "message bot-message";
-    loader.innerHTML = "Je réfléchis...";
-    chat.appendChild(loader);
-
-    try {
-      const res = await fetch(webhookURL, {
-        method: "POST",
-        body: JSON.stringify({ question: text, user_id: 0,chat_id: 0 }),
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      loader.remove();
-      appendMessage(data.output || "Pas de réponse", "bot-message");
-    } catch (err) {
-      loader.remove();
-      appendMessage("Erreur de connexion", "bot-message");
-    }
-  });
-
-  userInput.addEventListener("keypress", function (e) {
-    if (e.key === "Enter") sendBtn.click();
-  });
+  function generateChatId() {
+    return 'chat_' + Math.random().toString(36).substring(2, 10);
+  }
 });
