@@ -1,50 +1,39 @@
-// === history.js : Sidebar Historique (visuel uniquement) ===
+// Simple sidebar toggle pour l'historique
 
-// IDs & classes
-const historyPanelID = 'historyPanel';
-const historyToggleID = 'toggleHistory';
-
-// Création du bouton flottant à gauche
+// Création du bouton flottant
 const historyButton = document.createElement('div');
-historyButton.className = 'floating-toggle';
-historyButton.id = historyToggleID;
+historyButton.innerHTML = '🕘';
 historyButton.style.position = 'fixed';
-historyButton.style.left = '0';
 historyButton.style.top = '50%';
+historyButton.style.right = '10px';
 historyButton.style.transform = 'translateY(-50%)';
 historyButton.style.background = '#00478a';
 historyButton.style.color = 'white';
 historyButton.style.padding = '12px';
-historyButton.style.borderRadius = '0 8px 8px 0';
+historyButton.style.borderRadius = '50%';
+historyButton.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
 historyButton.style.cursor = 'pointer';
 historyButton.style.zIndex = '1000';
-historyButton.innerText = '📄'; // 📄 icône dossier/note
-
 document.body.appendChild(historyButton);
 
-// Création de la sidebar
+// Création de la sidebar cachée au départ
 const historySidebar = document.createElement('div');
-historySidebar.id = historyPanelID;
 historySidebar.style.position = 'fixed';
 historySidebar.style.top = '0';
-historySidebar.style.left = '-300px';
+historySidebar.style.right = '-300px';
 historySidebar.style.width = '300px';
 historySidebar.style.height = '100%';
-historySidebar.style.background = '#ffffff';
-historySidebar.style.boxShadow = '2px 0 8px rgba(0, 0, 0, 0.1)';
-historySidebar.style.transition = 'left 0.3s ease';
-historySidebar.style.padding = '20px';
+historySidebar.style.background = 'white';
+historySidebar.style.borderLeft = '1px solid #ccc';
+historySidebar.style.boxShadow = '-2px 0 6px rgba(0,0,0,0.1)';
+historySidebar.style.transition = 'right 0.3s ease';
 historySidebar.style.zIndex = '999';
-historySidebar.innerHTML = `
-  <h2 style="margin-top: 0;">Historique</h2>
-  <p>Aucun historique pour le moment.</p>
-`;
-
+historySidebar.innerHTML = '<h3 style="padding:20px;margin:0;">Historique</h3>';
 document.body.appendChild(historySidebar);
 
 // Fonction d'ouverture/fermeture
-let historyOpen = false;
+let sidebarOpen = false;
 historyButton.addEventListener('click', () => {
-  historyOpen = !historyOpen;
-  historySidebar.style.left = historyOpen ? '0' : '-300px';
+  sidebarOpen = !sidebarOpen;
+  historySidebar.style.right = sidebarOpen ? '0' : '-300px';
 });
