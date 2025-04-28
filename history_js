@@ -1,121 +1,50 @@
-// === history.js : Sidebar Historique dynamique ===
+// === history.js : Sidebar Historique (visuel uniquement) ===
 
-// Configurations
+// IDs & classes
 const historyPanelID = 'historyPanel';
 const historyToggleID = 'toggleHistory';
-const historyContentID = 'historyContent';
-const historyStorageKey = 'chatTitles'; // LocalStorage pour les titres personnalisés
-const historyAPIEndpoint = 'https://myfreightlab.app.n8n.cloud/webhook/TON_WEBHOOK_HISTORIQUE'; // Remplacer par ton webhook
 
-// Elements HTML ajoutés dynamiquement
+// Création du bouton flottant à gauche
 const historyButton = document.createElement('div');
 historyButton.className = 'floating-toggle';
 historyButton.id = historyToggleID;
+historyButton.style.position = 'fixed';
 historyButton.style.left = '0';
-historyButton.style.right = 'auto';
 historyButton.style.top = '50%';
 historyButton.style.transform = 'translateY(-50%)';
-historyButton.innerHTML = '🕒';
+historyButton.style.background = '#00478a';
+historyButton.style.color = 'white';
+historyButton.style.padding = '12px';
+historyButton.style.borderRadius = '0 8px 8px 0';
+historyButton.style.cursor = 'pointer';
+historyButton.style.zIndex = '1000';
+historyButton.innerText = '📄'; // 📄 icône dossier/note
+
 document.body.appendChild(historyButton);
 
+// Création de la sidebar
 const historySidebar = document.createElement('div');
-historySidebar.className = 'dynamic-sidebar';
 historySidebar.id = historyPanelID;
-historySidebar.style.right = '0';
-historySidebar.style.left = 'auto';
+historySidebar.style.position = 'fixed';
+historySidebar.style.top = '0';
+historySidebar.style.left = '-300px';
+historySidebar.style.width = '300px';
+historySidebar.style.height = '100%';
+historySidebar.style.background = '#ffffff';
+historySidebar.style.boxShadow = '2px 0 8px rgba(0, 0, 0, 0.1)';
+historySidebar.style.transition = 'left 0.3s ease';
+historySidebar.style.padding = '20px';
+historySidebar.style.zIndex = '999';
 historySidebar.innerHTML = `
-  <div class="sidebar-header">🕒 Historique des chats</div>
-  <div class="sidebar-content" id="${historyContentID}"></div>
+  <h2 style="margin-top: 0;">Historique</h2>
+  <p>Aucun historique pour le moment.</p>
 `;
+
 document.body.appendChild(historySidebar);
 
-// Toggle Sidebar
+// Fonction d'ouverture/fermeture
+let historyOpen = false;
 historyButton.addEventListener('click', () => {
-  historySidebar.classList.toggle('open');
+  historyOpen = !historyOpen;
+  historySidebar.style.left = historyOpen ? '0' : '-300px';
 });
-
-// Charger l'historique au lancement
-async function loadHistorySidebar(user_id) {
-  try {
-    const response = await fetch(historyAPIEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: user_id })
-    });
-    const history = await response.json();
-    createSidebarEntries(history);
-  } catch (error) {
-    console.error('Erreur de chargement historique:', error);
-  }
-}
-
-// Créer les entrées dans la sidebar
-function createSidebarEntries(history) {
-  const sidebarContent = document.getElementById(historyContentID);
-  sidebarContent.innerHTML = '';
-
-  const titles = JSON.parse(localStorage.getItem(historyStorageKey) || '{}');
-
-  history.forEach(chat => {
-    const container = document.createElement('div');
-    container.className = 'prompt';
-
-    const chatDate = new Date(parseInt(chat.chat_id.split('_')[1]));
-    const defaultTitle = `Chat du ${chatDate.toLocaleDateString('fr-FR')} ${chatDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}`;
-    const title = titles[chat.chat_id] || defaultTitle;
-
-    container.innerHTML = `
-      <span class="chat-title">${title}</span>
-      <button onclick="renameChat('${chat.chat_id}')">🖊️</button>
-      <button onclick="deleteChat('${chat.chat_id}')">🗑️</button>
-    `;
-
-    container.addEventListener('click', (e) => {
-      if (e.target.tagName.toLowerCase() !== 'button') {
-        loadChat(chat.chat_id);
-      }
-    });
-
-    sidebarContent.appendChild(container);
-  });
-}
-
-// Renommer un chat
-function renameChat(chatId) {
-  const titles = JSON.parse(localStorage.getItem(historyStorageKey) || '{}');
-  const newTitle = prompt('Nouveau nom du chat :');
-  if (newTitle) {
-    titles[chatId] = newTitle;
-    localStorage.setItem(historyStorageKey, JSON.stringify(titles));
-    loadHistorySidebar(window.user_id);
-  }
-}
-
-// Supprimer un chat
-function deleteChat(chatId) {
-  if (!confirm('Supprimer ce chat ?')) return;
-  const titles = JSON.parse(localStorage.getItem(historyStorageKey) || '{}');
-  delete titles[chatId];
-  localStorage.setItem(historyStorageKey, JSON.stringify(titles));
-  // Idéalement ici, faire aussi une suppression en base de données
-  loadHistorySidebar(window.user_id);
-}
-
-// Charger une ancienne conversation (version simple)
-async function loadChat(chatId) {
-  chat.innerHTML = '';
-  chat_id = chatId;
-  try {
-    const response = await fetch('https://myfreightlab.app.n8n.cloud/webhook/TON_WEBHOOK_MESSAGES', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId })
-    });
-    const messages = await response.json();
-    messages.forEach(msg => {
-      appendMessage(msg.content, msg.role === 'user' ? 'user-message' : 'bot-message');
-    });
-  } catch (error) {
-    console.error('Erreur de chargement du chat:', error);
-  }
-}
