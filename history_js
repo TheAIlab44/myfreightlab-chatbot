@@ -1,52 +1,46 @@
-// === history.js corrigé et propre ===
+// === history.js : Sidebar Historique dynamique ===
 
-// Attendre que le HTML soit chargé
+// Création du bouton flottant
+const historyButton = document.createElement('div');
+historyButton.innerHTML = '🕑'; // Icône horloge
+historyButton.style.position = 'fixed';
+historyButton.style.top = '50%';
+historyButton.style.right = '20px'; // Bord droit, 20px de marge
+historyButton.style.transform = 'translateY(-50%)';
+historyButton.style.background = '#00478a';
+historyButton.style.color = 'white';
+historyButton.style.padding = '12px';
+historyButton.style.borderRadius = '50%';
+historyButton.style.boxShadow = '2px 6px 10px rgba(0,0,0,0.2)';
+historyButton.style.cursor = 'pointer';
+historyButton.style.zIndex = '1000';
+document.body.appendChild(historyButton);
 
-document.addEventListener("DOMContentLoaded", function() {
-  
-  // Création du bouton flottant pour ouvrir la sidebar
-  const historyButton = document.createElement('div');
-  historyButton.innerHTML = '📂'; // Icône dossier
-  historyButton.style.position = 'fixed';
-  historyButton.style.top = '50%';
-  historyButton.style.right = '10px';
-  historyButton.style.transform = 'translateY(-50%)';
-  historyButton.style.background = '#00478a';
-  historyButton.style.color = 'white';
-  historyButton.style.padding = '12px';
-  historyButton.style.borderRadius = '50%';
-  historyButton.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
-  historyButton.style.cursor = 'pointer';
-  historyButton.style.zIndex = '1000';
-  document.body.appendChild(historyButton);
+// Création de la sidebar cachée au départ
+const historySidebar = document.createElement('div');
+historySidebar.style.position = 'fixed';
+historySidebar.style.top = '0';
+historySidebar.style.right = '-300px'; // Cachée au départ
+historySidebar.style.width = '300px';
+historySidebar.style.height = '100%';
+historySidebar.style.background = 'white';
+historySidebar.style.borderLeft = '1px solid #ccc';
+historySidebar.style.boxShadow = '0 0 15px rgba(0,0,0,0.1)';
+historySidebar.style.transition = 'right 0.3s ease';
+historySidebar.style.zIndex = '999';
+historySidebar.innerHTML = `
+  <div style="padding: 20px; font-weight: bold; font-size: 18px; border-bottom: 1px solid #eee;">🗂️ Historique</div>
+  <div id="history-content" style="padding: 20px;">Aucun historique pour l'instant.</div>
+`;
+document.body.appendChild(historySidebar);
 
-  // Création de la sidebar
-  const historySidebar = document.createElement('div');
-  historySidebar.style.position = 'fixed';
-  historySidebar.style.top = '0';
-  historySidebar.style.right = '-300px';
-  historySidebar.style.width = '300px';
-  historySidebar.style.height = '100%';
-  historySidebar.style.background = '#ffffff';
-  historySidebar.style.borderLeft = '1px solid #ccc';
-  historySidebar.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
-  historySidebar.style.transition = 'right 0.3s ease';
-  historySidebar.style.zIndex = '999';
-  historySidebar.innerHTML = `
-    <h3 style="padding:20px;margin:0;font-family:Arial,sans-serif;">Historique</h3>
-    <div id="historyContent" style="padding: 10px; font-family: Arial, sans-serif; font-size: 14px;"></div>
-  `;
-  document.body.appendChild(historySidebar);
-
-  // Fonction d'ouverture/fermeture de la sidebar
-  let sidebarOpen = false;
-  historyButton.addEventListener('click', function() {
-    if (sidebarOpen) {
-      historySidebar.style.right = '-300px';
-    } else {
-      historySidebar.style.right = '0';
-    }
-    sidebarOpen = !sidebarOpen;
-  });
-
+// Fonction ouverture/fermeture
+let sidebarOpen = false;
+historyButton.addEventListener('click', () => {
+  if (sidebarOpen) {
+    historySidebar.style.right = '-300px';
+  } else {
+    historySidebar.style.right = '0';
+  }
+  sidebarOpen = !sidebarOpen;
 });
