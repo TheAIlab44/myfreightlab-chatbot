@@ -24,7 +24,6 @@
       overflow: hidden;
       border: 1px solid #ccc;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      position: relative;
     }
     #chat {
       flex: 1;
@@ -77,83 +76,9 @@
       font-style: italic;
       opacity: 0.6;
     }
-    /* Floating Buttons */
-    .floating-toggle {
-      position: fixed;
-      top: 50%;
-      background-color: #0077c8;
-      color: white;
-      padding: 10px;
-      border-radius: 8px 0 0 8px;
-      cursor: pointer;
-      font-size: 20px;
-      z-index: 10000;
-      transform: translateY(-50%);
-    }
-    #togglePrompt { right: 0; }
-    #toggleHistory { left: 0; }
-
-    /* Sidebars */
-    .dynamic-sidebar {
-      position: fixed;
-      top: 0;
-      width: 320px;
-      height: 100vh;
-      background: #fff;
-      border: 1px solid #ddd;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-      overflow-y: auto;
-      z-index: 9999;
-    }
-    #promptPanel { right: -320px; }
-    #promptPanel.open { right: 0; }
-
-    #historyPanel { left: -320px; }
-    #historyPanel.open { left: 0; }
-
-    .sidebar-header {
-      padding: 16px;
-      background: #0077c8;
-      color: white;
-      font-weight: bold;
-      font-size: 16px;
-    }
-    .sidebar-content {
-      padding: 10px;
-    }
-    .prompt, .history-item {
-      padding: 10px;
-      background: #f0f0f0;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .prompt:hover, .history-item:hover {
-      background: #e0e0e0;
-    }
   </style>
 </head>
 <body>
-
-  <div class="floating-toggle" id="toggleHistory">📜</div>
-  <div class="floating-toggle" id="togglePrompt">💡</div>
-
-  <div id="historyPanel" class="dynamic-sidebar">
-    <div class="sidebar-header">📜 Historique</div>
-    <div class="sidebar-content" id="historyContent">
-      <!-- Historique sera chargé ici -->
-    </div>
-  </div>
-
-  <div id="promptPanel" class="dynamic-sidebar">
-    <div class="sidebar-header">💡 Idées de prompts</div>
-    <div class="sidebar-content">
-      <!-- Les prompts existants -->
-    </div>
-  </div>
-
   <div id="chat-wrapper">
     <div id="chat"></div>
     <div id="input-area">
@@ -162,6 +87,60 @@
     </div>
   </div>
 
-  <script src="chatbot.js"></script>
+  <script>
+    const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
+
+    const chat = document.getElementById("chat");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    function appendMessage(message, className) {
+      const msg = document.createElement("div");
+      msg.className = message ${className};
+      msg.innerText = message;
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function appendLoading() {
+      const loader = document.createElement("div");
+      loader.className = "message bot-message loading";
+      loader.innerText = "Rédaction en cours...";
+      chat.appendChild(loader);
+      chat.scrollTop = chat.scrollHeight;
+      return loader;
+    }
+
+    sendBtn.addEventListener("click", async () => {
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      appendMessage(message, "user-message");
+      userInput.value = "";
+
+      const loader = appendLoading();
+
+      try {
+        const response = await fetch(webhookURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: message }),
+        });
+
+        const data = await response.json();
+        loader.remove();
+        appendMessage(data.result || "Pas de réponse", "bot-message");
+      } catch (error) {
+        loader.remove();
+        appendMessage("Erreur : impossible de contacter le serveur.", "bot-message");
+        console.error("Erreur de requête :", error);
+      }
+    });
+
+    userInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") sendBtn.click();
+    });
+  </script>
 </body>
 </html>
+<!-- redeploy test to fix 404 -->
