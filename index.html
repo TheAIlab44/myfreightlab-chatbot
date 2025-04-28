@@ -87,60 +87,8 @@
     </div>
   </div>
 
-  <script>
-    const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
-
-    const chat = document.getElementById("chat");
-    const userInput = document.getElementById("userInput");
-    const sendBtn = document.getElementById("sendBtn");
-
-    function appendMessage(message, className) {
-      const msg = document.createElement("div");
-      msg.className = `message ${className}`;
-      msg.innerText = message;
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    function appendLoading() {
-      const loader = document.createElement("div");
-      loader.className = "message bot-message loading";
-      loader.innerText = "Rédaction en cours...";
-      chat.appendChild(loader);
-      chat.scrollTop = chat.scrollHeight;
-      return loader;
-    }
-
-    sendBtn.addEventListener("click", async () => {
-      const message = userInput.value.trim();
-      if (!message) return;
-
-      appendMessage(message, "user-message");
-      userInput.value = "";
-
-      const loader = appendLoading();
-
-      try {
-        const response = await fetch(webhookURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: message }),
-        });
-
-        const data = await response.json();
-        loader.remove();
-        appendMessage(data.result || "Pas de réponse", "bot-message");
-      } catch (error) {
-        loader.remove();
-        appendMessage("Erreur : impossible de contacter le serveur.", "bot-message");
-        console.error("Erreur de requête :", error);
-      }
-    });
-
-    userInput.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") sendBtn.click();
-    });
-  </script>
+  <!-- On appelle les scripts à la fin pour éviter les erreurs -->
+  <script src="chatbot.js"></script>
+  <script src="history.js"></script>
 </body>
 </html>
-<!-- redeploy test to fix 404 -->
