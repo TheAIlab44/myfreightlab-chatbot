@@ -161,6 +161,7 @@ if (document.readyState === "loading") {
     </style>
 
     <button id="resetBtn"> ✨Nouveau chat</button>
+    <button onclick="initChatbot()">Get User ID</button>
     <div id="chat"></div>
     <div id="input-area">
       <input type="text" id="userInput" placeholder="Pose ta question ici..." />
