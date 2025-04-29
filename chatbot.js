@@ -6,7 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const userId = parseInt(window.parent.chatbot_data?.user_id ?? 0);"?
       console.log("User ID is:", userId);
   };
-  
+  window.addEventListener("message", (event) => {
+    if (event.data?.type === "chatbot_data") {
+        window.chatbot_data = {
+            user_id: event.data.user_id
+        };
+        console.log("Received user ID via postMessage:", event.data.user_id);
+    }
+});
   if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initChatbot);
   } else {
