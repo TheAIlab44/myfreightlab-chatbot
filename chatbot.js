@@ -2,8 +2,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
 
-  const user_id = urlParams.get("user_id");
-let chat_id = generateChatId();
+  const urlParams = new URLSearchParams(window.location.search);
+const user_id = urlParams.get("user_id") || 0;
 
 
   const wrapper = document.createElement("div");
