@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const urlParams = new URLSearchParams(window.location.search);
 const user_id = urlParams.get("user_id");
-  const chat_id = `${user_id}-${Date.now()}`
 
 console.log("🧩 user_id récupéré :", user_id);
 
@@ -305,6 +304,9 @@ loadChatFromLocalStorage(); // ✅ Juste ici
     loader.className = "message bot-message";
     loader.innerHTML = "Je réfléchis...";
     chat.appendChild(loader);
+
+    const chat_id = `${user_id}-${Date.now()}`
+    console.log("📤 Envoi au webhook :", { question: text, user_id, chat_id });
 
     try {
       const res = await fetch(webhookURL, {
