@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const urlParams = new URLSearchParams(window.location.search);
 const user_id = urlParams.get("user_id");
+  const chat_id = `${user_id}-${Date.now()}`
 
 console.log("🧩 user_id récupéré :", user_id);
 
@@ -308,7 +309,7 @@ loadChatFromLocalStorage(); // ✅ Juste ici
     try {
       const res = await fetch(webhookURL, {
         method: "POST",
-        body: JSON.stringify({ question: text, user_id: 0,chat_id: 0 }),
+        body: JSON.stringify({ question: text, user_id,chat_id}),
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
