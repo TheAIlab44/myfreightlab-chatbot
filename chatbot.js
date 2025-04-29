@@ -1,5 +1,12 @@
 // === ChatBot MyFreightLab avec historique, prompts, sidebar fermable, et édition avant envoi ===
 document.addEventListener("DOMContentLoaded", () => {
+  const user_id = chatbot_data.user_id;
+  let chat_id = generateChatId();
+
+function generateChatId() {
+  return 'chat_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+}
+
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
 
   const wrapper = document.createElement("div");
@@ -257,6 +264,7 @@ loadChatFromLocalStorage(); // ✅ Juste ici
   });
 
   resetBtn.addEventListener("click", () => {
+    chat_id = generateChatId();
     localStorage.removeItem("chatHistory");
     chat.innerHTML = "";
     appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
@@ -301,7 +309,7 @@ loadChatFromLocalStorage(); // ✅ Juste ici
     try {
       const res = await fetch(webhookURL, {
         method: "POST",
-        body: JSON.stringify({ question: text, user_id: 0,chat_id: 0 }),
+        body: JSON.stringify({ question: text, user_id, chat_id }),
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
