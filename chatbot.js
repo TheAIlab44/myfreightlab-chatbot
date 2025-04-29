@@ -1,8 +1,10 @@
 // === ChatBot MyFreightLab avec historique, prompts, sidebar fermable, et édition avant envoi ===
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
-const user_id = typeof chatbot_data !== 'undefined' ? chatbot_data.user_id : 0;
-console.log("User ID:", user_id);
+  
+  const userWordpressId = window.userWordpressId || 0;
+  console.log("User ID:", userWordpressId);
+  
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
