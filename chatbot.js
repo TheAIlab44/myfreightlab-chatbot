@@ -166,7 +166,11 @@ document.addEventListener("DOMContentLoaded", () => {
       history.forEach(item => {
         const div = document.createElement("div");
         div.className = "prompt";
-        div.textContent = item.preview || item.question.slice(0, 50) + "...";
+        const label =
+  item.preview ||
+  (item.question ? item.question.slice(0, 50) + "..." : "Conversation précédente");
+div.textContent = label;
+
 
         div.addEventListener("click", () => {
           userInput.value = item.question;
