@@ -305,8 +305,9 @@ loadChatFromLocalStorage(); // ✅ Juste ici
     loader.innerHTML = "Je réfléchis...";
     chat.appendChild(loader);
 
-    const chatid = Date.now() + Math.floor(Math.random() * 10000);
-    console.log("📤 Envoi au webhook :", { question: text, user_id, chat_id });
+    const chat_id = `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+console.log("📤 Envoi au webhook :", { question: text, user_id, chat_id });
+
 
     try {
       const res = await fetch(webhookURL, {
