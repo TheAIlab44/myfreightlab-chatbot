@@ -239,6 +239,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       loader.remove();
       appendMessage(data.output || "Pas de réponse", "bot-message");
+      loadChatHistory();
+  
     } catch (err) {
       loader.remove();
       appendMessage("Erreur de connexion", "bot-message");
