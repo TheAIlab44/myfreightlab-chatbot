@@ -35,6 +35,10 @@ document.addEventListener("DOMContentLoaded", () => {
       <button id="sendBtn">▶</button>
     </div>
 <div class="floating-toggle" id="toggleHistory">🕓</div>
+#toggleHistory {
+  top: 40%;
+}
+
 <div class="dynamic-sidebar" id="historyPanel">
   <div class="sidebar-header">🕓 Historique des conversations</div>
   <div class="sidebar-content" id="historyList"></div>
@@ -114,7 +118,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const sidebar = wrapper.querySelector("#promptPanel");
   const prompts = wrapper.querySelectorAll(".prompt");
 
-  toggleBtn.addEventListener("click", () => sidebar.classList.toggle("open"));
+  toggleHistoryBtn.addEventListener("click", () => {
+  historyPanel.classList.toggle("open");
+});
+
+<div class="floating-toggle" id="toggleHistory">🕓</div>
+<div class="floating-toggle" id="togglePrompt">💡</div>
 
   prompts.forEach(prompt => {
     prompt.addEventListener("click", () => {
