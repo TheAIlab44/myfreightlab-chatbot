@@ -158,8 +158,9 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       console.log("📥 Chargement historique en cours...");
       const res = await fetch(`/api/get-history?user_id=${user_id}`);
-      const history = await res.json();
-      console.log("📜 Historique récupéré :", history);
+      const data = await res.json();
+console.log("📜 Historique récupéré :", data);
+
 
       historyList.innerHTML = "";
 
