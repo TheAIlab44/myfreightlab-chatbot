@@ -34,17 +34,16 @@ document.addEventListener("DOMContentLoaded", () => {
       <input type="text" id="userInput" placeholder="Pose ta question ici..." />
       <button id="sendBtn">▶</button>
     </div>
-    <div class="floating-toggle" id="toggleHistory">🕓</div>
-    <div class="dynamic-sidebar" id="historyPanel">
-      <div class="sidebar-header">🕓 Historique des conversations</div>
-      <div class="sidebar-content" id="historyList"></div>
-    </div>
-    <div class="floating-toggle" id="togglePrompt">💡</div>
-    <div class="dynamic-sidebar" id="promptPanel">
-      <div class="sidebar-header">💡 Idées de prompts</div>
-      <div class="sidebar-content"><!-- Tes prompts ici (inchangés) --></div>
-    </div>
+<div class="floating-toggle" id="toggleHistory">🕓</div>
+<div class="dynamic-sidebar" id="historyPanel">
+  <div class="sidebar-header">🕓 Historique des conversations</div>
+  <div class="sidebar-content" id="historyList"></div>
+</div>
 
+<div class="floating-toggle" id="togglePrompt">💡</div>
+<div class="dynamic-sidebar" id="promptPanel">
+  <div class="sidebar-header">💡 Idées de prompts</div>
+  <div class="sidebar-content">
     <details>
       <summary>▶ Opérations logistiques</summary>
       <div class="prompt" draggable="true">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
@@ -100,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     </details>
   </div>
 </div>
+
   `;
 
   const container = document.getElementById("chat-container");
