@@ -115,24 +115,39 @@ document.addEventListener("DOMContentLoaded", () => {
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
   const resetBtn = wrapper.querySelector("#resetBtn");
-  const toggleBtn = wrapper.querySelector("#togglePrompt");
-  const sidebar = wrapper.querySelector("#promptPanel");
+
+  const togglePromptBtn = wrapper.querySelector("#togglePrompt");
+  const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
+
+  const promptPanel = wrapper.querySelector("#promptPanel");
+  const historyPanel = wrapper.querySelector("#historyPanel");
+  const historyList = wrapper.querySelector("#historyList");
+
+  const sidebar = promptPanel;
   const prompts = wrapper.querySelectorAll(".prompt");
 
+  // Toggle panels
+  togglePromptBtn.addEventListener("click", () => {
+    promptPanel.classList.toggle("open");
+  });
+
   toggleHistoryBtn.addEventListener("click", () => {
-  historyPanel.classList.toggle("open");
-});
+    historyPanel.classList.toggle("open");
+  });
 
-
+  // Prompts click & drag
   prompts.forEach(prompt => {
     prompt.addEventListener("click", () => {
       userInput.value = prompt.textContent;
       userInput.focus();
       sidebar.classList.remove("open");
     });
-    prompt.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", prompt.textContent));
+    prompt.addEventListener("dragstart", e =>
+      e.dataTransfer.setData("text/plain", prompt.textContent)
+    );
   });
 
+  // Drag & drop in input
   userInput.addEventListener("dragover", e => e.preventDefault());
   userInput.addEventListener("drop", e => {
     e.preventDefault();
@@ -141,14 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebar.classList.remove("open");
   });
 
-  const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
-  const historyPanel = wrapper.querySelector("#historyPanel");
-  const historyList = wrapper.querySelector("#historyList");
-
-  toggleHistoryBtn.addEventListener("click", () => {
-    historyPanel.classList.toggle("open");
-  });
-
+  // Load history from backend
   async function loadChatHistory() {
     try {
       console.log("📥 Chargement historique en cours...");
@@ -171,6 +179,9 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Erreur chargement historique", err);
     }
   }
+
+  loadChatHistory();
+
 
   loadChatHistory();
 
