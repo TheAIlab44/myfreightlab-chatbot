@@ -27,6 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
       .prompt { padding: 10px; background: #f0f0f0; border-radius: 6px; margin-bottom: 8px; cursor: grab; font-size: 14px; }
       details summary { font-weight: 600; cursor: pointer; list-style: none; padding: 10px 0; }
       .floating-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: #0077c8; color: white; padding: 10px; border-radius: 8px 0 0 8px; cursor: pointer; font-size: 20px; z-index: 99999; }
+    #toggleHistory {
+  top: 40%;
+}
     </style>
     <button id="resetBtn"> ✨Nouveau chat</button>
     <div id="chat"></div>
@@ -35,9 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <button id="sendBtn">▶</button>
     </div>
 <div class="floating-toggle" id="toggleHistory">🕓</div>
-#toggleHistory {
-  top: 40%;
-}
+
 
 <div class="dynamic-sidebar" id="historyPanel">
   <div class="sidebar-header">🕓 Historique des conversations</div>
@@ -122,8 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
   historyPanel.classList.toggle("open");
 });
 
-<div class="floating-toggle" id="toggleHistory">🕓</div>
-<div class="floating-toggle" id="togglePrompt">💡</div>
 
   prompts.forEach(prompt => {
     prompt.addEventListener("click", () => {
