@@ -162,6 +162,14 @@ console.log("🧩 user_id récupéré :", user_id);
       <input type="text" id="userInput" placeholder="Pose ta question ici..." />
       <button id="sendBtn">▶</button>
     </div>
+    
+<div class="floating-toggle" id="toggleHistory">🕓</div>
+<div class="dynamic-sidebar" id="historyPanel">
+  <div class="sidebar-header">🕓 Historique des conversations</div>
+  <div class="sidebar-content" id="historyList">
+    <!-- Les éléments de l'historique seront injectés ici -->
+  </div>
+</div>
 
     <div class="floating-toggle" id="togglePrompt">💡</div>
 <div class="dynamic-sidebar" id="promptPanel">
@@ -262,6 +270,41 @@ loadChatFromLocalStorage(); // ✅ Juste ici
     userInput.value = text;
     sidebar.classList.remove("open");
   });
+
+  const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
+const historyPanel = wrapper.querySelector("#historyPanel");
+const historyList = wrapper.querySelector("#historyList");
+loadChatHistory();
+
+toggleHistoryBtn.addEventListener("click", () => {
+  historyPanel.classList.toggle("open");
+});
+
+// Récupère l’historique depuis Supabase (à adapter selon ton backend plus tard)
+async function loadChatHistory() {
+  try {
+    const res = await fetch(`/api/get-history?user_id=${user_id}`);
+    const history = await res.json();
+
+    historyList.innerHTML = "";
+    history.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "prompt";
+      div.textContent = item.preview || item.question.slice(0, 50) + "...";
+      div.addEventListener("click", () => {
+        userInput.value = item.question;
+        chat.innerHTML = ""; // Ou bien recharger tout l’historique ici
+        historyPanel.classList.remove("open");
+      });
+      historyList.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Erreur chargement historique", err);
+  }
+}
+
+loadChatHistory();
+
 
   resetBtn.addEventListener("click", () => {
     localStorage.removeItem("chatHistory");
