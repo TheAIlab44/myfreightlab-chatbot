@@ -118,15 +118,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const togglePromptBtn = wrapper.querySelector("#togglePrompt");
   const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
-
   const promptPanel = wrapper.querySelector("#promptPanel");
   const historyPanel = wrapper.querySelector("#historyPanel");
   const historyList = wrapper.querySelector("#historyList");
-
-  const sidebar = promptPanel;
+  const sidebar = promptPanel; // utilisé pour refermer la sidebar des prompts
   const prompts = wrapper.querySelectorAll(".prompt");
 
-  // Toggle panels
+  // 🔁 Toggle des sidebars
   togglePromptBtn.addEventListener("click", () => {
     promptPanel.classList.toggle("open");
   });
@@ -135,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
     historyPanel.classList.toggle("open");
   });
 
-  // Prompts click & drag
+  // 💬 Intégration des prompts cliquables et drag & drop
   prompts.forEach(prompt => {
     prompt.addEventListener("click", () => {
       userInput.value = prompt.textContent;
@@ -147,7 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   });
 
-  // Drag & drop in input
   userInput.addEventListener("dragover", e => e.preventDefault());
   userInput.addEventListener("drop", e => {
     e.preventDefault();
@@ -156,32 +153,33 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebar.classList.remove("open");
   });
 
-  // Load history from backend
+  // 📚 Charger l'historique dans la sidebar
   async function loadChatHistory() {
     try {
       console.log("📥 Chargement historique en cours...");
       const res = await fetch(`/api/get-history?user_id=${user_id}`);
       const history = await res.json();
       console.log("📜 Historique récupéré :", history);
+
       historyList.innerHTML = "";
+
       history.forEach(item => {
         const div = document.createElement("div");
         div.className = "prompt";
         div.textContent = item.preview || item.question.slice(0, 50) + "...";
+
         div.addEventListener("click", () => {
           userInput.value = item.question;
           chat.innerHTML = "";
           historyPanel.classList.remove("open");
         });
+
         historyList.appendChild(div);
       });
     } catch (err) {
       console.error("Erreur chargement historique", err);
     }
   }
-
-  loadChatHistory();
-
 
   loadChatHistory();
 
