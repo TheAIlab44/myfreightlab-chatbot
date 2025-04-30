@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadChatHistory() {
     try {
       console.log("📥 Chargement historique en cours...");
-      const res = await fetch(`/api/get-history?user_id=${user_id}`);
+      const res = await fetch(`https://myfreightlab.app.n8n.cloud/webhook/mon-endpoint-historique?user_id=${user_id}`);
       const data = await res.json();
 console.log("📜 Historique récupéré :", data);
 
