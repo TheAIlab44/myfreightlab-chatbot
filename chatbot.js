@@ -155,10 +155,52 @@ document.addEventListener("DOMContentLoaded", () => {
     userInput.value = text;
     sidebar.classList.remove("open");
   });
+// Remplace par ton URL de webhook
+const webhookUrl = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
 
+async function fetchUserMessages(userId) {
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ user_id: userId })
+    });
+
+    if (!response.ok) throw new Error("Erreur lors de la requête");
+
+    const data = await response.json();
+    console.log("Messages reçus :", data);
+    return data;
+  } catch (error) {
+    console.error("Erreur :", error);
+    return [];
+  }
+}
+
+function getUniqueSessionIds(messages) {
+  const sessionSet = new Set();
+
+  messages.forEach(item => {
+    if (item.session_id) {
+      sessionSet.add(item.session_id);
+    }
+  });
+
+  return Array.from(sessionSet);
+}
+
+// Exemple d'utilisation avec les données récupérées :
+fetchUserMessages(60).then(messages => {
+  const sessionsUniques = getUniqueSessionIds(messages);
+  console.log("Sessions uniques :", sessionsUniques);
+});
+
+  
   // 📚 Charger l'historique dans la sidebar
   async function loadChatHistory() {
-    try {
+  try {
       console.log("📥 Chargement historique en cours...");
       const res = await fetch(`https://myfreightlab.app.n8n.cloud/webhook/mon-endpoint-historique?user_id=${user_id}`);
       const data = await res.json();
