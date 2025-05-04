@@ -4,7 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   const user_id = urlParams.get("user_id");
   console.log("🧩 user_id récupéré :", user_id);
-  let chat_id = generateSessionID();
+  savesessionIDtolocalStorage();
+  let chat_id =  loadsessionIDfromlocalstorage();
+ 
   
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
@@ -191,7 +193,8 @@ div.textContent = label;
 
   resetBtn.addEventListener("click", () => {
     localStorage.removeItem("chatHistory");
-    chat_id = generateSessionID();
+      savesessionIDtolocalStorage();
+  chat_id = loadsessionIDfromlocalstorage();
     chat.innerHTML = "";
     appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
   });
@@ -222,6 +225,15 @@ div.textContent = label;
 
   loadChatFromLocalStorage();
 
+  function loadsessionIDfromlocalstorage() {
+    let sessionID = localStorage.getItem("chat_id");
+    if(!sessionID) generateSessionID();
+    return sessionID;
+  }
+  function savesessionIDtolocalStorage() {
+    localStorage.setItem("chat_id", generateSessionID());
+  }
+  
   sendBtn.addEventListener("click", async () => {
     const text = userInput.value.trim();
     if (!text) return;
