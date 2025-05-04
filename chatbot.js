@@ -206,8 +206,7 @@ function getUniqueSessionIds(messages) {
       sessionsUniques.forEach(item => {
         const div = document.createElement("div");
         div.className = "prompt";
-        const label = item;
-
+        div.textContent = item;
 
         div.addEventListener("click", () => {
           userInput.value = item;
