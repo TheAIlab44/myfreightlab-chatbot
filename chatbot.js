@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   const user_id = urlParams.get("user_id");
   console.log("🧩 user_id récupéré :", user_id);
-
+  let chat_id = generateSessionID();
+  
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
@@ -190,6 +191,7 @@ div.textContent = label;
 
   resetBtn.addEventListener("click", () => {
     localStorage.removeItem("chatHistory");
+    chat_id = generateSessionID();
     chat.innerHTML = "";
     appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
   });
@@ -232,7 +234,7 @@ div.textContent = label;
     loader.innerHTML = "Je réfléchis...";
     chat.appendChild(loader);
 
-    const chat_id = `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    
     console.log("📤 Envoi au webhook :", { question: text, user_id, chat_id });
 
     try {
@@ -255,4 +257,9 @@ div.textContent = label;
   userInput.addEventListener("keypress", function (e) {
     if (e.key === "Enter") sendBtn.click();
   });
+  
+  // Fonction pour générer un sessionID unique
+  function generateSessionID() {
+    return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  }
 });
