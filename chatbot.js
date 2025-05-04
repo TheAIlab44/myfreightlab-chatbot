@@ -161,7 +161,7 @@ const webhookUrl = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481
 async function fetchUserMessages(userId) {
   try {
     const response = await fetch(webhookUrl, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
@@ -191,35 +191,26 @@ function getUniqueSessionIds(messages) {
   return Array.from(sessionSet);
 }
 
-// Exemple d'utilisation avec les données récupérées :
-fetchUserMessages(60).then(messages => {
-  const sessionsUniques = getUniqueSessionIds(messages);
-  console.log("Sessions uniques :", sessionsUniques);
-});
-
   
   // 📚 Charger l'historique dans la sidebar
   async function loadChatHistory() {
   try {
       console.log("📥 Chargement historique en cours...");
-      const res = await fetch(`https://myfreightlab.app.n8n.cloud/webhook/mon-endpoint-historique?user_id=${user_id}`);
-      const data = await res.json();
-console.log("📜 Historique récupéré :", data);
+      let data = await fetchUserMessages(user_id);
+      let sessionsUniques = getUniqueSessionIds(data);
+      console.log("📜 Historique récupéré :", sessionsUniques);
 
 
       historyList.innerHTML = "";
 
-      history.forEach(item => {
+      sessionsUniques.forEach(item => {
         const div = document.createElement("div");
         div.className = "prompt";
-        const label =
-  item.preview ||
-  (item.question ? item.question.slice(0, 50) + "..." : "Conversation précédente");
-div.textContent = label;
+        const label = item;
 
 
         div.addEventListener("click", () => {
-          userInput.value = item.question;
+          userInput.value = item;
           chat.innerHTML = "";
           historyPanel.classList.remove("open");
         });
