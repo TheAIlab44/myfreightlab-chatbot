@@ -169,7 +169,8 @@ document.addEventListener("DOMContentLoaded", () => {
         map.set(msg.session_id, msg);
       }
     });
-    return Array.from(map.values()).map(m => {
+    const sorted = Array.from(map.values()).sort((a, b) => b.id - a.id);
+    return sorted.map(m => {
   const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
   const tmp = document.createElement("div");
 tmp.innerHTML = parsed.content || '';
