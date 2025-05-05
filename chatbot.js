@@ -171,11 +171,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     return Array.from(map.values()).map(m => {
   const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
-  const content = parsed.content || '';
-  return {
-    session_id: m.session_id,
-    preview: content.substring(0, 20) + (content.length > 20 ? '...' : '')
-  };
+  const tmp = document.createElement("div");
+tmp.innerHTML = parsed.content || '';
+const textOnly = tmp.textContent || tmp.innerText || "";
+const clean = textOnly.replace(/[\u{1F600}-\u{1F6FF}]/gu, ""); // facultatif : enlève les emojis
+
+return {
+  session_id: m.session_id,
+  preview: clean.substring(0, 20) + (clean.length > 20 ? '...' : '')
+};
+
 });
   }
 
