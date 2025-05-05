@@ -106,8 +106,6 @@ document.addEventListener("DOMContentLoaded", () => {
     </details>
   </div>
 </div>
-    </div>
-  </div>
 `;
 // ton wrapper.innerHTML complet reste inchangé ici...
 
