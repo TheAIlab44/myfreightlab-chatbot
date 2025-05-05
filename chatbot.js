@@ -193,86 +193,95 @@ return {
       console.log("Prévisualisations :", previews);
 
       historyList.innerHTML = "";
-      previews.forEach(({ session_id, preview }) => {
-        const container = document.createElement("div");
-container.className = "prompt";
-container.style.display = "flex";
-container.style.justifyContent = "space-between";
-container.style.alignItems = "center";
-container.style.position = "relative";
+previews.forEach(({ session_id, preview }) => {
+  // Container principal
+  const container = document.createElement("div");
+  container.className = "prompt";
+  container.style.display = "flex";
+  container.style.justifyContent = "space-between";
+  container.style.alignItems = "center";
+  container.style.position = "relative";
 
-const title = document.createElement("span");
-title.textContent = preview;
-title.style.flex = "1";
+  // Titre cliquable
+  const title = document.createElement("span");
+  title.textContent = preview;
+  title.style.flex = "1";
+  title.style.cursor = "pointer";
 
-const menuBtn = document.createElement("button");
-menuBtn.textContent = "⋮";
-menuBtn.style.border = "none";
-menuBtn.style.background = "transparent";
-menuBtn.style.cursor = "pointer";
-menuBtn.style.padding = "0 5px";
+  // Menu bouton (3 points)
+  const menuBtn = document.createElement("span");
+  menuBtn.textContent = "⋮";
+  menuBtn.style.cursor = "pointer";
+  menuBtn.style.padding = "0 8px";
+  menuBtn.style.userSelect = "none";
 
-const menu = document.createElement("div");
-menu.className = "dropdown-menu";
-menu.style.position = "absolute";
-menu.style.top = "100%";
-menu.style.right = "0";
-menu.style.background = "white";
-menu.style.border = "1px solid #ccc";
-menu.style.borderRadius = "4px";
-menu.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
-menu.style.padding = "6px";
-menu.style.display = "none";
-menu.style.zIndex = "1000";
-
-const rename = document.createElement("div");
-rename.textContent = "✏️ Renommer";
-rename.style.cursor = "pointer";
-rename.onclick = () => {
-  const newName = prompt("Renommer ce chat :", preview);
-  if (newName) {
-    // stocker le nouveau nom dans localStorage
-    localStorage.setItem(`name_${session_id}`, newName);
-    title.textContent = newName;
-  }
+  // Menu déroulant
+  const menu = document.createElement("div");
+  menu.style.position = "absolute";
+  menu.style.top = "100%";
+  menu.style.right = "0";
+  menu.style.background = "white";
+  menu.style.border = "1px solid #ccc";
+  menu.style.borderRadius = "6px";
+  menu.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
   menu.style.display = "none";
-};
+  menu.style.zIndex = "999";
 
-const del = document.createElement("div");
-del.textContent = "🗑️ Supprimer";
-del.style.cursor = "pointer";
-del.onclick = () => {
-  if (confirm("Supprimer cette session ?")) {
-    localStorage.removeItem(`name_${session_id}`);
+  // Options du menu
+  const renameOption = document.createElement("div");
+  renameOption.textContent = "Renommer";
+  renameOption.style.padding = "8px";
+  renameOption.style.cursor = "pointer";
+  renameOption.addEventListener("click", () => {
+    const newName = prompt("Nouveau nom pour cette session :", preview);
+    if (newName) {
+      title.textContent = newName;
+      // (optionnel) Tu peux sauvegarder ce nom en localStorage ou backend ici
+    }
+    menu.style.display = "none";
+  });
+
+  const deleteOption = document.createElement("div");
+  deleteOption.textContent = "Supprimer";
+  deleteOption.style.padding = "8px";
+  deleteOption.style.cursor = "pointer";
+  deleteOption.addEventListener("click", () => {
     container.remove();
-  }
-};
+    // (optionnel) Tu peux aussi supprimer sur le backend ici
+  });
 
-menu.appendChild(rename);
-menu.appendChild(del);
-menuBtn.onclick = (e) => {
-  e.stopPropagation();
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
-};
+  menu.appendChild(renameOption);
+  menu.appendChild(deleteOption);
 
-container.appendChild(title);
-container.appendChild(menuBtn);
-container.appendChild(menu);
+  // Toggle menu au clic
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // évite de propager le clic
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+  });
 
+  // Clic sur titre = recharger l’historique
+  title.addEventListener("click", async () => {
+    localStorage.setItem("chat_id", session_id);
+    chat.innerHTML = "";
+    const full = data.filter(m => m.session_id === session_id);
+    full.forEach(m => {
+      const parsed = JSON.parse(m.message);
+      appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
+    });
+    historyPanel.classList.remove("open");
+  });
 
-        div.addEventListener("click", async () => {
-          localStorage.setItem("chat_id", session_id);
-          chat.innerHTML = "";
-          const full = data.filter(m => m.session_id === session_id);
-          full.forEach(m => {
-            const parsed = JSON.parse(m.message);
-            appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
-          });
-          historyPanel.classList.remove("open");
-        });
+  // Fermer le menu si on clique ailleurs
+  document.addEventListener("click", () => {
+    menu.style.display = "none";
+  });
 
-        historyList.appendChild(div);
-      });
+  container.appendChild(title);
+  container.appendChild(menuBtn);
+  container.appendChild(menu);
+  historyList.appendChild(container);
+});
+
     } catch (err) {
       console.error("Erreur chargement historique", err);
     }
