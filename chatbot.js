@@ -170,13 +170,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
     return Array.from(map.values()).map(m => {
-      const parsed = JSON.parse(m.message);
-      const content = parsed.content || '';
-      return {
-        session_id: m.session_id,
-        preview: content.substring(0, 20) + (content.length > 20 ? '...' : '')
-      };
-    });
+  const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+  const content = parsed.content || '';
+  return {
+    session_id: m.session_id,
+    preview: content.substring(0, 20) + (content.length > 20 ? '...' : '')
+  };
+});
   }
 
   async function loadChatHistory() {
