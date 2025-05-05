@@ -231,13 +231,11 @@ previews.forEach(({ session_id, preview }) => {
   });
 
   historyList.appendChild(div);
-});
-
-      });
-    } catch (err) {
-      console.error("Erreur chargement historique", err);
-    }
+  } catch (err) {
+    console.error("Erreur chargement historique", err);
   }
+}
+
 
   loadChatHistory();
 
