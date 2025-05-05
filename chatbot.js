@@ -179,16 +179,23 @@ async function fetchUserMessages(userId) {
   }
 }
 
-function getUniqueSessionIds(messages) {
-  const sessionSet = new Set();
+function getLastMessages(messages) {
+  const map = new Map();
 
-  messages.forEach(item => {
-    if (item.session_id) {
-      sessionSet.add(item.session_id);
+  messages.forEach(msg => {
+    if (!map.has(msg.session_id) || msg.id > map.get(msg.session_id).id) {
+      map.set(msg.session_id, msg);
     }
   });
 
-  return Array.from(sessionSet);
+  return Array.from(map.values()).map(m => {
+    const parsed = JSON.parse(m.message);
+    const content = parsed.content || '';
+    return {
+      session_id: m.session_id,
+      preview: content.substring(0, 20) + (content.length > 20 ? '...' : '')
+    };
+  });
 }
 
   
@@ -203,18 +210,29 @@ function getUniqueSessionIds(messages) {
 
       historyList.innerHTML = "";
 
-      sessionsUniques.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "prompt";
-        div.textContent = item;
+      const previews = getLastMessages(data);
 
-        div.addEventListener("click", () => {
-          userInput.value = item;
-          chat.innerHTML = "";
-          historyPanel.classList.remove("open");
-        });
+historyList.innerHTML = "";
+previews.forEach(({ session_id, preview }) => {
+  const div = document.createElement("div");
+  div.className = "prompt";
+  div.textContent = preview;
+  div.title = session_id; // info complète au survol
 
-        historyList.appendChild(div);
+  div.addEventListener("click", async () => {
+    localStorage.setItem("chat_id", session_id);
+    chat.innerHTML = "";
+    const full = data.filter(m => m.session_id === session_id);
+    full.forEach(m => {
+      const parsed = JSON.parse(m.message);
+      appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
+    });
+    historyPanel.classList.remove("open");
+  });
+
+  historyList.appendChild(div);
+});
+
       });
     } catch (err) {
       console.error("Erreur chargement historique", err);
