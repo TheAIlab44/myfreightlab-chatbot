@@ -5,54 +5,53 @@ document.addEventListener("DOMContentLoaded", () => {
   const user_id = urlParams.get("user_id");
   console.log("🧩 user_id récupéré :", user_id);
   savesessionIDtolocalStorage();
-  let chat_id =  loadsessionIDfromlocalstorage();
- 
-  
+  let chat_id = loadsessionIDfromlocalstorage();
+
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-      * { font-family: 'Inter', sans-serif; }
-      #chat-wrapper { display: flex; flex-direction: column; justify-content: flex-end; height: 90vh; width: 80vw; margin: 0 auto; background: #f9fbfc; border-radius: 12px; overflow: hidden; border: 1px solid #d3dce6; position: relative; }
-      #chat { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 16px; align-items: center; }
-      .message { padding: 14px 18px; border-radius: 18px; max-width: 80%; font-size: 15px; line-height: 1.6; box-shadow: 0 2px 6px rgba(0,0,0,0.05); animation: fadeInUp 0.4s ease-out; }
-      .user-message { align-self: flex-start; background: #e6f0ff; color: #003366; border-bottom-right-radius: 0; }
-      .bot-message { align-self: flex-end; background: #fff; color: #222; border-bottom-left-radius: 0; }
-      #input-area { display: flex; padding: 12px 16px; border-top: 1px solid #ccc; gap: 10px; background: white; }
-      #userInput { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; font-size: 15px; }
-      #sendBtn { width: 44px; height: 44px; border-radius: 50%; border: none; background: #0077c8; color: white; cursor: pointer; }
-      #resetBtn { position: absolute; top: 10px; left: 10px; background: white; border: 1px solid #ccc; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 13px; }
-      .dynamic-sidebar { position: fixed; top: 0; right: -320px; width: 320px; height: 100vh; background: #fff; border-left: 1px solid #ddd; box-shadow: -2px 0 6px rgba(0,0,0,0.05); transition: right 0.3s ease-in-out; z-index: 9999; }
-      .dynamic-sidebar.open { right: 0; }
-      .sidebar-header { padding: 16px; background: #0077c8; color: white; font-weight: bold; font-size: 16px; }
-      .sidebar-content { padding: 10px; }
-      .prompt { padding: 10px; background: #f0f0f0; border-radius: 6px; margin-bottom: 8px; cursor: grab; font-size: 14px; }
-      details summary { font-weight: 600; cursor: pointer; list-style: none; padding: 10px 0; }
-      .floating-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: #0077c8; color: white; padding: 10px; border-radius: 8px 0 0 8px; cursor: pointer; font-size: 20px; z-index: 99999; }
-    #toggleHistory {
-  top: 40%;
-}
-    </style>
-    <button id="resetBtn"> ✨Nouveau chat</button>
-    <div id="chat"></div>
-    <div id="input-area">
-      <input type="text" id="userInput" placeholder="Pose ta question ici..." />
-      <button id="sendBtn">▶</button>
-    </div>
-<div class="floating-toggle" id="toggleHistory">🕓</div>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+    #chat-wrapper { display: flex; flex-direction: column; justify-content: flex-end; height: 90vh; width: 80vw; margin: 0 auto; background: #f9fbfc; border-radius: 12px; overflow: hidden; border: 1px solid #d3dce6; position: relative; }
+    #chat { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 16px; align-items: center; }
+    .message { padding: 14px 18px; border-radius: 18px; max-width: 80%; font-size: 15px; line-height: 1.6; box-shadow: 0 2px 6px rgba(0,0,0,0.05); animation: fadeInUp 0.4s ease-out; }
+    .user-message { align-self: flex-start; background: #e6f0ff; color: #003366; border-bottom-right-radius: 0; }
+    .bot-message { align-self: flex-end; background: #fff; color: #222; border-bottom-left-radius: 0; }
+    #input-area { display: flex; padding: 12px 16px; border-top: 1px solid #ccc; gap: 10px; background: white; }
+    #userInput { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; font-size: 15px; }
+    #sendBtn { width: 44px; height: 44px; border-radius: 50%; border: none; background: #0077c8; color: white; cursor: pointer; }
+    #resetBtn { position: absolute; top: 10px; left: 10px; background: white; border: 1px solid #ccc; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 13px; }
+    .dynamic-sidebar { position: fixed; top: 0; right: -320px; width: 320px; height: 100vh; background: #fff; border-left: 1px solid #ddd; box-shadow: -2px 0 6px rgba(0,0,0,0.05); transition: right 0.3s ease-in-out; z-index: 9999; overflow-y: auto; }
+    .dynamic-sidebar.open { right: 0; }
+    .sidebar-header { padding: 16px; background: #0077c8; color: white; font-weight: bold; font-size: 16px; }
+    .sidebar-content { padding: 10px; }
+    .prompt { padding: 10px; background: #f0f0f0; border-radius: 6px; margin-bottom: 8px; cursor: grab; font-size: 14px; }
+    details summary { font-weight: 600; cursor: pointer; list-style: none; padding: 10px 0; }
+    .floating-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: #0077c8; color: white; padding: 10px; border-radius: 8px 0 0 8px; cursor: pointer; font-size: 20px; z-index: 99999; }
+    #toggleHistory { top: 40%; }
+  </style>
 
+  <button id="resetBtn">✨ Nouveau chat</button>
+  <div id="chat"></div>
+  <div id="input-area">
+    <input type="text" id="userInput" placeholder="Pose ta question ici..." />
+    <button id="sendBtn">▶</button>
+  </div>
 
-<div class="dynamic-sidebar" id="historyPanel">
-  <div class="sidebar-header">🕓 Historique des conversations</div>
-  <div class="sidebar-content" id="historyList"></div>
-</div>
+  <div class="floating-toggle" id="toggleHistory">🕓</div>
+  <div class="dynamic-sidebar" id="historyPanel">
+    <div class="sidebar-header">🕓 Historique des conversations</div>
+    <div class="sidebar-content" id="historyList"></div>
+  </div>
 
-<div class="floating-toggle" id="togglePrompt">💡</div>
-<div class="dynamic-sidebar" id="promptPanel">
-  <div class="sidebar-header">💡 Idées de prompts</div>
-  <div class="sidebar-content">
-    <details>
+  <div class="floating-toggle" id="togglePrompt">💡</div>
+  <div class="dynamic-sidebar" id="promptPanel">
+    <div class="sidebar-header">💡 Idées de prompts</div>
+    <div class="sidebar-content">
+      <!-- tes blocs <details> ... ici ... -->
+      <!-- tu peux remettre tous tes blocs prompts/logistique/etc ici -->
+      <details>
       <summary>▶ Opérations logistiques</summary>
       <div class="prompt" draggable="true">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
       <div class="prompt" draggable="true">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
@@ -107,8 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
     </details>
   </div>
 </div>
-
-  `;
+    </div>
+  </div>
+`;
+// ton wrapper.innerHTML complet reste inchangé ici...
 
   const container = document.getElementById("chat-container");
   if (!container) return;
@@ -124,125 +125,98 @@ document.addEventListener("DOMContentLoaded", () => {
   const promptPanel = wrapper.querySelector("#promptPanel");
   const historyPanel = wrapper.querySelector("#historyPanel");
   const historyList = wrapper.querySelector("#historyList");
-  const sidebar = promptPanel; // utilisé pour refermer la sidebar des prompts
+  const sidebar = promptPanel;
   const prompts = wrapper.querySelectorAll(".prompt");
 
-  // 🔁 Toggle des sidebars
-  togglePromptBtn.addEventListener("click", () => {
-    promptPanel.classList.toggle("open");
-  });
+  togglePromptBtn.addEventListener("click", () => promptPanel.classList.toggle("open"));
+  toggleHistoryBtn.addEventListener("click", () => historyPanel.classList.toggle("open"));
 
-  toggleHistoryBtn.addEventListener("click", () => {
-    historyPanel.classList.toggle("open");
-  });
-
-  // 💬 Intégration des prompts cliquables et drag & drop
   prompts.forEach(prompt => {
     prompt.addEventListener("click", () => {
       userInput.value = prompt.textContent;
       userInput.focus();
       sidebar.classList.remove("open");
     });
-    prompt.addEventListener("dragstart", e =>
-      e.dataTransfer.setData("text/plain", prompt.textContent)
-    );
+    prompt.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", prompt.textContent));
   });
 
   userInput.addEventListener("dragover", e => e.preventDefault());
   userInput.addEventListener("drop", e => {
     e.preventDefault();
-    const text = e.dataTransfer.getData("text");
-    userInput.value = text;
+    userInput.value = e.dataTransfer.getData("text");
     sidebar.classList.remove("open");
   });
-// Remplace par ton URL de webhook
-const webhookUrl = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
 
-async function fetchUserMessages(userId) {
-  try {
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ user_id: userId })
-    });
-
-    if (!response.ok) throw new Error("Erreur lors de la requête");
-
-    const data = await response.json();
-    console.log("Messages reçus :", data);
-    return data;
-  } catch (error) {
-    console.error("Erreur :", error);
-    return [];
-  }
-}
-
-function getLastMessages(messages) {
-  const map = new Map();
-
-  messages.forEach(msg => {
-    if (!map.has(msg.session_id) || msg.id > map.get(msg.session_id).id) {
-      map.set(msg.session_id, msg);
+  async function fetchUserMessages(userId) {
+    try {
+      const response = await fetch("https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId })
+      });
+      if (!response.ok) throw new Error("Erreur lors de la requête");
+      const data = await response.json();
+      console.log("Messages reçus :", data);
+      return data;
+    } catch (error) {
+      console.error("Erreur :", error);
+      return [];
     }
-  });
+  }
 
-  return Array.from(map.values()).map(m => {
-    const parsed = JSON.parse(m.message);
-    const content = parsed.content || '';
-    return {
-      session_id: m.session_id,
-      preview: content.substring(0, 20) + (content.length > 20 ? '...' : '')
-    };
-  });
-}
+  function getLastMessages(messages) {
+    const map = new Map();
+    messages.forEach(msg => {
+      if (!map.has(msg.session_id) || msg.id > map.get(msg.session_id).id) {
+        map.set(msg.session_id, msg);
+      }
+    });
+    return Array.from(map.values()).map(m => {
+      const parsed = JSON.parse(m.message);
+      const content = parsed.content || '';
+      return {
+        session_id: m.session_id,
+        preview: content.substring(0, 20) + (content.length > 20 ? '...' : '')
+      };
+    });
+  }
 
-  
-  // 📚 Charger l'historique dans la sidebar
   async function loadChatHistory() {
-  try {
+    try {
       console.log("📥 Chargement historique en cours...");
       let data = await fetchUserMessages(user_id);
-      let sessionsUniques = getUniqueSessionIds(data);
-      console.log("📜 Historique récupéré :", sessionsUniques);
-
+      const previews = getLastMessages(data);
+      console.log("Prévisualisations :", previews);
 
       historyList.innerHTML = "";
+      previews.forEach(({ session_id, preview }) => {
+        const div = document.createElement("div");
+        div.className = "prompt";
+        div.textContent = preview;
+        div.title = session_id;
 
-      const previews = getLastMessages(data);
+        div.addEventListener("click", async () => {
+          localStorage.setItem("chat_id", session_id);
+          chat.innerHTML = "";
+          const full = data.filter(m => m.session_id === session_id);
+          full.forEach(m => {
+            const parsed = JSON.parse(m.message);
+            appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
+          });
+          historyPanel.classList.remove("open");
+        });
 
-historyList.innerHTML = "";
-previews.forEach(({ session_id, preview }) => {
-  const div = document.createElement("div");
-  div.className = "prompt";
-  div.textContent = preview;
-  div.title = session_id; // info complète au survol
-
-  div.addEventListener("click", async () => {
-    localStorage.setItem("chat_id", session_id);
-    chat.innerHTML = "";
-    const full = data.filter(m => m.session_id === session_id);
-    full.forEach(m => {
-      const parsed = JSON.parse(m.message);
-      appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
-    });
-    historyPanel.classList.remove("open");
-  });
-
-  historyList.appendChild(div);
-  } catch (err) {
-    console.error("Erreur chargement historique", err);
+        historyList.appendChild(div);
+      });
+    } catch (err) {
+      console.error("Erreur chargement historique", err);
+    }
   }
-}
-
-
-  loadChatHistory();
 
   resetBtn.addEventListener("click", () => {
     localStorage.removeItem("chatHistory");
-      savesessionIDtolocalStorage();
-  chat_id = loadsessionIDfromlocalstorage();
+    savesessionIDtolocalStorage();
+    chat_id = loadsessionIDfromlocalstorage();
     chat.innerHTML = "";
     appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
   });
@@ -266,37 +240,32 @@ previews.forEach(({ session_id, preview }) => {
 
   function loadChatFromLocalStorage() {
     const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
-    history.forEach(msg => {
-      appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message");
-    });
+    history.forEach(msg => appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message"));
   }
-
-  loadChatFromLocalStorage();
 
   function loadsessionIDfromlocalstorage() {
     let sessionID = localStorage.getItem("chat_id");
-    if(!sessionID) generateSessionID();
+    if (!sessionID) sessionID = generateSessionID();
     return sessionID;
   }
+
   function savesessionIDtolocalStorage() {
     localStorage.setItem("chat_id", generateSessionID());
   }
-  
+
+  function generateSessionID() {
+    return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  }
+
   sendBtn.addEventListener("click", async () => {
     const text = userInput.value.trim();
     if (!text) return;
-
     appendMessage(text, "user-message");
     userInput.value = "";
-
     const loader = document.createElement("div");
     loader.className = "message bot-message";
     loader.innerHTML = "Je réfléchis...";
     chat.appendChild(loader);
-
-    
-    console.log("📤 Envoi au webhook :", { question: text, user_id, chat_id });
-
     try {
       const res = await fetch(webhookURL, {
         method: "POST",
@@ -307,7 +276,6 @@ previews.forEach(({ session_id, preview }) => {
       loader.remove();
       appendMessage(data.output || "Pas de réponse", "bot-message");
       loadChatHistory();
-  
     } catch (err) {
       loader.remove();
       appendMessage("Erreur de connexion", "bot-message");
@@ -317,9 +285,7 @@ previews.forEach(({ session_id, preview }) => {
   userInput.addEventListener("keypress", function (e) {
     if (e.key === "Enter") sendBtn.click();
   });
-  
-  // Fonction pour générer un sessionID unique
-  function generateSessionID() {
-    return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-  }
+
+  loadChatHistory();
+  loadChatFromLocalStorage();
 });
