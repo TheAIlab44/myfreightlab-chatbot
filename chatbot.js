@@ -194,10 +194,71 @@ return {
 
       historyList.innerHTML = "";
       previews.forEach(({ session_id, preview }) => {
-        const div = document.createElement("div");
-        div.className = "prompt";
-        div.textContent = preview;
-        div.title = session_id;
+        const container = document.createElement("div");
+container.className = "prompt";
+container.style.display = "flex";
+container.style.justifyContent = "space-between";
+container.style.alignItems = "center";
+container.style.position = "relative";
+
+const title = document.createElement("span");
+title.textContent = preview;
+title.style.flex = "1";
+
+const menuBtn = document.createElement("button");
+menuBtn.textContent = "⋮";
+menuBtn.style.border = "none";
+menuBtn.style.background = "transparent";
+menuBtn.style.cursor = "pointer";
+menuBtn.style.padding = "0 5px";
+
+const menu = document.createElement("div");
+menu.className = "dropdown-menu";
+menu.style.position = "absolute";
+menu.style.top = "100%";
+menu.style.right = "0";
+menu.style.background = "white";
+menu.style.border = "1px solid #ccc";
+menu.style.borderRadius = "4px";
+menu.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+menu.style.padding = "6px";
+menu.style.display = "none";
+menu.style.zIndex = "1000";
+
+const rename = document.createElement("div");
+rename.textContent = "✏️ Renommer";
+rename.style.cursor = "pointer";
+rename.onclick = () => {
+  const newName = prompt("Renommer ce chat :", preview);
+  if (newName) {
+    // stocker le nouveau nom dans localStorage
+    localStorage.setItem(`name_${session_id}`, newName);
+    title.textContent = newName;
+  }
+  menu.style.display = "none";
+};
+
+const del = document.createElement("div");
+del.textContent = "🗑️ Supprimer";
+del.style.cursor = "pointer";
+del.onclick = () => {
+  if (confirm("Supprimer cette session ?")) {
+    localStorage.removeItem(`name_${session_id}`);
+    container.remove();
+  }
+};
+
+menu.appendChild(rename);
+menu.appendChild(del);
+menuBtn.onclick = (e) => {
+  e.stopPropagation();
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+};
+
+container.appendChild(title);
+container.appendChild(menuBtn);
+container.appendChild(menu);
+
 
         div.addEventListener("click", async () => {
           localStorage.setItem("chat_id", session_id);
