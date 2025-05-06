@@ -130,36 +130,59 @@ dropZone.style.cssText = `
   font-size: 18px;
   z-index: 10000;
 `;
-  document.body.appendChild(dropZone);
+// === Zone de dépôt de fichier globale ===
+const dropZone = document.createElement("div");
+dropZone.id = "drop-zone";
 dropZone.textContent = "📎 Dépose ton fichier n'importe où sur l’écran…";
-  const sendBtn = wrapper.querySelector("#sendBtn");
-  const resetBtn = wrapper.querySelector("#resetBtn");
-  const togglePromptBtn = wrapper.querySelector("#togglePrompt");
-  const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
-  const promptPanel = wrapper.querySelector("#promptPanel");
-  const historyPanel = wrapper.querySelector("#historyPanel");
-  const historyList = wrapper.querySelector("#historyList");
-  const sidebar = promptPanel;
-  const prompts = wrapper.querySelectorAll(".prompt");
+dropZone.style.cssText = `
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px dashed #ccc;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 18px;
+  z-index: 10000;
+  transition: opacity 0.2s ease;
+  opacity: 0;
+`;
+document.body.appendChild(dropZone);
 
-  togglePromptBtn.addEventListener("click", () => promptPanel.classList.toggle("open"));
-  toggleHistoryBtn.addEventListener("click", () => historyPanel.classList.toggle("open"));
+// === Sélections des éléments principaux ===
+const sendBtn = wrapper.querySelector("#sendBtn");
+const resetBtn = wrapper.querySelector("#resetBtn");
+const togglePromptBtn = wrapper.querySelector("#togglePrompt");
+const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
+const promptPanel = wrapper.querySelector("#promptPanel");
+const historyPanel = wrapper.querySelector("#historyPanel");
+const historyList = wrapper.querySelector("#historyList");
+const sidebar = promptPanel;
+const prompts = wrapper.querySelectorAll(".prompt");
 
-  prompts.forEach(prompt => {
-    prompt.addEventListener("click", () => {
-      userInput.value = prompt.textContent;
-      userInput.focus();
-      sidebar.classList.remove("open");
-    });
-    prompt.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", prompt.textContent));
-  });
+// === Gestion des panneaux latéraux ===
+togglePromptBtn.addEventListener("click", () => promptPanel.classList.toggle("open"));
+toggleHistoryBtn.addEventListener("click", () => historyPanel.classList.toggle("open"));
 
-  userInput.addEventListener("dragover", e => e.preventDefault());
-  userInput.addEventListener("drop", e => {
-    e.preventDefault();
-    userInput.value = e.dataTransfer.getData("text");
+// === Prompts cliquables et glissables ===
+prompts.forEach(prompt => {
+  prompt.addEventListener("click", () => {
+    userInput.value = prompt.textContent;
+    userInput.focus();
     sidebar.classList.remove("open");
   });
+  prompt.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", prompt.textContent));
+});
+
+// === Gestion du drop dans l'input texte (drag de prompt uniquement) ===
+userInput.addEventListener("dragover", e => e.preventDefault());
+userInput.addEventListener("drop", e => {
+  e.preventDefault();
+  userInput.value = e.dataTransfer.getData("text");
+  sidebar.classList.remove("open");
+});
+
 
   async function fetchUserMessages(userId) {
     try {
