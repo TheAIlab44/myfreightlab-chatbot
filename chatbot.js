@@ -117,6 +117,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const chat = wrapper.querySelector("#chat");
   const userInput = wrapper.querySelector("#userInput");
+  const dropZone = document.createElement("div");
+dropZone.id = "drop-zone";
+dropZone.style.cssText = "border: 2px dashed #ccc; padding: 10px; text-align: center; display: none; margin-bottom: 10px;";
+dropZone.textContent = "📎 Dépose un fichier ici...";
+wrapper.querySelector("#input-area").prepend(dropZone);
   const sendBtn = wrapper.querySelector("#sendBtn");
   const resetBtn = wrapper.querySelector("#resetBtn");
   const togglePromptBtn = wrapper.querySelector("#togglePrompt");
@@ -332,15 +337,57 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Gestion touche Entrée
   userInput.addEventListener("keypress", function (e) {
     if (e.key === "Enter") sendBtn.click();
   });
 
+  // Drag & Drop de fichiers
+  ["dragenter", "dragover"].forEach(event => {
+    document.addEventListener(event, e => {
+      e.preventDefault();
+      dropZone.style.display = "block";
+    });
+  });
+
+  ["dragleave", "drop"].forEach(event => {
+    document.addEventListener(event, e => {
+      e.preventDefault();
+      dropZone.style.display = "none";
+    });
+  });
+
+  dropZone.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("user_id", user_id);
+    formData.append("chat_id", chat_id);
+
+    appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
+
+    try {
+      const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/upload-file", {
+        method: "POST",
+        body: formData
+      });
+      const result = await res.json();
+      appendMessage(result.output || "✅ Fichier traité avec succès !", "bot-message");
+    } catch (err) {
+      console.error(err);
+      appendMessage("❌ Erreur lors de l’envoi du fichier", "bot-message");
+    }
+  });
+
+  // Chargement de la session active
   const currentChatId = localStorage.getItem("chat_id");
   if (currentChatId) {
     fetchUserMessages(user_id).then(data => {
       const full = data.filter(m => m.session_id === currentChatId);
-            chat.innerHTML = ""; // 🔹 nettoyer avant de recharger
+      chat.innerHTML = ""; // 🔹 nettoyer avant de recharger
       full.forEach(m => {
         const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
         if (parsed.content) {
@@ -351,9 +398,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // En dernier, la fonction utilitaire generateSessionID
+  // En dernier : générateur d'ID de session
   function generateSessionID() {
     return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   }
 });
+
 
