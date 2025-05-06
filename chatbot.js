@@ -357,22 +357,36 @@ userInput.addEventListener("keypress", function (e) {
 });
 
 // 🎯 Drag & Drop pour la zone de fichier
+let dragCounter = 0;
+
 ["dragenter", "dragover"].forEach(eventType => {
   document.addEventListener(eventType, e => {
     e.preventDefault();
+    dragCounter++;
     dropZone.style.display = "block";
     dropZone.style.opacity = "1";
     dropZone.style.pointerEvents = "all";
   });
 });
 
-["dragleave", "drop"].forEach(eventType => {
+["dragleave"].forEach(eventType => {
   document.addEventListener(eventType, e => {
     e.preventDefault();
-    dropZone.style.opacity = "0";
-    dropZone.style.pointerEvents = "none";
-    dropZone.style.display = "none";
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dropZone.style.opacity = "0";
+      dropZone.style.pointerEvents = "none";
+      dropZone.style.display = "none";
+    }
   });
+});
+
+document.addEventListener("drop", e => {
+  e.preventDefault();
+  dragCounter = 0; // reset
+  dropZone.style.opacity = "0";
+  dropZone.style.pointerEvents = "none";
+  dropZone.style.display = "none";
 });
 
 dropZone.addEventListener("drop", async (e) => {
@@ -399,6 +413,7 @@ dropZone.addEventListener("drop", async (e) => {
     appendMessage("❌ Erreur lors de l’envoi du fichier", "bot-message");
   }
 });
+
 
   const currentChatId = localStorage.getItem("chat_id");
   if (currentChatId) {
