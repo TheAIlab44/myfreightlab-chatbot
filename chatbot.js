@@ -128,7 +128,8 @@ dropZone.style.cssText = `
   font-size: 18px;
   z-index: 10000;
   transition: opacity 0.3s ease;
-  pointer-events: none;
+  pointer-events: all;
+
 `;
 dropZone.innerText = "📂 Déposez votre fichier ici";
 document.body.appendChild(dropZone);
@@ -326,47 +327,54 @@ document.body.appendChild(dropZone);
   }
 
   sendBtn.addEventListener("click", async () => {
-    const text = userInput.value.trim();
-    if (!text) return;
-    appendMessage(text, "user-message");
-    userInput.value = "";
-    const loader = document.createElement("div");
-    loader.className = "message bot-message";
-    loader.innerHTML = "Je réfléchis...";
-    chat.appendChild(loader);
-    try {
-      const res = await fetch(webhookURL, {
-        method: "POST",
-        body: JSON.stringify({ question: text, user_id, chat_id }),
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      loader.remove();
-      appendMessage(data.output || "Pas de réponse", "bot-message");
-    } catch (err) {
-      loader.remove();
-      appendMessage("Erreur de connexion", "bot-message");
-    }
-  });
+  const text = userInput.value.trim();
+  if (!text) return;
+  appendMessage(text, "user-message");
+  userInput.value = "";
 
-  userInput.addEventListener("keypress", function (e) {
-    if (e.key === "Enter") sendBtn.click();
-  });
-["dragenter", "dragover"].forEach(event => {
-  document.addEventListener(event, e => {
+  const loader = document.createElement("div");
+  loader.className = "message bot-message";
+  loader.innerHTML = "Je réfléchis...";
+  chat.appendChild(loader);
+
+  try {
+    const res = await fetch(webhookURL, {
+      method: "POST",
+      body: JSON.stringify({ question: text, user_id, chat_id }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    loader.remove();
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+  } catch (err) {
+    loader.remove();
+    appendMessage("Erreur de connexion", "bot-message");
+  }
+});
+
+userInput.addEventListener("keypress", function (e) {
+  if (e.key === "Enter") sendBtn.click();
+});
+
+// 🎯 Drag & Drop pour la zone de fichier
+["dragenter", "dragover"].forEach(eventType => {
+  document.addEventListener(eventType, e => {
     e.preventDefault();
+    dropZone.style.display = "block";
     dropZone.style.opacity = "1";
-    dropZone.style.pointerEvents = "auto";
+    dropZone.style.pointerEvents = "all";
   });
 });
 
-["dragleave", "drop"].forEach(event => {
-  document.addEventListener(event, e => {
+["dragleave", "drop"].forEach(eventType => {
+  document.addEventListener(eventType, e => {
     e.preventDefault();
     dropZone.style.opacity = "0";
     dropZone.style.pointerEvents = "none";
+    dropZone.style.display = "none";
   });
 });
+
 dropZone.addEventListener("drop", async (e) => {
   e.preventDefault();
   const file = e.dataTransfer.files[0];
