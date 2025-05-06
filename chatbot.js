@@ -149,11 +149,12 @@ document.body.appendChild(dropZone);
   toggleHistoryBtn.addEventListener("click", () => historyPanel.classList.toggle("open"));
 
   prompts.forEach(prompt => {
-    prompt.addEventListener("click", () => {
-      userInput.value = prompt.textContent;
-      userInput.focus();
-      sidebar.classList.remove("open");
+  prompt.addEventListener("click", () => {
+    userInput.value = prompt.textContent;
+    userInput.focus();
+    sidebar.classList.remove("open");
   });
+});
 
   userInput.addEventListener("dragover", e => e.preventDefault());
   userInput.addEventListener("drop", e => {
