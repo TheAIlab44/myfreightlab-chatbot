@@ -104,12 +104,11 @@ document.addEventListener("DOMContentLoaded", () => {
   <div class="prompt">Peux-tu vérifier la cohérence de cette liasse documentaire ?</div>
 </details>
 
-  </div>
+ </div>
 </div>
-        </details>
-      </div>
-    </div>
-  </div>
+</div>
+</div>
+
   `;
 
   const container = document.getElementById("chat-container");
