@@ -133,8 +133,6 @@ dropZone.style.cssText = `
 dropZone.innerText = "📂 Déposez votre fichier ici";
 document.body.appendChild(dropZone);
 
-
-`;
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
   const resetBtn = wrapper.querySelector("#resetBtn");
