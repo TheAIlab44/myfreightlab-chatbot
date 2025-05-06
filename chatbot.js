@@ -338,4 +338,20 @@ document.addEventListener("DOMContentLoaded", () => {
   if (currentChatId) {
     fetchUserMessages(user_id).then(data => {
       const full = data.filter(m => m.session_id === currentChatId);
-      chat.innerHTML =
+            chat.innerHTML = ""; // 🔹 nettoyer avant de recharger
+      full.forEach(m => {
+        const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+        if (parsed.content) {
+          appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
+        }
+      });
+      loadChatHistory(); // on recharge les sessions dans la sidebar
+    });
+  }
+
+  // En dernier, la fonction utilitaire generateSessionID
+  function generateSessionID() {
+    return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  }
+});
+
