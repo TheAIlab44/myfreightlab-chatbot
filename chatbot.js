@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const clean = textOnly.replace(/[\u{1F600}-\u{1F6FF}]/gu, "");
         return {
           session_id: m.session_id,
-          preview: clean.substring(0, 40) + (clean.length > 40 ? '...' : '')
+          preview: clean.substring(0, 30) + (clean.length > 30 ? '...' : '')
         };
       });
   }
