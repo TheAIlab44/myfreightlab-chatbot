@@ -115,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!container) return;
   container.appendChild(wrapper);
 
-  const chat = wrapper.querySelector("#chat");
 const dropZone = document.createElement("div");
 dropZone.id = "drop-zone";
 dropZone.style.cssText = `
@@ -131,10 +130,11 @@ dropZone.style.cssText = `
   transition: opacity 0.3s ease;
   pointer-events: none;
 `;
-dropZone.innerText = "📂 Déposez votre fichier ici"; // ✅ place cette ligne après le style
+dropZone.innerText = "📂 Déposez votre fichier ici";
 document.body.appendChild(dropZone);
 
 
+`;
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
   const resetBtn = wrapper.querySelector("#resetBtn");
