@@ -116,6 +116,24 @@ document.addEventListener("DOMContentLoaded", () => {
   container.appendChild(wrapper);
 
   const chat = wrapper.querySelector("#chat");
+  const dropZone = document.createElement("div");
+dropZone.id = "drop-zone";
+dropZone.style.cssText = `
+  border: 2px dashed #ccc;
+  padding: 40px;
+  text-align: center;
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 18px;
+  z-index: 10000;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  dropZone.innerText = "📂 Déposez votre fichier ici";
+`;
+document.body.appendChild(dropZone);
+
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
   const resetBtn = wrapper.querySelector("#resetBtn");
@@ -335,6 +353,45 @@ document.addEventListener("DOMContentLoaded", () => {
   userInput.addEventListener("keypress", function (e) {
     if (e.key === "Enter") sendBtn.click();
   });
+["dragenter", "dragover"].forEach(event => {
+  document.addEventListener(event, e => {
+    e.preventDefault();
+    dropZone.style.opacity = "1";
+    dropZone.style.pointerEvents = "auto";
+  });
+});
+
+["dragleave", "drop"].forEach(event => {
+  document.addEventListener(event, e => {
+    e.preventDefault();
+    dropZone.style.opacity = "0";
+    dropZone.style.pointerEvents = "none";
+  });
+});
+dropZone.addEventListener("drop", async (e) => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("user_id", user_id);
+  formData.append("chat_id", chat_id);
+
+  appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
+
+  try {
+    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/upload-file", {
+      method: "POST",
+      body: formData
+    });
+    const result = await res.json();
+    appendMessage(result.output || "✅ Fichier traité avec succès !", "bot-message");
+  } catch (err) {
+    console.error(err);
+    appendMessage("❌ Erreur lors de l’envoi du fichier", "bot-message");
+  }
+});
 
   const currentChatId = localStorage.getItem("chat_id");
   if (currentChatId) {
