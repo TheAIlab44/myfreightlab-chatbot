@@ -324,12 +324,10 @@ previews.forEach(({ session_id, preview }) => {
   }
 
   function savesessionIDtolocalStorage() {
+  if (!localStorage.getItem("chat_id")) {
     localStorage.setItem("chat_id", generateSessionID());
   }
-
-  function generateSessionID() {
-    return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-  }
+}
 
   sendBtn.addEventListener("click", async () => {
     const text = userInput.value.trim();
@@ -349,7 +347,8 @@ previews.forEach(({ session_id, preview }) => {
       const data = await res.json();
       loader.remove();
       appendMessage(data.output || "Pas de réponse", "bot-message");
-      loadChatHistory();
+      loadChatHistory() // loadChatHistory(); // on évite de recharger à chaque message envoyé
+      ;
     } catch (err) {
       loader.remove();
       appendMessage("Erreur de connexion", "bot-message");
