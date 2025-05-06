@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
   container.appendChild(wrapper);
 
   const chat = wrapper.querySelector("#chat");
-  const dropZone = document.createElement("div");
+const dropZone = document.createElement("div");
 dropZone.id = "drop-zone";
 dropZone.style.cssText = `
   border: 2px dashed #ccc;
@@ -130,9 +130,10 @@ dropZone.style.cssText = `
   z-index: 10000;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  dropZone.innerText = "📂 Déposez votre fichier ici";
 `;
+dropZone.innerText = "📂 Déposez votre fichier ici"; // ✅ place cette ligne après le style
 document.body.appendChild(dropZone);
+
 
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
