@@ -359,6 +359,16 @@ previews.forEach(({ session_id, preview }) => {
     if (e.key === "Enter") sendBtn.click();
   });
 
-  loadChatHistory();
-  loadChatFromLocalStorage();
-});
+const currentChatId = localStorage.getItem("chat_id");
+if (currentChatId) {
+  fetchUserMessages(user_id).then(data => {
+    const full = data.filter(m => m.session_id === currentChatId);
+    chat.innerHTML = ""; // 🔹 nettoyer avant de recharger
+    full.forEach(m => {
+      const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+      if (parsed.content) {
+        appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
+      }
+    });
+  });
+}
