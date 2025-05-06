@@ -190,6 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
       historyList.innerHTML = "";
 
       previews.forEach(({ session_id, preview }) => {
+  const sessionMessages = data.filter(m => m.session_id === session_id);
+
         const container = document.createElement("div");
         container.className = "prompt";
         container.style.display = "flex";
@@ -243,16 +245,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         document.addEventListener("click", () => menu.style.display = "none");
 
-        title.addEventListener("click", async () => {
-          localStorage.setItem("chat_id", session_id);
-          chat.innerHTML = "";
-          const full = data.filter(m => m.session_id === session_id);
-          full.forEach(m => {
-            const parsed = JSON.parse(m.message);
-            appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
-          });
-          historyPanel.classList.remove("open");
-        });
+        title.addEventListener("click", () => {
+  localStorage.setItem("chat_id", session_id);
+  chat.innerHTML = "";
+  sessionMessages.forEach(m => {
+    const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+    appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
+  });
+  historyPanel.classList.remove("open");
+});
+
 
         container.appendChild(title);
         container.appendChild(menuBtn);
