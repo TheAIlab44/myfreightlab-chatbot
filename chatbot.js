@@ -119,9 +119,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const userInput = wrapper.querySelector("#userInput");
   const dropZone = document.createElement("div");
 dropZone.id = "drop-zone";
-dropZone.style.cssText = "border: 2px dashed #ccc; padding: 10px; text-align: center; display: none; margin-bottom: 10px;";
-dropZone.textContent = "📎 Dépose un fichier ici...";
-wrapper.querySelector("#input-area").prepend(dropZone);
+dropZone.style.cssText = `
+  border: 2px dashed #ccc;
+  padding: 40px;
+  text-align: center;
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 18px;
+  z-index: 10000;
+`;
+  document.body.appendChild(dropZone);
+dropZone.textContent = "📎 Dépose ton fichier n'importe où sur l’écran…";
   const sendBtn = wrapper.querySelector("#sendBtn");
   const resetBtn = wrapper.querySelector("#resetBtn");
   const togglePromptBtn = wrapper.querySelector("#togglePrompt");
