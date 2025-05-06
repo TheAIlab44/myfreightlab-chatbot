@@ -10,48 +10,47 @@ document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-    * { font-family: 'Inter', sans-serif; }
-    #chat-wrapper { display: flex; flex-direction: column; justify-content: flex-end; height: 90vh; width: 80vw; margin: 0 auto; background: #f9fbfc; border-radius: 12px; overflow: hidden; border: 1px solid #d3dce6; position: relative; }
-    #chat { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 16px; align-items: center; }
-    .message { padding: 14px 18px; border-radius: 18px; max-width: 80%; font-size: 15px; line-height: 1.6; box-shadow: 0 2px 6px rgba(0,0,0,0.05); animation: fadeInUp 0.4s ease-out; }
-    .user-message { align-self: flex-start; background: #e6f0ff; color: #003366; border-bottom-right-radius: 0; }
-    .bot-message { align-self: flex-end; background: #fff; color: #222; border-bottom-left-radius: 0; }
-    #input-area { display: flex; padding: 12px 16px; border-top: 1px solid #ccc; gap: 10px; background: white; }
-    #userInput { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; font-size: 15px; }
-    #sendBtn { width: 44px; height: 44px; border-radius: 50%; border: none; background: #0077c8; color: white; cursor: pointer; }
-    #resetBtn { position: absolute; top: 10px; left: 10px; background: white; border: 1px solid #ccc; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 13px; }
-    .dynamic-sidebar { position: fixed; top: 0; right: -320px; width: 320px; height: 100vh; background: #fff; border-left: 1px solid #ddd; box-shadow: -2px 0 6px rgba(0,0,0,0.05); transition: right 0.3s ease-in-out; z-index: 9999; overflow-y: auto; }
-    .dynamic-sidebar.open { right: 0; }
-    .sidebar-header { padding: 16px; background: #0077c8; color: white; font-weight: bold; font-size: 16px; }
-    .sidebar-content { padding: 10px; }
-    .prompt { padding: 10px; background: #f0f0f0; border-radius: 6px; margin-bottom: 8px; cursor: grab; font-size: 14px; }
-    details summary { font-weight: 600; cursor: pointer; list-style: none; padding: 10px 0; }
-    .floating-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: #0077c8; color: white; padding: 10px; border-radius: 8px 0 0 8px; cursor: pointer; font-size: 20px; z-index: 99999; }
-    #toggleHistory { top: 40%; }
-  </style>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+      * { font-family: 'Inter', sans-serif; }
+      #chat-wrapper { display: flex; flex-direction: column; justify-content: flex-end; height: 90vh; width: 80vw; margin: 0 auto; background: #f9fbfc; border-radius: 12px; overflow: hidden; border: 1px solid #d3dce6; position: relative; }
+      #chat { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 16px; align-items: center; }
+      .message { padding: 14px 18px; border-radius: 18px; max-width: 80%; font-size: 15px; line-height: 1.6; box-shadow: 0 2px 6px rgba(0,0,0,0.05); animation: fadeInUp 0.4s ease-out; }
+      .user-message { align-self: flex-start; background: #e6f0ff; color: #003366; border-bottom-right-radius: 0; }
+      .bot-message { align-self: flex-end; background: #fff; color: #222; border-bottom-left-radius: 0; }
+      #input-area { display: flex; padding: 12px 16px; border-top: 1px solid #ccc; gap: 10px; background: white; }
+      #userInput { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; font-size: 15px; }
+      #sendBtn { width: 44px; height: 44px; border-radius: 50%; border: none; background: #0077c8; color: white; cursor: pointer; }
+      #resetBtn { position: absolute; top: 10px; left: 10px; background: white; border: 1px solid #ccc; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 13px; }
+      .dynamic-sidebar { position: fixed; top: 0; right: -320px; width: 320px; height: 100vh; background: #fff; border-left: 1px solid #ddd; box-shadow: -2px 0 6px rgba(0,0,0,0.05); transition: right 0.3s ease-in-out; z-index: 9999; overflow-y: auto; }
+      .dynamic-sidebar.open { right: 0; }
+      .sidebar-header { padding: 16px; background: #0077c8; color: white; font-weight: bold; font-size: 16px; }
+      .sidebar-content { padding: 10px; }
+      .prompt { padding: 10px; background: #f0f0f0; border-radius: 6px; margin-bottom: 8px; cursor: grab; font-size: 14px; }
+      details summary { font-weight: 600; cursor: pointer; list-style: none; padding: 10px 0; }
+      .floating-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: #0077c8; color: white; padding: 10px; border-radius: 8px 0 0 8px; cursor: pointer; font-size: 20px; z-index: 99999; }
+      #toggleHistory { top: 40%; }
+    </style>
 
-  <button id="resetBtn">✨ Nouveau chat</button>
-  <div id="chat"></div>
-  <div id="input-area">
-    <input type="text" id="userInput" placeholder="Pose ta question ici..." />
-    <button id="sendBtn">▶</button>
-  </div>
+    <button id="resetBtn">✨ Nouveau chat</button>
+    <div id="chat"></div>
+    <div id="input-area">
+      <input type="text" id="userInput" placeholder="Pose ta question ici..." />
+      <button id="sendBtn">▶</button>
+    </div>
 
-  <div class="floating-toggle" id="toggleHistory">🕓</div>
-  <div class="dynamic-sidebar" id="historyPanel">
-    <div class="sidebar-header">🕓 Historique des conversations</div>
-    <div class="sidebar-content" id="historyList"></div>
-  </div>
+    <div class="floating-toggle" id="toggleHistory">🕓</div>
+    <div class="dynamic-sidebar" id="historyPanel">
+      <div class="sidebar-header">🕓 Historique des conversations</div>
+      <div class="sidebar-content" id="historyList"></div>
+    </div>
 
-  <div class="floating-toggle" id="togglePrompt">💡</div>
-  <div class="dynamic-sidebar" id="promptPanel">
-    <div class="sidebar-header">💡 Idées de prompts</div>
-    <div class="sidebar-content">
-      <!-- tes blocs <details> ... ici ... -->
-      <!-- tu peux remettre tous tes blocs prompts/logistique/etc ici -->
-      <details>
+    <div class="floating-toggle" id="togglePrompt">💡</div>
+    <div class="dynamic-sidebar" id="promptPanel">
+      <div class="sidebar-header">💡 Idées de prompts</div>
+      <div class="sidebar-content">
+        <!-- Ajoute ici tes <details> comme dans ton code -->
+        <details>
       <summary>▶ Opérations logistiques</summary>
       <div class="prompt" draggable="true">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
       <div class="prompt" draggable="true">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
@@ -106,8 +105,11 @@ document.addEventListener("DOMContentLoaded", () => {
     </details>
   </div>
 </div>
-`;
-// ton wrapper.innerHTML complet reste inchangé ici...
+        </details>
+      </div>
+    </div>
+  </div>
+  `;
 
   const container = document.getElementById("chat-container");
   if (!container) return;
@@ -117,7 +119,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
   const resetBtn = wrapper.querySelector("#resetBtn");
-
   const togglePromptBtn = wrapper.querySelector("#togglePrompt");
   const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
   const promptPanel = wrapper.querySelector("#promptPanel");
@@ -153,9 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ user_id: userId })
       });
       if (!response.ok) throw new Error("Erreur lors de la requête");
-      const data = await response.json();
-      console.log("Messages reçus :", data);
-      return data;
+      return await response.json();
     } catch (error) {
       console.error("Erreur :", error);
       return [];
@@ -169,119 +168,97 @@ document.addEventListener("DOMContentLoaded", () => {
         map.set(msg.session_id, msg);
       }
     });
-    const sorted = Array.from(map.values()).sort((a, b) => b.id - a.id);
-    return sorted.map(m => {
-  const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
-  const tmp = document.createElement("div");
-tmp.innerHTML = parsed.content || '';
-const textOnly = tmp.textContent || tmp.innerText || "";
-const clean = textOnly.replace(/[\u{1F600}-\u{1F6FF}]/gu, ""); // facultatif : enlève les emojis
-
-return {
-  session_id: m.session_id,
-  preview: clean.substring(0, 20) + (clean.length > 20 ? '...' : '')
-};
-
-});
+    return Array.from(map.values())
+      .sort((a, b) => b.id - a.id)
+      .map(m => {
+        const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+        const tmp = document.createElement("div");
+        tmp.innerHTML = parsed.content || '';
+        const textOnly = tmp.textContent || tmp.innerText || "";
+        const clean = textOnly.replace(/[\u{1F600}-\u{1F6FF}]/gu, "");
+        return {
+          session_id: m.session_id,
+          preview: clean.substring(0, 20) + (clean.length > 20 ? '...' : '')
+        };
+      });
   }
 
   async function loadChatHistory() {
     try {
-      console.log("📥 Chargement historique en cours...");
-      let data = await fetchUserMessages(user_id);
+      const data = await fetchUserMessages(user_id);
       const previews = getLastMessages(data);
-      console.log("Prévisualisations :", previews);
-
       historyList.innerHTML = "";
-previews.forEach(({ session_id, preview }) => {
-  // Container principal
-  const container = document.createElement("div");
-  container.className = "prompt";
-  container.style.display = "flex";
-  container.style.justifyContent = "space-between";
-  container.style.alignItems = "center";
-  container.style.position = "relative";
 
-  // Titre cliquable
-  const title = document.createElement("span");
-  title.textContent = preview;
-  title.style.flex = "1";
-  title.style.cursor = "pointer";
+      previews.forEach(({ session_id, preview }) => {
+        const container = document.createElement("div");
+        container.className = "prompt";
+        container.style.display = "flex";
+        container.style.justifyContent = "space-between";
+        container.style.alignItems = "center";
+        container.style.position = "relative";
 
-  // Menu bouton (3 points)
-  const menuBtn = document.createElement("span");
-  menuBtn.textContent = "⋮";
-  menuBtn.style.cursor = "pointer";
-  menuBtn.style.padding = "0 8px";
-  menuBtn.style.userSelect = "none";
+        const title = document.createElement("span");
+        title.textContent = preview;
+        title.style.flex = "1";
+        title.style.cursor = "pointer";
 
-  // Menu déroulant
-  const menu = document.createElement("div");
-  menu.style.position = "absolute";
-  menu.style.top = "100%";
-  menu.style.right = "0";
-  menu.style.background = "white";
-  menu.style.border = "1px solid #ccc";
-  menu.style.borderRadius = "6px";
-  menu.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
-  menu.style.display = "none";
-  menu.style.zIndex = "999";
+        const menuBtn = document.createElement("span");
+        menuBtn.textContent = "⋮";
+        menuBtn.style.cursor = "pointer";
+        menuBtn.style.padding = "0 8px";
+        menuBtn.style.userSelect = "none";
 
-  // Options du menu
-  const renameOption = document.createElement("div");
-  renameOption.textContent = "Renommer";
-  renameOption.style.padding = "8px";
-  renameOption.style.cursor = "pointer";
-  renameOption.addEventListener("click", () => {
-    const newName = prompt("Nouveau nom pour cette session :", preview);
-    if (newName) {
-      title.textContent = newName;
-      // (optionnel) Tu peux sauvegarder ce nom en localStorage ou backend ici
-    }
-    menu.style.display = "none";
-  });
+        const menu = document.createElement("div");
+        menu.style.position = "absolute";
+        menu.style.top = "100%";
+        menu.style.right = "0";
+        menu.style.background = "white";
+        menu.style.border = "1px solid #ccc";
+        menu.style.borderRadius = "6px";
+        menu.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+        menu.style.display = "none";
+        menu.style.zIndex = "999";
 
-  const deleteOption = document.createElement("div");
-  deleteOption.textContent = "Supprimer";
-  deleteOption.style.padding = "8px";
-  deleteOption.style.cursor = "pointer";
-  deleteOption.addEventListener("click", () => {
-    container.remove();
-    // (optionnel) Tu peux aussi supprimer sur le backend ici
-  });
+        const renameOption = document.createElement("div");
+        renameOption.textContent = "Renommer";
+        renameOption.style.padding = "8px";
+        renameOption.style.cursor = "pointer";
+        renameOption.addEventListener("click", () => {
+          const newName = prompt("Nouveau nom pour cette session :", preview);
+          if (newName) title.textContent = newName;
+          menu.style.display = "none";
+        });
 
-  menu.appendChild(renameOption);
-  menu.appendChild(deleteOption);
+        const deleteOption = document.createElement("div");
+        deleteOption.textContent = "Supprimer";
+        deleteOption.style.padding = "8px";
+        deleteOption.style.cursor = "pointer";
+        deleteOption.addEventListener("click", () => container.remove());
 
-  // Toggle menu au clic
-  menuBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // évite de propager le clic
-    menu.style.display = menu.style.display === "block" ? "none" : "block";
-  });
+        menu.appendChild(renameOption);
+        menu.appendChild(deleteOption);
+        menuBtn.addEventListener("click", e => {
+          e.stopPropagation();
+          menu.style.display = menu.style.display === "block" ? "none" : "block";
+        });
+        document.addEventListener("click", () => menu.style.display = "none");
 
-  // Clic sur titre = recharger l’historique
-  title.addEventListener("click", async () => {
-    localStorage.setItem("chat_id", session_id);
-    chat.innerHTML = "";
-    const full = data.filter(m => m.session_id === session_id);
-    full.forEach(m => {
-      const parsed = JSON.parse(m.message);
-      appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
-    });
-    historyPanel.classList.remove("open");
-  });
+        title.addEventListener("click", async () => {
+          localStorage.setItem("chat_id", session_id);
+          chat.innerHTML = "";
+          const full = data.filter(m => m.session_id === session_id);
+          full.forEach(m => {
+            const parsed = JSON.parse(m.message);
+            appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
+          });
+          historyPanel.classList.remove("open");
+        });
 
-  // Fermer le menu si on clique ailleurs
-  document.addEventListener("click", () => {
-    menu.style.display = "none";
-  });
-
-  container.appendChild(title);
-  container.appendChild(menuBtn);
-  container.appendChild(menu);
-  historyList.appendChild(container);
-});
-
+        container.appendChild(title);
+        container.appendChild(menuBtn);
+        container.appendChild(menu);
+        historyList.appendChild(container);
+      });
     } catch (err) {
       console.error("Erreur chargement historique", err);
     }
@@ -324,10 +301,10 @@ previews.forEach(({ session_id, preview }) => {
   }
 
   function savesessionIDtolocalStorage() {
-  if (!localStorage.getItem("chat_id")) {
-    localStorage.setItem("chat_id", generateSessionID());
+    if (!localStorage.getItem("chat_id")) {
+      localStorage.setItem("chat_id", generateSessionID());
+    }
   }
-}
 
   sendBtn.addEventListener("click", async () => {
     const text = userInput.value.trim();
@@ -347,8 +324,6 @@ previews.forEach(({ session_id, preview }) => {
       const data = await res.json();
       loader.remove();
       appendMessage(data.output || "Pas de réponse", "bot-message");
-      loadChatHistory() // loadChatHistory(); // on évite de recharger à chaque message envoyé
-      ;
     } catch (err) {
       loader.remove();
       appendMessage("Erreur de connexion", "bot-message");
@@ -359,16 +334,8 @@ previews.forEach(({ session_id, preview }) => {
     if (e.key === "Enter") sendBtn.click();
   });
 
-const currentChatId = localStorage.getItem("chat_id");
-if (currentChatId) {
-  fetchUserMessages(user_id).then(data => {
-    const full = data.filter(m => m.session_id === currentChatId);
-    chat.innerHTML = ""; // 🔹 nettoyer avant de recharger
-    full.forEach(m => {
-      const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
-      if (parsed.content) {
-        appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
-      }
-    });
-  });
-}
+  const currentChatId = localStorage.getItem("chat_id");
+  if (currentChatId) {
+    fetchUserMessages(user_id).then(data => {
+      const full = data.filter(m => m.session_id === currentChatId);
+      chat.innerHTML =
