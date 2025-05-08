@@ -330,6 +330,9 @@ document.body.appendChild(dropZone);
   if (!text) return;
   appendMessage(text, "user-message");
   userInput.value = "";
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+loadChatHistory(); // <= ajoute ça ici
+
 
   const loader = document.createElement("div");
   loader.className = "message bot-message";
