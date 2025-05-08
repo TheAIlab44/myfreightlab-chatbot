@@ -330,8 +330,6 @@ document.body.appendChild(dropZone);
   if (!text) return;
   appendMessage(text, "user-message");
   userInput.value = "";
-    appendMessage(data.output || "Pas de réponse", "bot-message");
-loadChatHistory(); // <= ajoute ça ici
 
 
   const loader = document.createElement("div");
@@ -339,19 +337,22 @@ loadChatHistory(); // <= ajoute ça ici
   loader.innerHTML = "Je réfléchis...";
   chat.appendChild(loader);
 
-  try {
-    const res = await fetch(webhookURL, {
-      method: "POST",
-      body: JSON.stringify({ question: text, user_id, chat_id }),
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await res.json();
-    loader.remove();
-    appendMessage(data.output || "Pas de réponse", "bot-message");
-  } catch (err) {
-    loader.remove();
-    appendMessage("Erreur de connexion", "bot-message");
-  }
+try {
+  const res = await fetch(webhookURL, {
+    method: "POST",
+    body: JSON.stringify({ question: text, user_id, chat_id }),
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const data = await res.json(); // ✅ cette ligne est indispensable AVANT d'utiliser 'data'
+
+  loader.remove();
+  appendMessage(data.output || "Pas de réponse", "bot-message");
+  loadChatHistory(); // ✅ ici c'est bon, 'data' est bien défini
+} catch (err) {
+  loader.remove();
+  appendMessage("Erreur de connexion", "bot-message");
+}
 });
 
 userInput.addEventListener("keypress", function (e) {
