@@ -340,7 +340,7 @@ document.body.appendChild(dropZone);
 try {
   const res = await fetch(webhookURL, {
     method: "POST",
-    body: JSON.stringify({ question: text, user_id, chat_id }),
+    body: JSON.stringify({ question: text, user_id, chat_id , type : "text"}),
     headers: { "Content-Type": "application/json" },
   });
 
@@ -401,6 +401,7 @@ dropZone.addEventListener("drop", async (e) => {
   formData.append("file", file);
   formData.append("user_id", user_id);
   formData.append("chat_id", chat_id);
+  formData.append("type","file");
 
   appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
 
