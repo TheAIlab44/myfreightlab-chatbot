@@ -1,9 +1,16 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const bucketName = "myfreightlab";
+  const user_id = new URLSearchParams(window.location.search).get("user_id") || "invite";
 
+  // 🔐 Ton instance Supabase
+  const supabaseUrl = "https://<TON_INSTANCE>.supabase.co";
+  const supabaseKey = "<TON_ANON_KEY>";
+  const bucketName = "myfreightlab"; // adapte si besoin
+
+  // 📦 Import Supabase dynamiquement
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
-  const supabase = createClient("https://<TON_INSTANCE>.supabase.co", "<TON_ANON_KEY>");
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
+  // 🎨 UI wrapper
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
     <style>
@@ -21,6 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         text-align: center;
         border-radius: 10px;
         cursor: pointer;
+        transition: background 0.3s ease;
       }
       .file-entry {
         padding: 8px;
@@ -42,6 +50,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const uploadInput = wrapper.querySelector("#uploadInput");
   const filelist = wrapper.querySelector("#file-list");
 
+  // 📥 Listing depuis Supabase
   async function fetchFiles() {
     const { data, error } = await supabase.storage.from(bucketName).list("docs");
     if (error) {
@@ -63,11 +72,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // 📤 Upload fichier
   async function handleUpload(file) {
     const filePath = `docs/${file.name}`;
-    const { error } = await supabase.storage.from(bucketName).upload(filePath, file, { upsert: true });
+    const { error } = await supabase.storage.from(bucketName).upload(filePath, file, {
+      upsert: true
+    });
     if (error) {
-      alert("Erreur d'upload : " + error.message);
+      alert("❌ Erreur upload : " + error.message);
     } else {
       alert("✅ Fichier ajouté !");
       fetchFiles();
@@ -95,5 +107,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (file) handleUpload(file);
   });
 
-  fetchFiles();
+  fetchFiles(); // initial load
 });
