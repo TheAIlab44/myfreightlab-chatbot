@@ -1,139 +1,106 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ma base de documents</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 2rem;
-      background-color: #f8f9fb;
-    }
+document.addEventListener("DOMContentLoaded", async () => {
+  const bucketName = "myfreightlab"; // adapte si nécessaire
 
-    #file-manager {
-      max-width: 900px;
-      margin: auto;
-    }
+  // === Supabase config
+  const supabaseUrl = "https://TON_INSTANCE.supabase.co";
+  const supabaseKey = "TON_ANON_KEY";
+  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
-    #toolbar {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-
-    #file-view {
-      border: 2px dashed #0077c8;
-      padding: 20px;
-      border-radius: 10px;
-      background: #f0f8ff;
-      min-height: 300px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .item {
-      width: 120px;
-      text-align: center;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      background: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: background 0.2s;
-    }
-
-    .item:hover {
-      background: #e6f2fa;
-    }
-
-    .item-icon {
-      font-size: 40px;
-    }
-
-    #breadcrumb {
-      margin-bottom: 1rem;
-    }
-  </style>
-</head>
-<body>
-  <div id="file-manager">
-    <h2>📁 Ma base de documents</h2>
-    <div id="breadcrumb">/</div>
-    <div id="toolbar">
-      <button onclick="createFolder()">📂 Nouveau dossier</button>
-      <label>📤 <input type="file" id="uploadInput" hidden> Ajouter un fichier</label>
-    </div>
-    <div id="file-view"></div>
-  </div>
-
-  <script type="module">
-    const supabaseUrl = "https://TON_INSTANCE.supabase.co";
-    const supabaseKey = "TON_ANON_KEY";
-    const bucketName = "myfreightlab";
-    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    let currentPath = [];
-
-    async function fetchFiles() {
-      const folderPath = 'docs/' + currentPath.join('/') + (currentPath.length ? '/' : '');
-      const { data, error } = await supabase.storage.from(bucketName).list(folderPath);
-      const container = document.getElementById("file-view");
-      const breadcrumb = document.getElementById("breadcrumb");
-      let path = '/';
-      breadcrumb.innerHTML = '';
-      currentPath.forEach((p, i) => {
-        path += p + '/';
-        breadcrumb.innerHTML += `<span style="cursor:pointer;color:#0077c8" onclick="goTo(${i})">${p}/</span>`;
-      });
-      if (error) {
-        container.innerHTML = `<p style="color:red;">Erreur chargement : ${error.message}</p>`;
-        return;
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <style>
+      #uploadInput { display: none; }
+      #drive-header {
+        font-weight: bold;
+        font-size: 20px;
+        margin-bottom: 1rem;
       }
-      container.innerHTML = '';
-      data.forEach(file => {
-        const el = document.createElement("div");
-        el.className = "item";
-        if (file.metadata) {
-          el.innerHTML = `<div class="item-icon">📄</div><div>${file.name}</div>`;
-        } else {
-          el.innerHTML = `<div class="item-icon">📁</div><div>${file.name}</div>`;
-          el.ondblclick = () => {
-            currentPath.push(file.name);
-            fetchFiles();
-          };
-        }
-        container.appendChild(el);
-      });
+      #upload-area {
+        border: 2px dashed #0077c8;
+        padding: 40px;
+        margin-bottom: 1rem;
+        background: #f0f8ff;
+        text-align: center;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .file-entry {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+      }
+    </style>
+
+    <div id="drive-header">📁 Ma base de documents</div>
+    <div id="upload-area">
+      📤 Glisse un fichier ici ou <label for="uploadInput" style="color: #0077c8; cursor: pointer; text-decoration: underline;">clique pour choisir</label>
+      <input type="file" id="uploadInput" />
+    </div>
+    <div id="file-list">Chargement des fichiers...</div>
+  `;
+
+  document.body.appendChild(wrapper);
+
+  const uploadArea = wrapper.querySelector("#upload-area");
+  const uploadInput = wrapper.querySelector("#uploadInput");
+  const filelist = wrapper.querySelector("#file-list");
+
+  // 📥 Liste les fichiers
+  async function fetchFiles() {
+    const { data, error } = await supabase.storage.from(bucketName).list("docs");
+    if (error) {
+      filelist.innerHTML = `<p style="color:red;">Erreur chargement : ${error.message}</p>`;
+      return;
     }
 
-    window.goTo = (i) => {
-      currentPath = currentPath.slice(0, i + 1);
-      fetchFiles();
+    if (!data.length) {
+      filelist.innerHTML = `<p>Aucun fichier pour l'instant.</p>`;
+      return;
     }
 
-    window.createFolder = async () => {
-      const name = prompt("Nom du dossier :");
-      if (!name) return;
-      const folderPath = 'docs/' + currentPath.concat(name).join('/') + '/placeholder.txt';
-      const { error } = await supabase.storage.from(bucketName).upload(folderPath, new Blob([""], { type: 'text/plain' }));
-      if (error) return alert("Erreur création dossier : " + error.message);
-      fetchFiles();
-    };
-
-    document.getElementById("uploadInput").addEventListener("change", async e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const filePath = 'docs/' + currentPath.join('/') + (currentPath.length ? '/' : '') + file.name;
-      const { error } = await supabase.storage.from(bucketName).upload(filePath, file, { upsert: true });
-      if (error) return alert("Erreur d'upload : " + error.message);
-      fetchFiles();
+    filelist.innerHTML = "";
+    data.forEach(file => {
+      const div = document.createElement("div");
+      div.className = "file-entry";
+      div.textContent = file.name;
+      filelist.appendChild(div);
     });
+  }
 
-    fetchFiles();
-  </script>
-</body>
-</html>
+  // 📤 Upload
+  async function handleUpload(file) {
+    const filePath = `docs/${file.name}`;
+    const { error } = await supabase.storage.from(bucketName).upload(filePath, file, {
+      upsert: true
+    });
+    if (error) {
+      alert("Erreur d'upload : " + error.message);
+    } else {
+      alert("✅ Fichier ajouté !");
+      fetchFiles();
+    }
+  }
+
+  uploadArea.addEventListener("dragover", e => {
+    e.preventDefault();
+    uploadArea.style.background = "#e0f0ff";
+  });
+
+  uploadArea.addEventListener("dragleave", () => {
+    uploadArea.style.background = "#f0f8ff";
+  });
+
+  uploadArea.addEventListener("drop", e => {
+    e.preventDefault();
+    uploadArea.style.background = "#f0f8ff";
+    const file = e.dataTransfer.files[0];
+    if (file) handleUpload(file);
+  });
+
+  uploadInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) handleUpload(file);
+  });
+
+  fetchFiles(); // initial load
+});
