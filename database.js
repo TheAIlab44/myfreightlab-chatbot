@@ -64,76 +64,76 @@
     <div id="breadcrumb">/</div>
     <div id="toolbar">
       <button onclick="createFolder()">📂 Nouveau dossier</button>
-      <label>📤 <input type="file" onchange="uploadFile(event)" hidden> Ajouter un fichier</label>
+      <label>📤 <input type="file" id="uploadInput" hidden> Ajouter un fichier</label>
     </div>
     <div id="file-view"></div>
   </div>
 
-  <script>
-    let currentPath = [];
-    let mockFS = {
-      name: '/',
-      folders: {},
-      files: []
-    };
+  <script type="module">
+    const supabaseUrl = "https://TON_INSTANCE.supabase.co";
+    const supabaseKey = "TON_ANON_KEY";
+    const bucketName = "myfreightlab";
+    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    function render() {
+    let currentPath = [];
+
+    async function fetchFiles() {
+      const folderPath = 'docs/' + currentPath.join('/') + (currentPath.length ? '/' : '');
+      const { data, error } = await supabase.storage.from(bucketName).list(folderPath);
       const container = document.getElementById("file-view");
       const breadcrumb = document.getElementById("breadcrumb");
-
-      let node = mockFS;
-      breadcrumb.textContent = '/';
-      currentPath.forEach(p => {
-        breadcrumb.textContent += p + '/';
-        node = node.folders[p];
+      let path = '/';
+      breadcrumb.innerHTML = '';
+      currentPath.forEach((p, i) => {
+        path += p + '/';
+        breadcrumb.innerHTML += `<span style="cursor:pointer;color:#0077c8" onclick="goTo(${i})">${p}/</span>`;
       });
-
-      container.innerHTML = '';
-
-      Object.keys(node.folders).forEach(folder => {
-        const el = document.createElement("div");
-        el.className = "item";
-        el.innerHTML = `<div class="item-icon">📁</div><div>${folder}</div>`;
-        el.ondblclick = () => {
-          currentPath.push(folder);
-          render();
-        };
-        container.appendChild(el);
-      });
-
-      node.files.forEach(file => {
-        const el = document.createElement("div");
-        el.className = "item";
-        el.innerHTML = `<div class="item-icon">📄</div><div>${file}</div>`;
-        container.appendChild(el);
-      });
-    }
-
-    function createFolder() {
-      const name = prompt("Nom du dossier :");
-      if (!name) return;
-
-      let node = mockFS;
-      currentPath.forEach(p => node = node.folders[p]);
-      if (node.folders[name]) {
-        alert("Ce dossier existe déjà.");
+      if (error) {
+        container.innerHTML = `<p style="color:red;">Erreur chargement : ${error.message}</p>`;
         return;
       }
-      node.folders[name] = { folders: {}, files: [] };
-      render();
+      container.innerHTML = '';
+      data.forEach(file => {
+        const el = document.createElement("div");
+        el.className = "item";
+        if (file.metadata) {
+          el.innerHTML = `<div class="item-icon">📄</div><div>${file.name}</div>`;
+        } else {
+          el.innerHTML = `<div class="item-icon">📁</div><div>${file.name}</div>`;
+          el.ondblclick = () => {
+            currentPath.push(file.name);
+            fetchFiles();
+          };
+        }
+        container.appendChild(el);
+      });
     }
 
-    function uploadFile(e) {
+    window.goTo = (i) => {
+      currentPath = currentPath.slice(0, i + 1);
+      fetchFiles();
+    }
+
+    window.createFolder = async () => {
+      const name = prompt("Nom du dossier :");
+      if (!name) return;
+      const folderPath = 'docs/' + currentPath.concat(name).join('/') + '/placeholder.txt';
+      const { error } = await supabase.storage.from(bucketName).upload(folderPath, new Blob([""], { type: 'text/plain' }));
+      if (error) return alert("Erreur création dossier : " + error.message);
+      fetchFiles();
+    };
+
+    document.getElementById("uploadInput").addEventListener("change", async e => {
       const file = e.target.files[0];
       if (!file) return;
+      const filePath = 'docs/' + currentPath.join('/') + (currentPath.length ? '/' : '') + file.name;
+      const { error } = await supabase.storage.from(bucketName).upload(filePath, file, { upsert: true });
+      if (error) return alert("Erreur d'upload : " + error.message);
+      fetchFiles();
+    });
 
-      let node = mockFS;
-      currentPath.forEach(p => node = node.folders[p]);
-      node.files.push(file.name);
-      render();
-    }
-
-    render();
+    fetchFiles();
   </script>
 </body>
 </html>
