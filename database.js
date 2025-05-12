@@ -1,6 +1,16 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const bucketName = "myfreightlab"; // adapte selon ton nom réel dans Supabase
+document.addEventListener("DOMContentLoaded", async () => {
+  const user_id = new URLSearchParams(window.location.search).get("user_id") || "invite";
 
+  // 🔐 Ton instance Supabase
+  const supabaseUrl = "https://<TON_INSTANCE>.supabase.co";
+  const supabaseKey = "<TON_ANON_KEY>";
+  const bucketName = "myfreightlab"; // adapte si besoin
+
+  // 📦 Import Supabase dynamiquement
+  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // 🎨 UI wrapper
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
     <style>
@@ -18,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
         text-align: center;
         border-radius: 10px;
         cursor: pointer;
+        transition: background 0.3s ease;
       }
       .file-entry {
         padding: 8px;
@@ -68,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
       upsert: true
     });
     if (error) {
-      alert("Erreur d'upload : " + error.message);
+      alert("❌ Erreur upload : " + error.message);
     } else {
       alert("✅ Fichier ajouté !");
       fetchFiles();
