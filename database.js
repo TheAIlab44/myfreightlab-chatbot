@@ -31,48 +31,51 @@ document.addEventListener("DOMContentLoaded", async () => {
         align-items: flex-start;
       }
 
-      .add-folder, .folder-item {
-        width: 90px;
-        height: 110px;
-        background: white;
-        border-radius: 10px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-size: 28px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        cursor: pointer;
-        position: relative;
-      }
+.add-folder, .folder-item {
+  width: 90px;
+  height: 110px;
+  background: transparent;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  position: relative;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+}
 
-      .add-folder {
-        border: 2px dashed green;
-        color: green;
-        transition: background 0.2s;
-      }
+.add-folder {
+  border: 2px dashed green;
+  color: green;
+  transition: background 0.2s;
+}
 
-      .add-folder:hover {
-        background-color: #f0fff0;
-      }
+.add-folder:hover {
+  background-color: #f0fff0;
+}
 
-      .folder-item {
-        border: 1px solid #c0c0c0;
-        font-size: 14px;
-        padding: 6px;
-      }
+.folder-item {
+  border: none;
+  font-size: 14px;
+}
 
-      .folder-item .emoji {
-        font-size: 34px;
-        margin-bottom: 2px;
-      }
+.folder-item .emoji {
+  font-size: 34px;
+  margin-bottom: 2px;
+}
 
-      .folder-item .name {
-        font-size: 13px;
-        line-height: 1.2;
-        word-break: break-word;
-        text-align: center;
-      }
+.folder-item .name {
+  font-size: 13px;
+  line-height: 1.2;
+  word-break: break-word;
+  text-align: center;
+}
+
 
       .menu-button {
         position: absolute;
