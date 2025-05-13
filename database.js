@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const bucketName = "myfreightlab"; // adapte si nécessaire
+  const bucketName = "myfreightlab";
 
-  // === Supabase config
+  // Supabase config
   const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc";
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
@@ -10,8 +10,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
     <style>
-      #uploadInput { display: none; }
-
       .explorer {
         padding: 20px;
         background: #f5f7fa;
@@ -53,17 +51,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         text-align: center;
         font-size: 14px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         cursor: pointer;
         padding: 5px;
+        position: relative;
       }
 
-      .folder-item:hover {
-        background: #eef;
-        border-color: #339;
+      .folder-actions {
+        display: flex;
+        gap: 5px;
+        font-size: 12px;
+        justify-content: center;
+        margin-top: 4px;
+      }
+
+      .folder-actions span {
+        cursor: pointer;
+      }
+
+      .folder-actions span:hover {
+        color: red;
+      }
+
+      .dragging {
+        opacity: 0.5;
       }
     </style>
 
@@ -71,58 +85,102 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="explorer-toolbar">
         <button id="create-folder">📁 Nouveau dossier</button>
       </div>
-      <div id="upload-area">
-        📤 Glisse un fichier ici ou <label for="uploadInput" style="color: #0077c8; cursor: pointer; text-decoration: underline;">clique pour choisir</label>
-        <input type="file" id="uploadInput" />
-      </div>
       <div class="explorer-grid" id="folder-container">
-        <!-- Les dossiers s’empilent ici -->
+        <!-- Dossiers dynamiques ici -->
       </div>
     </div>
   `;
 
-
   document.body.appendChild(wrapper);
 
-    let folderCount = 1;
+  // === Gestion des dossiers dynamiques ===
+  let folderCount = 1;
   const folderContainer = wrapper.querySelector("#folder-container");
   const createBtn = wrapper.querySelector("#create-folder");
 
   createBtn.addEventListener("click", () => {
     const folder = document.createElement("div");
     folder.className = "folder-item";
-    folder.innerHTML = `📁 Dossier ${folderCount++}`;
+    folder.setAttribute("draggable", "true");
+
+    const name = document.createElement("div");
+    name.textContent = `📁 Dossier ${folderCount++}`;
+    name.contentEditable = false;
+
+    name.addEventListener("dblclick", () => {
+      name.contentEditable = true;
+      name.focus();
+    });
+
+    name.addEventListener("blur", () => {
+      name.contentEditable = false;
+    });
+
+    const actions = document.createElement("div");
+    actions.className = "folder-actions";
+
+    const renameBtn = document.createElement("span");
+    renameBtn.textContent = "✏️";
+    renameBtn.title = "Renommer";
+    renameBtn.onclick = () => {
+      name.contentEditable = true;
+      name.focus();
+    };
+
+    const deleteBtn = document.createElement("span");
+    deleteBtn.textContent = "🗑️";
+    deleteBtn.title = "Supprimer";
+    deleteBtn.onclick = () => folder.remove();
+
+    actions.appendChild(renameBtn);
+    actions.appendChild(deleteBtn);
+
+    folder.appendChild(name);
+    folder.appendChild(actions);
     folderContainer.appendChild(folder);
+
+    // Drag & Drop logic
+    folder.addEventListener("dragstart", () => {
+      folder.classList.add("dragging");
+    });
+
+    folder.addEventListener("dragend", () => {
+      folder.classList.remove("dragging");
+    });
   });
 
-
-  const uploadArea = wrapper.querySelector("#upload-area");
-  const uploadInput = wrapper.querySelector("#uploadInput");
-  const filelist = wrapper.querySelector("#file-list");
-
-  // 📥 Liste les fichiers
-  async function fetchFiles() {
-    const { data, error } = await supabase.storage.from(bucketName).list("docs");
-    if (error) {
-      filelist.innerHTML = `<p style="color:red;">Erreur chargement : ${error.message}</p>`;
-      return;
+  // Container drop logic
+  folderContainer.addEventListener("dragover", e => {
+    e.preventDefault();
+    const dragging = folderContainer.querySelector(".dragging");
+    const afterElement = getDragAfterElement(folderContainer, e.clientX);
+    if (afterElement == null) {
+      folderContainer.appendChild(dragging);
+    } else {
+      folderContainer.insertBefore(dragging, afterElement);
     }
+  });
 
-    if (!data.length) {
-      filelist.innerHTML = `<p>Aucun fichier pour l'instant.</p>`;
-      return;
-    }
+  function getDragAfterElement(container, x) {
+    const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
 
-    filelist.innerHTML = "";
-    data.forEach(file => {
-      const div = document.createElement("div");
-      div.className = "file-entry";
-      div.textContent = file.name;
-      filelist.appendChild(div);
-    });
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = x - box.left - box.width / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
   }
 
-  // 📤 Upload
+  // === Supabase : gestion de fichiers ===
+  async function fetchFiles() {
+    // Tu peux réutiliser ce bloc plus tard si tu veux réafficher les fichiers Supabase.
+    // Actuellement non utilisé.
+  }
+
   async function handleUpload(file) {
     const filePath = `docs/${file.name}`;
     const { error } = await supabase.storage.from(bucketName).upload(filePath, file, {
@@ -135,27 +193,4 @@ document.addEventListener("DOMContentLoaded", async () => {
       fetchFiles();
     }
   }
-
-  uploadArea.addEventListener("dragover", e => {
-    e.preventDefault();
-    uploadArea.style.background = "#e0f0ff";
-  });
-
-  uploadArea.addEventListener("dragleave", () => {
-    uploadArea.style.background = "#f0f8ff";
-  });
-
-  uploadArea.addEventListener("drop", e => {
-    e.preventDefault();
-    uploadArea.style.background = "#f0f8ff";
-    const file = e.dataTransfer.files[0];
-    if (file) handleUpload(file);
-  });
-
-  uploadInput.addEventListener("change", e => {
-    const file = e.target.files[0];
-    if (file) handleUpload(file);
-  });
-
-  fetchFiles(); // initial load
 });
