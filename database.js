@@ -44,29 +44,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       .folder-item {
         width: 90px;
-        height: 120px;
+        height: 110px;
         background: white;
         border: 1px solid #c0c0c0;
         border-radius: 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         text-align: center;
         font-size: 14px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         cursor: pointer;
-        padding: 8px;
+        padding: 6px;
         position: relative;
       }
 
       .folder-item .emoji {
-        font-size: 36px;
-        margin-bottom: 4px;
+        font-size: 34px;
+        margin-bottom: 2px;
       }
 
       .folder-item .name {
-        font-size: 14px;
+        font-size: 13px;
+        line-height: 1.2;
         word-break: break-word;
       }
 
@@ -86,6 +87,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         font-size: 13px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         z-index: 1000;
+        width: 100px;
       }
 
       .context-menu div {
@@ -145,7 +147,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       menu.className = "context-menu";
 
       const renameOption = document.createElement("div");
-      renameOption.textContent = "✏️ Renommer";
+      renameOption.textContent = "Renommer";
       renameOption.onclick = () => {
         name.contentEditable = true;
         name.focus();
@@ -153,7 +155,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
 
       const deleteOption = document.createElement("div");
-      deleteOption.textContent = "🗑️ Supprimer";
+      deleteOption.textContent = "Supprimer";
       deleteOption.onclick = () => {
         folder.remove();
       };
@@ -162,11 +164,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       menu.appendChild(deleteOption);
 
       folder.appendChild(menu);
-
-      // Position the menu below the 3-dot button
-      const rect = menuBtn.getBoundingClientRect();
-      menu.style.top = `${menuBtn.offsetTop + 20}px`;
-      menu.style.right = `6px`;
     });
 
     document.addEventListener("click", closeMenus);
