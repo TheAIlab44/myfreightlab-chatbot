@@ -21,26 +21,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         align-items: flex-start;
       }
 
-      .add-folder {
-        font-size: 32px;
-        color: green;
-        cursor: pointer;
-        width: 80px;
-        height: 80px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 3px dotted green;
-        border-radius: 50%;
-        background-color: #f0fff0;
-        box-shadow: 0 2px 4px rgba(0, 128, 0, 0.1);
-        user-select: none;
-        transition: background 0.2s;
-      }
+.add-folder {
+  width: 90px;
+  height: 110px;
+  background: white;
+  border: 2px dashed green;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: green;
+  box-shadow: 0 2px 4px rgba(0, 128, 0, 0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+}
 
-      .add-folder:hover {
-        background-color: #ccffcc;
-      }
+.add-folder:hover {
+  background-color: #f0fff0;
+}
+
 
       .folder-item {
         width: 90px;
@@ -202,6 +203,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       folderContainer.insertBefore(dragging, afterElement);
     }
   });
+
+  folderContainer.addEventListener("drop", async (e) => {
+  e.preventDefault();
+  const files = e.dataTransfer.files;
+  if (!files.length) return;
+
+  for (const file of files) {
+    const filePath = `docs/${file.name}`;
+    const { error } = await supabase.storage.from(bucketName).upload(filePath, file, { upsert: true });
+    if (error) {
+      alert("Erreur d'upload : " + error.message);
+    } else {
+      alert("✅ Fichier ajouté !");
+    }
+  }
+});
 
   function getDragAfterElement(container, x) {
     const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
