@@ -1,18 +1,45 @@
-<script type="module">
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  const bucketName = "myfreightlab";
+
+  // Supabase config
+  const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc";
+  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
     <style>
       .explorer {
         padding: 20px;
+        background: #f5f7fa;
+        border-radius: 10px;
+        border: 1px solid #ccc;
         font-family: "Segoe UI", sans-serif;
+        max-width: 100%;
+      }
+
+      .explorer-toolbar {
+        margin-bottom: 15px;
+      }
+
+      .explorer-toolbar button {
+        padding: 8px 12px;
+        background: #e4e6eb;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .explorer-toolbar button:hover {
+        background-color: #d0d2d6;
       }
 
       .explorer-grid {
         display: flex;
         flex-wrap: wrap;
         gap: 15px;
-        align-items: flex-start;
       }
 
       .folder-item {
@@ -20,11 +47,12 @@ document.addEventListener("DOMContentLoaded", () => {
         height: 90px;
         background: white;
         border: 1px solid #c0c0c0;
-        border-radius: 10px;
+        border-radius: 6px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
+        text-align: center;
         font-size: 14px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         cursor: pointer;
@@ -32,48 +60,137 @@ document.addEventListener("DOMContentLoaded", () => {
         position: relative;
       }
 
-      .folder-item:hover {
-        background: #eef;
-        border-color: #339;
+      .folder-actions {
+        display: flex;
+        gap: 5px;
+        font-size: 12px;
+        justify-content: center;
+        margin-top: 4px;
       }
 
-      #add-folder {
-        font-size: 32px;
-        color: green;
+      .folder-actions span {
         cursor: pointer;
-        user-select: none;
-        margin-right: 15px;
       }
 
-      .folder-name {
-        margin-top: 5px;
-        font-size: 13px;
-        text-align: center;
+      .folder-actions span:hover {
+        color: red;
+      }
+
+      .dragging {
+        opacity: 0.5;
       }
     </style>
 
     <div class="explorer">
+      <div class="explorer-toolbar">
+        <button id="create-folder">📁 Nouveau dossier</button>
+      </div>
       <div class="explorer-grid" id="folder-container">
-        <div id="add-folder">➕</div>
-        <!-- Dossiers générés -->
+        <!-- Dossiers dynamiques ici -->
       </div>
     </div>
   `;
 
   document.body.appendChild(wrapper);
 
+  // === Gestion des dossiers dynamiques ===
   let folderCount = 1;
   const folderContainer = wrapper.querySelector("#folder-container");
-  const addBtn = wrapper.querySelector("#add-folder");
+  const createBtn = wrapper.querySelector("#create-folder");
 
-  addBtn.addEventListener("click", () => {
+  createBtn.addEventListener("click", () => {
     const folder = document.createElement("div");
     folder.className = "folder-item";
-    folder.innerHTML = `
-      📁
-      <div class="folder-name">Dossier ${folderCount++}</div>
-    `;
+    folder.setAttribute("draggable", "true");
+
+    const name = document.createElement("div");
+    name.textContent = `📁 Dossier ${folderCount++}`;
+    name.contentEditable = false;
+
+    name.addEventListener("dblclick", () => {
+      name.contentEditable = true;
+      name.focus();
+    });
+
+    name.addEventListener("blur", () => {
+      name.contentEditable = false;
+    });
+
+    const actions = document.createElement("div");
+    actions.className = "folder-actions";
+
+    const renameBtn = document.createElement("span");
+    renameBtn.textContent = "✏️";
+    renameBtn.title = "Renommer";
+    renameBtn.onclick = () => {
+      name.contentEditable = true;
+      name.focus();
+    };
+
+    const deleteBtn = document.createElement("span");
+    deleteBtn.textContent = "🗑️";
+    deleteBtn.title = "Supprimer";
+    deleteBtn.onclick = () => folder.remove();
+
+    actions.appendChild(renameBtn);
+    actions.appendChild(deleteBtn);
+
+    folder.appendChild(name);
+    folder.appendChild(actions);
     folderContainer.appendChild(folder);
+
+    // Drag & Drop logic
+    folder.addEventListener("dragstart", () => {
+      folder.classList.add("dragging");
+    });
+
+    folder.addEventListener("dragend", () => {
+      folder.classList.remove("dragging");
+    });
   });
+
+  // Container drop logic
+  folderContainer.addEventListener("dragover", e => {
+    e.preventDefault();
+    const dragging = folderContainer.querySelector(".dragging");
+    const afterElement = getDragAfterElement(folderContainer, e.clientX);
+    if (afterElement == null) {
+      folderContainer.appendChild(dragging);
+    } else {
+      folderContainer.insertBefore(dragging, afterElement);
+    }
+  });
+
+  function getDragAfterElement(container, x) {
+    const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
+
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = x - box.left - box.width / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  // === Supabase : gestion de fichiers ===
+  async function fetchFiles() {
+    // Tu peux réutiliser ce bloc plus tard si tu veux réafficher les fichiers Supabase.
+    // Actuellement non utilisé.
+  }
+
+  async function handleUpload(file) {
+    const filePath = `docs/${file.name}`;
+    const { error } = await supabase.storage.from(bucketName).upload(filePath, file, {
+      upsert: true
+    });
+    if (error) {
+      alert("Erreur d'upload : " + error.message);
+    } else {
+      alert("✅ Fichier ajouté !");
+      fetchFiles();
+    }
+  }
 });
-</script>
