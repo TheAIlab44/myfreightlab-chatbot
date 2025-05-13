@@ -1,12 +1,5 @@
-document.addEventListener("DOMContentLoaded", async () => {
-  const bucketName = "myfreightlab";
-
-  // Supabase config
-  const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc";
-  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
+<script type="module">
+document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
     <style>
@@ -16,24 +9,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         border-radius: 10px;
         border: 1px solid #ccc;
         font-family: "Segoe UI", sans-serif;
-        max-width: 100%;
       }
 
       .explorer-toolbar {
-        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
       }
 
-      .explorer-toolbar button {
-        padding: 8px 12px;
-        background: #e4e6eb;
-        border: 1px solid #ccc;
-        border-radius: 6px;
+      #create-folder {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: green;
         cursor: pointer;
-        font-size: 14px;
-      }
-
-      .explorer-toolbar button:hover {
-        background-color: #d0d2d6;
+        padding: 0;
+        margin: 0;
       }
 
       .explorer-grid {
@@ -47,7 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         height: 90px;
         background: white;
         border: 1px solid #c0c0c0;
-        border-radius: 6px;
+        border-radius: 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -60,137 +52,118 @@ document.addEventListener("DOMContentLoaded", async () => {
         position: relative;
       }
 
-      .folder-actions {
-        display: flex;
-        gap: 5px;
-        font-size: 12px;
-        justify-content: center;
-        margin-top: 4px;
+      .folder-item:hover {
+        background: #eef;
+        border-color: #339;
       }
 
-      .folder-actions span {
+      .item-title {
+        margin-top: 5px;
+      }
+
+      .menu-button {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: none;
+        border: none;
+        font-size: 18px;
         cursor: pointer;
       }
 
-      .folder-actions span:hover {
-        color: red;
+      .context-menu {
+        position: absolute;
+        top: 25px;
+        right: 5px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        display: none;
+        flex-direction: column;
+        font-size: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        z-index: 10;
       }
 
-      .dragging {
-        opacity: 0.5;
+      .context-menu button {
+        background: none;
+        border: none;
+        padding: 8px 12px;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .context-menu button:hover {
+        background: #f0f0f0;
       }
     </style>
 
     <div class="explorer">
       <div class="explorer-toolbar">
-        <button id="create-folder">📁 Nouveau dossier</button>
+        <button id="create-folder">➕</button>
       </div>
       <div class="explorer-grid" id="folder-container">
-        <!-- Dossiers dynamiques ici -->
+        <!-- Dossiers s'empilent ici -->
       </div>
     </div>
   `;
 
   document.body.appendChild(wrapper);
 
-  // === Gestion des dossiers dynamiques ===
-  let folderCount = 1;
   const folderContainer = wrapper.querySelector("#folder-container");
   const createBtn = wrapper.querySelector("#create-folder");
 
-  createBtn.addEventListener("click", () => {
+  let folderCount = 1;
+
+  function createFolder(name = `Dossier ${folderCount++}`) {
     const folder = document.createElement("div");
     folder.className = "folder-item";
-    folder.setAttribute("draggable", "true");
+    folder.innerHTML = `
+      <div>📁</div>
+      <div class="item-title" contenteditable="false">${name}</div>
+      <button class="menu-button">⋮</button>
+      <div class="context-menu">
+        <button class="rename">Renommer</button>
+        <button class="delete">Supprimer</button>
+      </div>
+    `;
 
-    const name = document.createElement("div");
-    name.textContent = `📁 Dossier ${folderCount++}`;
-    name.contentEditable = false;
+    const menuBtn = folder.querySelector(".menu-button");
+    const menu = folder.querySelector(".context-menu");
+    const renameBtn = folder.querySelector(".rename");
+    const deleteBtn = folder.querySelector(".delete");
+    const title = folder.querySelector(".item-title");
 
-    name.addEventListener("dblclick", () => {
-      name.contentEditable = true;
-      name.focus();
+    menuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
     });
 
-    name.addEventListener("blur", () => {
-      name.contentEditable = false;
+    document.addEventListener("click", () => {
+      menu.style.display = "none";
     });
 
-    const actions = document.createElement("div");
-    actions.className = "folder-actions";
+    renameBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      title.contentEditable = true;
+      title.focus();
+      menu.style.display = "none";
+    });
 
-    const renameBtn = document.createElement("span");
-    renameBtn.textContent = "✏️";
-    renameBtn.title = "Renommer";
-    renameBtn.onclick = () => {
-      name.contentEditable = true;
-      name.focus();
-    };
+    title.addEventListener("blur", () => {
+      title.contentEditable = false;
+    });
 
-    const deleteBtn = document.createElement("span");
-    deleteBtn.textContent = "🗑️";
-    deleteBtn.title = "Supprimer";
-    deleteBtn.onclick = () => folder.remove();
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      folder.remove();
+    });
 
-    actions.appendChild(renameBtn);
-    actions.appendChild(deleteBtn);
-
-    folder.appendChild(name);
-    folder.appendChild(actions);
     folderContainer.appendChild(folder);
+  }
 
-    // Drag & Drop logic
-    folder.addEventListener("dragstart", () => {
-      folder.classList.add("dragging");
-    });
-
-    folder.addEventListener("dragend", () => {
-      folder.classList.remove("dragging");
-    });
+  createBtn.addEventListener("click", () => {
+    createFolder();
   });
-
-  // Container drop logic
-  folderContainer.addEventListener("dragover", e => {
-    e.preventDefault();
-    const dragging = folderContainer.querySelector(".dragging");
-    const afterElement = getDragAfterElement(folderContainer, e.clientX);
-    if (afterElement == null) {
-      folderContainer.appendChild(dragging);
-    } else {
-      folderContainer.insertBefore(dragging, afterElement);
-    }
-  });
-
-  function getDragAfterElement(container, x) {
-    const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
-
-    return draggableElements.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = x - box.left - box.width / 2;
-      if (offset < 0 && offset > closest.offset) {
-        return { offset: offset, element: child };
-      } else {
-        return closest;
-      }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-  }
-
-  // === Supabase : gestion de fichiers ===
-  async function fetchFiles() {
-    // Tu peux réutiliser ce bloc plus tard si tu veux réafficher les fichiers Supabase.
-    // Actuellement non utilisé.
-  }
-
-  async function handleUpload(file) {
-    const filePath = `docs/${file.name}`;
-    const { error } = await supabase.storage.from(bucketName).upload(filePath, file, {
-      upsert: true
-    });
-    if (error) {
-      alert("Erreur d'upload : " + error.message);
-    } else {
-      alert("✅ Fichier ajouté !");
-      fetchFiles();
-    }
-  }
 });
+</script>
