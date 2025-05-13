@@ -12,16 +12,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         padding: 20px;
         font-family: "Segoe UI", sans-serif;
         min-height: calc(100vh - 100px);
-        border: 2px dashed transparent;
-        transition: background 0.3s, border-color 0.3s;
+        transition: background 0.3s;
         box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
       }
 
       .explorer.dragover {
-        border-color: #00aa00;
         background: #f6fff6;
+        outline: 2px dashed #00aa00;
       }
 
       .explorer-grid {
@@ -31,50 +28,43 @@ document.addEventListener("DOMContentLoaded", async () => {
         align-items: flex-start;
       }
 
-.add-folder {
-  width: 90px;
-  height: 110px;
-  background: transparent;
-  border: none; /* plus de contour */
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 34px;
-  color: green;
-  transition: background 0.2s;
-  cursor: pointer;
-}
+      .add-folder {
+        width: 90px;
+        height: 110px;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+        color: green;
+        cursor: pointer;
+      }
 
+      .folder-item {
+        width: 90px;
+        height: 110px;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 14px;
+        cursor: pointer;
+        position: relative;
+      }
 
-.add-folder {
-  border: 2px dashed green;
-  color: green;
-  transition: background 0.2s;
-}
+      .folder-item .emoji {
+        font-size: 34px;
+        margin-bottom: 2px;
+      }
 
-.add-folder:hover {
-  background-color: #f0fff0;
-}
-
-.folder-item {
-  border: none;
-  font-size: 14px;
-}
-
-.folder-item .emoji {
-  font-size: 34px;
-  margin-bottom: 2px;
-}
-
-.folder-item .name {
-  font-size: 13px;
-  line-height: 1.2;
-  word-break: break-word;
-  text-align: center;
-}
-
+      .folder-item .name {
+        font-size: 13px;
+        line-height: 1.2;
+        word-break: break-word;
+      }
 
       .menu-button {
         position: absolute;
@@ -118,6 +108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.body.appendChild(wrapper);
 
+  let folderCount = 1;
   const folderContainer = wrapper.querySelector("#folder-container");
   const createBtn = wrapper.querySelector("#create-folder");
   const dropZone = wrapper.querySelector("#drop-zone");
@@ -126,9 +117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelectorAll(".context-menu").forEach(menu => menu.remove());
   }
 
-  document.addEventListener("click", closeMenus);
-
-  function createFolder(nameText) {
+  function createFolder(nameText = `Dossier ${folderCount++}`) {
     const folder = document.createElement("div");
     folder.className = "folder-item";
     folder.setAttribute("draggable", "true");
@@ -170,6 +159,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       folder.appendChild(menu);
     });
 
+    document.addEventListener("click", closeMenus);
+
     name.addEventListener("dblclick", () => {
       name.contentEditable = true;
       name.focus();
@@ -184,22 +175,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     folder.appendChild(menuBtn);
     folderContainer.appendChild(folder);
 
-    folder.addEventListener("dragstart", () => folder.classList.add("dragging"));
-    folder.addEventListener("dragend", () => folder.classList.remove("dragging"));
+    folder.addEventListener("dragstart", () => {
+      folder.classList.add("dragging");
+    });
+
+    folder.addEventListener("dragend", () => {
+      folder.classList.remove("dragging");
+    });
   }
 
   createBtn.addEventListener("click", () => {
-    const name = prompt("Nom du dossier :");
-    if (name && name.trim()) {
-      createFolder(name.trim());
-    }
+    const folderName = prompt("Nom du nouveau dossier :");
+    if (folderName) createFolder(folderName);
   });
 
   folderContainer.addEventListener("dragover", e => {
     e.preventDefault();
     const dragging = folderContainer.querySelector(".dragging");
     const afterElement = getDragAfterElement(folderContainer, e.clientX);
-    if (!afterElement) {
+    if (afterElement == null) {
       folderContainer.appendChild(dragging);
     } else {
       folderContainer.insertBefore(dragging, afterElement);
@@ -234,11 +228,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   function getDragAfterElement(container, x) {
-    const elements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
-    return elements.reduce((closest, child) => {
+    const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
+    return draggableElements.reduce((closest, child) => {
       const box = child.getBoundingClientRect();
       const offset = x - box.left - box.width / 2;
-      return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
   }
 });
