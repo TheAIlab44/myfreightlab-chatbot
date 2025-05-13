@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const bucketName = "myfreightlab";
   const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // remplace par ta vraie clé
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
   const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -12,8 +12,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         padding: 20px;
         font-family: "Segoe UI", sans-serif;
         min-height: calc(100vh - 100px);
-        height: 100%;
-        flex: 1;
         border: 2px dashed transparent;
         transition: background 0.3s, border-color 0.3s;
         box-sizing: border-box;
@@ -23,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       .explorer.dragover {
         border-color: #00aa00;
-        background: linear-gradient(90deg, #f0fff0 0%, #eaffea 100%);
+        background: #f6fff6;
       }
 
       .explorer-grid {
@@ -33,20 +31,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         align-items: flex-start;
       }
 
-      .add-folder {
+      .add-folder, .folder-item {
         width: 90px;
         height: 110px;
         background: white;
-        border: 2px dashed green;
         border-radius: 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         font-size: 28px;
-        color: green;
-        box-shadow: 0 2px 4px rgba(0, 128, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         cursor: pointer;
+        position: relative;
+      }
+
+      .add-folder {
+        border: 2px dashed green;
+        color: green;
         transition: background 0.2s;
       }
 
@@ -55,21 +57,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       .folder-item {
-        width: 90px;
-        height: 110px;
-        background: white;
         border: 1px solid #c0c0c0;
-        border-radius: 10px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
         font-size: 14px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        cursor: pointer;
         padding: 6px;
-        position: relative;
       }
 
       .folder-item .emoji {
@@ -81,6 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         font-size: 13px;
         line-height: 1.2;
         word-break: break-word;
+        text-align: center;
       }
 
       .menu-button {
@@ -128,18 +119,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const folderContainer = wrapper.querySelector("#folder-container");
   const createBtn = wrapper.querySelector("#create-folder");
   const dropZone = wrapper.querySelector("#drop-zone");
-  let folderCount = 1;
 
-  // Fermer tous les menus contextuels
   function closeMenus() {
     document.querySelectorAll(".context-menu").forEach(menu => menu.remove());
   }
 
-  // Écouteur global pour fermer les menus quand on clique ailleurs
   document.addEventListener("click", closeMenus);
 
-  // Créer un dossier
-  function createFolder(nameText = `Dossier ${folderCount++}`) {
+  function createFolder(nameText) {
     const folder = document.createElement("div");
     folder.className = "folder-item";
     folder.setAttribute("draggable", "true");
@@ -199,10 +186,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     folder.addEventListener("dragend", () => folder.classList.remove("dragging"));
   }
 
-  // Création via le bouton "+"
-  createBtn.addEventListener("click", () => createFolder());
+  createBtn.addEventListener("click", () => {
+    const name = prompt("Nom du dossier :");
+    if (name && name.trim()) {
+      createFolder(name.trim());
+    }
+  });
 
-  // Drag & drop dossier (réorganisation)
   folderContainer.addEventListener("dragover", e => {
     e.preventDefault();
     const dragging = folderContainer.querySelector(".dragging");
@@ -214,7 +204,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Drag & drop fichier (upload dans la drop zone)
   dropZone.addEventListener("dragover", e => {
     e.preventDefault();
     dropZone.classList.add("dragover");
@@ -242,7 +231,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Fonction utilitaire pour le placement en drag
   function getDragAfterElement(container, x) {
     const elements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
     return elements.reduce((closest, child) => {
