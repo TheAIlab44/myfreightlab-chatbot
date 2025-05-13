@@ -2,8 +2,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const bucketName = "myfreightlab"; // adapte si nécessaire
 
   // === Supabase config
-  const supabaseUrl = "https://TON_INSTANCE.supabase.co";
-  const supabaseKey = "TON_ANON_KEY";
+  const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc";
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
   const supabase = createClient(supabaseUrl, supabaseKey);
 
