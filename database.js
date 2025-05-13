@@ -1,90 +1,88 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const bucketName = "myfreightlab";
 
-  // Supabase config
   const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   const wrapper = document.createElement("div");
-<style>
-  .explorer {
-    padding: 20px;
-    font-family: "Segoe UI", sans-serif;
-  }
+  wrapper.innerHTML = `
+    <style>
+      .explorer {
+        padding: 20px;
+        font-family: "Segoe UI", sans-serif;
+      }
 
-  .explorer-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: flex-start;
-  }
+      .explorer-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: flex-start;
+      }
 
-  .add-folder {
-    font-size: 28px;
-    color: green;
-    cursor: pointer;
-    width: 60px;
-    height: 90px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 2px dashed green;
-    border-radius: 10px;
-    user-select: none;
-  }
+      .add-folder {
+        font-size: 28px;
+        color: green;
+        cursor: pointer;
+        width: 60px;
+        height: 90px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 2px dashed green;
+        border-radius: 10px;
+        user-select: none;
+      }
 
-  .folder-item {
-    width: 100px;
-    height: 90px;
-    background: white;
-    border: 1px solid #c0c0c0;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    text-align: center;
-    font-size: 14px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    cursor: pointer;
-    padding: 5px;
-    position: relative;
-  }
+      .folder-item {
+        width: 100px;
+        height: 90px;
+        background: white;
+        border: 1px solid #c0c0c0;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        text-align: center;
+        font-size: 14px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        cursor: pointer;
+        padding: 5px;
+        position: relative;
+      }
 
-  .folder-actions {
-    display: flex;
-    gap: 5px;
-    font-size: 12px;
-    justify-content: center;
-    margin-top: 4px;
-  }
+      .folder-actions {
+        display: flex;
+        gap: 5px;
+        font-size: 12px;
+        justify-content: center;
+        margin-top: 4px;
+      }
 
-  .folder-actions span {
-    cursor: pointer;
-  }
+      .folder-actions span {
+        cursor: pointer;
+      }
 
-  .folder-actions span:hover {
-    color: red;
-  }
+      .folder-actions span:hover {
+        color: red;
+      }
 
-  .dragging {
-    opacity: 0.5;
-  }
-</style>
+      .dragging {
+        opacity: 0.5;
+      }
+    </style>
 
-<div class="explorer">
-  <div class="explorer-grid" id="folder-container">
-    <div class="add-folder" id="create-folder">➕</div>
-    <!-- Dossiers dynamiques ici -->
-  </div>
-</div>
+    <div class="explorer">
+      <div class="explorer-grid" id="folder-container">
+        <div class="add-folder" id="create-folder">➕</div>
+      </div>
+    </div>
   `;
 
   document.body.appendChild(wrapper);
 
-  // === Gestion des dossiers dynamiques ===
   let folderCount = 1;
   const folderContainer = wrapper.querySelector("#folder-container");
   const createBtn = wrapper.querySelector("#create-folder");
@@ -130,17 +128,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     folder.appendChild(actions);
     folderContainer.appendChild(folder);
 
-    // Drag & Drop logic
-    folder.addEventListener("dragstart", () => {
-      folder.classList.add("dragging");
-    });
-
-    folder.addEventListener("dragend", () => {
-      folder.classList.remove("dragging");
-    });
+    folder.addEventListener("dragstart", () => folder.classList.add("dragging"));
+    folder.addEventListener("dragend", () => folder.classList.remove("dragging"));
   });
 
-  // Container drop logic
   folderContainer.addEventListener("dragover", e => {
     e.preventDefault();
     const dragging = folderContainer.querySelector(".dragging");
@@ -154,7 +145,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function getDragAfterElement(container, x) {
     const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
-
     return draggableElements.reduce((closest, child) => {
       const box = child.getBoundingClientRect();
       const offset = x - box.left - box.width / 2;
@@ -164,24 +154,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         return closest;
       }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
-  }
-
-  // === Supabase : gestion de fichiers ===
-  async function fetchFiles() {
-    // Tu peux réutiliser ce bloc plus tard si tu veux réafficher les fichiers Supabase.
-    // Actuellement non utilisé.
-  }
-
-  async function handleUpload(file) {
-    const filePath = `docs/${file.name}`;
-    const { error } = await supabase.storage.from(bucketName).upload(filePath, file, {
-      upsert: true
-    });
-    if (error) {
-      alert("Erreur d'upload : " + error.message);
-    } else {
-      alert("✅ Fichier ajouté !");
-      fetchFiles();
-    }
   }
 });
