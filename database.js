@@ -1,169 +1,136 @@
 <script type="module">
-document.addEventListener("DOMContentLoaded", () => {
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = `
-    <style>
-      .explorer {
-        padding: 20px;
-        background: #f5f7fa;
-        border-radius: 10px;
-        border: 1px solid #ccc;
-        font-family: "Segoe UI", sans-serif;
-      }
+  document.addEventListener("DOMContentLoaded", () => {
+    const explorer = document.createElement("div");
+    explorer.innerHTML = `
+      <style>
+        .explorer {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          font-family: "Segoe UI", sans-serif;
+          padding: 1rem;
+        }
+        .folder {
+          width: 100px;
+          text-align: center;
+          border-radius: 12px;
+          background: #fff;
+          border: 1px solid #ccc;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          padding: 10px 5px;
+          position: relative;
+          cursor: pointer;
+        }
+        .folder .label {
+          margin-top: 5px;
+          font-size: 14px;
+          word-break: break-word;
+        }
+        .folder .menu {
+          position: absolute;
+          top: 6px;
+          right: 6px;
+          background: #fff;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 13px;
+          display: none;
+          flex-direction: column;
+          z-index: 10;
+        }
+        .folder .menu button {
+          background: none;
+          border: none;
+          padding: 4px 8px;
+          text-align: left;
+          cursor: pointer;
+        }
+        .folder .menu button:hover {
+          background: #eee;
+        }
+        .folder .dots {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          background: none;
+          border: none;
+          font-size: 16px;
+          cursor: pointer;
+        }
+        .create-folder {
+          font-size: 32px;
+          color: green;
+          background: none;
+          border: none;
+          cursor: pointer;
+        }
+      </style>
 
-      .explorer-toolbar {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-      }
-
-      #create-folder {
-        background: none;
-        border: none;
-        font-size: 24px;
-        color: green;
-        cursor: pointer;
-        padding: 0;
-        margin: 0;
-      }
-
-      .explorer-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-      }
-
-      .folder-item {
-        width: 100px;
-        height: 90px;
-        background: white;
-        border: 1px solid #c0c0c0;
-        border-radius: 10px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-between;
-        text-align: center;
-        font-size: 14px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        cursor: pointer;
-        padding: 5px;
-        position: relative;
-      }
-
-      .folder-item:hover {
-        background: #eef;
-        border-color: #339;
-      }
-
-      .item-title {
-        margin-top: 5px;
-      }
-
-      .menu-button {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: none;
-        border: none;
-        font-size: 18px;
-        cursor: pointer;
-      }
-
-      .context-menu {
-        position: absolute;
-        top: 25px;
-        right: 5px;
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        display: none;
-        flex-direction: column;
-        font-size: 14px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        z-index: 10;
-      }
-
-      .context-menu button {
-        background: none;
-        border: none;
-        padding: 8px 12px;
-        cursor: pointer;
-        text-align: left;
-      }
-
-      .context-menu button:hover {
-        background: #f0f0f0;
-      }
-    </style>
-
-    <div class="explorer">
-      <div class="explorer-toolbar">
-        <button id="create-folder">➕</button>
-      </div>
-      <div class="explorer-grid" id="folder-container">
-        <!-- Dossiers s'empilent ici -->
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(wrapper);
-
-  const folderContainer = wrapper.querySelector("#folder-container");
-  const createBtn = wrapper.querySelector("#create-folder");
-
-  let folderCount = 1;
-
-  function createFolder(name = `Dossier ${folderCount++}`) {
-    const folder = document.createElement("div");
-    folder.className = "folder-item";
-    folder.innerHTML = `
-      <div>📁</div>
-      <div class="item-title" contenteditable="false">${name}</div>
-      <button class="menu-button">⋮</button>
-      <div class="context-menu">
-        <button class="rename">Renommer</button>
-        <button class="delete">Supprimer</button>
-      </div>
+      <button class="create-folder" title="Nouveau dossier">＋</button>
+      <div class="explorer" id="folder-container"></div>
     `;
 
-    const menuBtn = folder.querySelector(".menu-button");
-    const menu = folder.querySelector(".context-menu");
-    const renameBtn = folder.querySelector(".rename");
-    const deleteBtn = folder.querySelector(".delete");
-    const title = folder.querySelector(".item-title");
+    document.body.appendChild(explorer);
 
-    menuBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    const folderContainer = explorer.querySelector("#folder-container");
+    const createButton = explorer.querySelector(".create-folder");
+
+    let folders = JSON.parse(localStorage.getItem("myFolders")) || [];
+    let counter = folders.length + 1;
+
+    function saveAndRenderFolders() {
+      localStorage.setItem("myFolders", JSON.stringify(folders));
+      renderFolders();
+    }
+
+    function renderFolders() {
+      folderContainer.innerHTML = "";
+      folders.forEach((folder, index) => {
+        const div = document.createElement("div");
+        div.className = "folder";
+        div.innerHTML = `
+          📁
+          <div class="label">${folder}</div>
+          <button class="dots">⋮</button>
+          <div class="menu">
+            <button data-action="rename">Renommer</button>
+            <button data-action="delete">Supprimer</button>
+          </div>
+        `;
+
+        const dots = div.querySelector(".dots");
+        const menu = div.querySelector(".menu");
+
+        dots.addEventListener("click", e => {
+          e.stopPropagation();
+          document.querySelectorAll(".menu").forEach(m => m.style.display = "none");
+          menu.style.display = "flex";
+        });
+
+        document.addEventListener("click", () => menu.style.display = "none");
+
+        menu.querySelector('[data-action="rename"]').addEventListener("click", () => {
+          const newName = prompt("Nouveau nom :", folders[index]);
+          if (newName) {
+            folders[index] = newName;
+            saveAndRenderFolders();
+          }
+        });
+
+        menu.querySelector('[data-action="delete"]').addEventListener("click", () => {
+          folders.splice(index, 1);
+          saveAndRenderFolders();
+        });
+
+        folderContainer.appendChild(div);
+      });
+    }
+
+    createButton.addEventListener("click", () => {
+      folders.push(`Dossier ${counter++}`);
+      saveAndRenderFolders();
     });
 
-    document.addEventListener("click", () => {
-      menu.style.display = "none";
-    });
-
-    renameBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      title.contentEditable = true;
-      title.focus();
-      menu.style.display = "none";
-    });
-
-    title.addEventListener("blur", () => {
-      title.contentEditable = false;
-    });
-
-    deleteBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      folder.remove();
-    });
-
-    folderContainer.appendChild(folder);
-  }
-
-  createBtn.addEventListener("click", () => {
-    createFolder();
+    renderFolders();
   });
-});
 </script>
