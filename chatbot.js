@@ -431,12 +431,14 @@ document.body.appendChild(dropZone);
   }
 
   resetBtn.addEventListener("click", () => {
-    localStorage.removeItem("chatHistory");
-    savesessionIDtolocalStorage();
-    chat_id = loadsessionIDfromlocalstorage();
-    chat.innerHTML = "";
-    appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
-  });
+  localStorage.removeItem("chatHistory"); // vide l'affichage
+  const newChatId = generateSessionID(); // génère un nouvel ID
+  localStorage.setItem("chat_id", newChatId); // sauvegarde dans localStorage
+  chat_id = newChatId; // met à jour la variable active
+  chat.innerHTML = ""; // vide l'affichage à l'écran
+  appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
+});
+
 
   function appendMessage(message, className) {
     const msg = document.createElement("div");
@@ -458,18 +460,6 @@ document.body.appendChild(dropZone);
   function loadChatFromLocalStorage() {
     const history = JSON.parse(localStorage.getItem("chatHistory") || "[]");
     history.forEach(msg => appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message"));
-  }
-
-  function loadsessionIDfromlocalstorage() {
-    let sessionID = localStorage.getItem("chat_id");
-    if (!sessionID) sessionID = generateSessionID();
-    return sessionID;
-  }
-
-  function savesessionIDtolocalStorage() {
-    if (!localStorage.getItem("chat_id")) {
-      localStorage.setItem("chat_id", generateSessionID());
-    }
   }
 
   sendBtn.addEventListener("click", async () => {
