@@ -8,87 +8,78 @@ document.addEventListener("DOMContentLoaded", async () => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   const wrapper = document.createElement("div");
-  wrapper.innerHTML = `
-    <style>
-      .explorer {
-        padding: 20px;
-        background: #f5f7fa;
-        border-radius: 10px;
-        border: 1px solid #ccc;
-        font-family: "Segoe UI", sans-serif;
-        max-width: 100%;
-      }
+<style>
+  .explorer {
+    padding: 20px;
+    font-family: "Segoe UI", sans-serif;
+  }
 
-      .explorer-toolbar {
-        margin-bottom: 15px;
-      }
+  .explorer-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-start;
+  }
 
-      .explorer-toolbar button {
-        padding: 8px 12px;
-        background: #e4e6eb;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-      }
+  .add-folder {
+    font-size: 28px;
+    color: green;
+    cursor: pointer;
+    width: 60px;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed green;
+    border-radius: 10px;
+    user-select: none;
+  }
 
-      .explorer-toolbar button:hover {
-        background-color: #d0d2d6;
-      }
+  .folder-item {
+    width: 100px;
+    height: 90px;
+    background: white;
+    border: 1px solid #c0c0c0;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    cursor: pointer;
+    padding: 5px;
+    position: relative;
+  }
 
-      .explorer-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-      }
+  .folder-actions {
+    display: flex;
+    gap: 5px;
+    font-size: 12px;
+    justify-content: center;
+    margin-top: 4px;
+  }
 
-      .folder-item {
-        width: 100px;
-        height: 90px;
-        background: white;
-        border: 1px solid #c0c0c0;
-        border-radius: 6px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-between;
-        text-align: center;
-        font-size: 14px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        cursor: pointer;
-        padding: 5px;
-        position: relative;
-      }
+  .folder-actions span {
+    cursor: pointer;
+  }
 
-      .folder-actions {
-        display: flex;
-        gap: 5px;
-        font-size: 12px;
-        justify-content: center;
-        margin-top: 4px;
-      }
+  .folder-actions span:hover {
+    color: red;
+  }
 
-      .folder-actions span {
-        cursor: pointer;
-      }
+  .dragging {
+    opacity: 0.5;
+  }
+</style>
 
-      .folder-actions span:hover {
-        color: red;
-      }
-
-      .dragging {
-        opacity: 0.5;
-      }
-    </style>
-
-    <div class="explorer">
-      <div class="explorer-toolbar">
-        <button id="create-folder">📁 Nouveau dossier</button>
-      </div>
-      <div class="explorer-grid" id="folder-container">
-        <!-- Dossiers dynamiques ici -->
-      </div>
-    </div>
+<div class="explorer">
+  <div class="explorer-grid" id="folder-container">
+    <div class="add-folder" id="create-folder">➕</div>
+    <!-- Dossiers dynamiques ici -->
+  </div>
+</div>
   `;
 
   document.body.appendChild(wrapper);
