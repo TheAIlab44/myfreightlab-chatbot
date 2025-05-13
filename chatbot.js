@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
         height: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden;
+        overflow: hidden; /* empêche le scroll de la page */
       }
 
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
@@ -26,13 +26,13 @@ document.addEventListener("DOMContentLoaded", () => {
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
-        height: 100vh;
-        width: 100vw;
-        margin: 0;
+        height: 90vh;
+        width: 80vw;
+        margin: 0 auto;
         background: #f9fbfc;
-        border-radius: 0;
+        border-radius: 12px;
         overflow: hidden;
-        border: none;
+        border: 1px solid #d3dce6;
         position: relative;
       }
 
