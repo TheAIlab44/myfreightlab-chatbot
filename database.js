@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const bucketName = "myfreightlab";
-
   const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
@@ -22,51 +21,52 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       .add-folder {
-        font-size: 28px;
+        font-size: 32px;
         color: green;
         cursor: pointer;
-        width: 60px;
-        height: 90px;
+        width: 80px;
+        height: 80px;
         display: flex;
         justify-content: center;
         align-items: center;
-        border: 2px dashed green;
-        border-radius: 10px;
+        border: 3px solid green;
+        border-radius: 50%;
+        background-color: #f0fff0;
+        box-shadow: 0 2px 4px rgba(0, 128, 0, 0.1);
         user-select: none;
+        transition: background 0.2s;
+      }
+
+      .add-folder:hover {
+        background-color: #ccffcc;
       }
 
       .folder-item {
-        width: 100px;
-        height: 90px;
+        width: 90px;
+        height: 100px;
         background: white;
         border: 1px solid #c0c0c0;
         border-radius: 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         text-align: center;
         font-size: 14px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         cursor: pointer;
-        padding: 5px;
+        padding: 8px;
         position: relative;
       }
 
-      .folder-actions {
-        display: flex;
-        gap: 5px;
-        font-size: 12px;
-        justify-content: center;
-        margin-top: 4px;
+      .folder-item .emoji {
+        font-size: 36px;
+        margin-bottom: 4px;
       }
 
-      .folder-actions span {
-        cursor: pointer;
-      }
-
-      .folder-actions span:hover {
-        color: red;
+      .folder-item .name {
+        font-size: 14px;
+        word-break: break-word;
       }
 
       .dragging {
@@ -80,7 +80,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
     </div>
   `;
-
   document.body.appendChild(wrapper);
 
   let folderCount = 1;
@@ -92,8 +91,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     folder.className = "folder-item";
     folder.setAttribute("draggable", "true");
 
+    const emoji = document.createElement("div");
+    emoji.className = "emoji";
+    emoji.textContent = "📁";
+
     const name = document.createElement("div");
-    name.textContent = `📁 Dossier ${folderCount++}`;
+    name.className = "name";
+    name.textContent = `Dossier ${folderCount++}`;
     name.contentEditable = false;
 
     name.addEventListener("dblclick", () => {
@@ -105,33 +109,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       name.contentEditable = false;
     });
 
-    const actions = document.createElement("div");
-    actions.className = "folder-actions";
-
-    const renameBtn = document.createElement("span");
-    renameBtn.textContent = "✏️";
-    renameBtn.title = "Renommer";
-    renameBtn.onclick = () => {
-      name.contentEditable = true;
-      name.focus();
-    };
-
-    const deleteBtn = document.createElement("span");
-    deleteBtn.textContent = "🗑️";
-    deleteBtn.title = "Supprimer";
-    deleteBtn.onclick = () => folder.remove();
-
-    actions.appendChild(renameBtn);
-    actions.appendChild(deleteBtn);
-
+    folder.appendChild(emoji);
     folder.appendChild(name);
-    folder.appendChild(actions);
     folderContainer.appendChild(folder);
 
-    folder.addEventListener("dragstart", () => folder.classList.add("dragging"));
-    folder.addEventListener("dragend", () => folder.classList.remove("dragging"));
+    folder.addEventListener("dragstart", () => {
+      folder.classList.add("dragging");
+    });
+
+    folder.addEventListener("dragend", () => {
+      folder.classList.remove("dragging");
+    });
   });
 
+  // ✅ Drag & Drop global
   folderContainer.addEventListener("dragover", e => {
     e.preventDefault();
     const dragging = folderContainer.querySelector(".dragging");
@@ -143,6 +134,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // ✅ Fonction utilitaire (hors du clic)
   function getDragAfterElement(container, x) {
     const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
     return draggableElements.reduce((closest, child) => {
