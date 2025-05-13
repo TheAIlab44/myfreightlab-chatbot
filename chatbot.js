@@ -5,8 +5,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   const user_id = urlParams.get("user_id");
   console.log("🧩 user_id récupéré :", user_id);
-  savesessionIDtolocalStorage();
-  let chat_id = loadsessionIDfromlocalstorage();
+  let chat_id = localStorage.getItem("chat_id");
+
+if (!chat_id) {
+  chat_id = generateSessionID();
+  localStorage.setItem("chat_id", chat_id);
+}
+
 
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
