@@ -11,35 +11,90 @@ document.addEventListener("DOMContentLoaded", async () => {
   wrapper.innerHTML = `
     <style>
       #uploadInput { display: none; }
-      #drive-header {
-        font-weight: bold;
-        font-size: 20px;
-        margin-bottom: 1rem;
-      }
-      #upload-area {
-        border: 2px dashed #0077c8;
-        padding: 40px;
-        margin-bottom: 1rem;
-        background: #f0f8ff;
-        text-align: center;
+
+      .explorer {
+        padding: 20px;
+        background: #f5f7fa;
         border-radius: 10px;
-        cursor: pointer;
+        border: 1px solid #ccc;
+        font-family: "Segoe UI", sans-serif;
+        max-width: 100%;
       }
-      .file-entry {
-        padding: 8px;
-        border-bottom: 1px solid #ddd;
+
+      .explorer-toolbar {
+        margin-bottom: 15px;
+      }
+
+      .explorer-toolbar button {
+        padding: 8px 12px;
+        background: #e4e6eb;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .explorer-toolbar button:hover {
+        background-color: #d0d2d6;
+      }
+
+      .explorer-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .folder-item {
+        width: 100px;
+        height: 90px;
+        background: white;
+        border: 1px solid #c0c0c0;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 14px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        cursor: pointer;
+        padding: 5px;
+      }
+
+      .folder-item:hover {
+        background: #eef;
+        border-color: #339;
       }
     </style>
 
-    <div id="drive-header">📁 Ma base de documents</div>
-    <div id="upload-area">
-      📤 Glisse un fichier ici ou <label for="uploadInput" style="color: #0077c8; cursor: pointer; text-decoration: underline;">clique pour choisir</label>
-      <input type="file" id="uploadInput" />
+    <div class="explorer">
+      <div class="explorer-toolbar">
+        <button id="create-folder">📁 Nouveau dossier</button>
+      </div>
+      <div id="upload-area">
+        📤 Glisse un fichier ici ou <label for="uploadInput" style="color: #0077c8; cursor: pointer; text-decoration: underline;">clique pour choisir</label>
+        <input type="file" id="uploadInput" />
+      </div>
+      <div class="explorer-grid" id="folder-container">
+        <!-- Les dossiers s’empilent ici -->
+      </div>
     </div>
-    <div id="file-list">Chargement des fichiers...</div>
   `;
 
+
   document.body.appendChild(wrapper);
+
+    let folderCount = 1;
+  const folderContainer = wrapper.querySelector("#folder-container");
+  const createBtn = wrapper.querySelector("#create-folder");
+
+  createBtn.addEventListener("click", () => {
+    const folder = document.createElement("div");
+    folder.className = "folder-item";
+    folder.innerHTML = `📁 Dossier ${folderCount++}`;
+    folderContainer.appendChild(folder);
+  });
+
 
   const uploadArea = wrapper.querySelector("#upload-area");
   const uploadInput = wrapper.querySelector("#uploadInput");
