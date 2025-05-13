@@ -31,23 +31,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         align-items: flex-start;
       }
 
-.add-folder, .folder-item {
+.add-folder {
   width: 90px;
   height: 110px;
   background: transparent;
+  border: none; /* plus de contour */
   border-radius: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 34px;
+  color: green;
+  transition: background 0.2s;
   cursor: pointer;
-  position: relative;
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-  box-shadow: none;
 }
+
 
 .add-folder {
   border: 2px dashed green;
