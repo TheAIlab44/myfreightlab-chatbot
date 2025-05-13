@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const bucketName = "myfreightlab";
-
   const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
@@ -12,6 +11,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       .explorer {
         padding: 20px;
         font-family: "Segoe UI", sans-serif;
+        min-height: 400px;
+        border: 2px dashed transparent;
+        transition: background 0.3s, border-color 0.3s;
+      }
+      .explorer.dragover {
+        border-color: #00aa00;
+        background: #f6fff6;
       }
 
       .explorer-grid {
@@ -21,27 +27,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         align-items: flex-start;
       }
 
-.add-folder {
-  width: 90px;
-  height: 110px;
-  background: white;
-  border: 2px dashed green;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: green;
-  box-shadow: 0 2px 4px rgba(0, 128, 0, 0.1);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.add-folder:hover {
-  background-color: #f0fff0;
-}
-
+      .add-folder {
+        width: 90px;
+        height: 110px;
+        background: white;
+        border: 2px dashed green;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: green;
+        box-shadow: 0 2px 4px rgba(0, 128, 0, 0.1);
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .add-folder:hover {
+        background-color: #f0fff0;
+      }
 
       .folder-item {
         width: 90px;
@@ -105,7 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     </style>
 
-    <div class="explorer">
+    <div class="explorer" id="drop-zone">
       <div class="explorer-grid" id="folder-container">
         <div class="add-folder" id="create-folder">➕</div>
       </div>
@@ -117,12 +121,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   let folderCount = 1;
   const folderContainer = wrapper.querySelector("#folder-container");
   const createBtn = wrapper.querySelector("#create-folder");
+  const dropZone = wrapper.querySelector("#drop-zone");
 
   function closeMenus() {
     document.querySelectorAll(".context-menu").forEach(menu => menu.remove());
   }
 
-  createBtn.addEventListener("click", () => {
+  function createFolder(nameText = `Dossier ${folderCount++}`) {
     const folder = document.createElement("div");
     folder.className = "folder-item";
     folder.setAttribute("draggable", "true");
@@ -133,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const name = document.createElement("div");
     name.className = "name";
-    name.textContent = `Dossier ${folderCount++}`;
+    name.textContent = nameText;
     name.contentEditable = false;
 
     const menuBtn = document.createElement("div");
@@ -163,7 +168,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       menu.appendChild(renameOption);
       menu.appendChild(deleteOption);
-
       folder.appendChild(menu);
     });
 
@@ -183,7 +187,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     folder.appendChild(menuBtn);
     folderContainer.appendChild(folder);
 
-    // Drag & Drop logic
     folder.addEventListener("dragstart", () => {
       folder.classList.add("dragging");
     });
@@ -191,7 +194,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     folder.addEventListener("dragend", () => {
       folder.classList.remove("dragging");
     });
-  });
+  }
+
+  createBtn.addEventListener("click", () => createFolder());
 
   folderContainer.addEventListener("dragover", e => {
     e.preventDefault();
@@ -204,21 +209,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  folderContainer.addEventListener("drop", async (e) => {
-  e.preventDefault();
-  const files = e.dataTransfer.files;
-  if (!files.length) return;
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
 
-  for (const file of files) {
-    const filePath = `docs/${file.name}`;
-    const { error } = await supabase.storage.from(bucketName).upload(filePath, file, { upsert: true });
-    if (error) {
-      alert("Erreur d'upload : " + error.message);
-    } else {
-      alert("✅ Fichier ajouté !");
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
+
+  dropZone.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+
+    const files = e.dataTransfer.files;
+    if (!files.length) return;
+
+    for (const file of files) {
+      const filePath = `docs/${file.name}`;
+      const { error } = await supabase.storage.from(bucketName).upload(filePath, file, { upsert: true });
+      if (error) {
+        alert("Erreur d'upload : " + error.message);
+      } else {
+        alert("✅ Fichier ajouté !");
+      }
     }
-  }
-});
+  });
 
   function getDragAfterElement(container, x) {
     const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
