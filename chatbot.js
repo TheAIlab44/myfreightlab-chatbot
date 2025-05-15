@@ -7,39 +7,33 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("🧩 user_id récupéré :", user_id);
   let chat_id = localStorage.getItem("chat_id");
 
-  if (!chat_id) {
-    chat_id = generateSessionID();
-    localStorage.setItem("chat_id", chat_id);
-  }
+if (!chat_id) {
+  chat_id = generateSessionID();
+  localStorage.setItem("chat_id", chat_id);
+}
 
-  // Ajoute la police Inter dans le head proprement
-  const fontLink = document.createElement("link");
-  fontLink.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap";
-  fontLink.rel = "stylesheet";
-  document.head.appendChild(fontLink);
 
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
-  wrapper.innerHTML = `
+  wrapper.innerHTML = 
     <style>
       html, body {
         height: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden;
+        overflow: hidden; /* empêche le scroll de la page */
       }
 
-      * {
-        font-family: 'Inter', sans-serif;
-      }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+      * { font-family: 'Inter', sans-serif; }
 
       #chat-wrapper {
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
         height: 90vh;
-        width: 100%;
-        margin: 0;
+        width: 80vw;
+        margin: 0 auto;
         background: #f9fbfc;
         border-radius: 12px;
         overflow: hidden;
@@ -48,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       #chat {
-        height: 100%;
         flex: 1;
         overflow-y: auto;
         padding: 1rem;
@@ -120,6 +113,70 @@ document.addEventListener("DOMContentLoaded", () => {
         cursor: pointer;
         font-size: 13px;
       }
+
+      .dynamic-sidebar {
+        position: fixed;
+        top: 0;
+        right: -320px;
+        width: 320px;
+        height: 100vh;
+        background: #fff;
+        border-left: 1px solid #ddd;
+        box-shadow: -2px 0 6px rgba(0,0,0,0.05);
+        transition: right 0.3s ease-in-out;
+        z-index: 9999;
+        overflow-y: auto;
+      }
+
+      .dynamic-sidebar.open {
+        right: 0;
+      }
+
+      .sidebar-header {
+        padding: 16px;
+        background: #0077c8;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .sidebar-content {
+        padding: 10px;
+      }
+
+      .prompt {
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        cursor: grab;
+        font-size: 14px;
+      }
+
+      details summary {
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+        padding: 10px 0;
+      }
+
+      .floating-toggle {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        background-color: #0077c8;
+        color: white;
+        padding: 10px;
+        border-radius: 8px 0 0 8px;
+        cursor: pointer;
+        font-size: 20px;
+        z-index: 99999;
+      }
+
+      #toggleHistory {
+        top: 40%;
+      }
     </style>
 
     <button id="resetBtn">✨ Nouveau chat</button>
@@ -139,72 +196,75 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="dynamic-sidebar" id="promptPanel">
       <div class="sidebar-header">💡 Idées de prompts</div>
       <div class="sidebar-content">
-        <!-- Tes <details> de prompts viendront ici -->
+        <!-- Ajoute ici tes <details> comme dans ton code -->
         <details>
-          <summary>▶ Opérations logistiques</summary>
-          <div class="prompt">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
-          <div class="prompt">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
-          <div class="prompt">Un hub à Rotterdam, c’est une bonne idée pour livrer l’Allemagne ?</div>
-          <div class="prompt">Comment je peux gagner du temps sur mes transits intercontinentaux ?</div>
-          <div class="prompt">Quels sont les pièges à éviter avec une chaîne logistique multi-clients ?</div>
-        </details>
+  <summary>▶ Opérations logistiques</summary>
+  <div class="prompt">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
+  <div class="prompt">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
+  <div class="prompt">Un hub à Rotterdam, c’est une bonne idée pour livrer l’Allemagne ?</div>
+  <div class="prompt">Comment je peux gagner du temps sur mes transits intercontinentaux ?</div>
+  <div class="prompt">Quels sont les pièges à éviter avec une chaîne logistique multi-clients ?</div>
+</details>
 
-        <details>
-          <summary>▶ Commerce international</summary>
-          <div class="prompt">Quels sont les incoterms les plus souvent utilisés en 2024 ?</div>
-          <div class="prompt">Est-ce qu’il y a des accords de libre-échange avec l’Inde ?</div>
-          <div class="prompt">Y a-t-il des sanctions qui pourraient bloquer certaines destinations ?</div>
-          <div class="prompt">Comment prévoir les droits de douane pour exporter en Afrique ?</div>
-          <div class="prompt">Comment profiter des accords UE–Canada ?</div>
-        </details>
+<details>
+  <summary>▶ Commerce international</summary>
+  <div class="prompt">Quels sont les incoterms les plus souvent utilisés en 2024 ?</div>
+  <div class="prompt">Est-ce qu’il y a des accords de libre-échange avec l’Inde ?</div>
+  <div class="prompt">Y a-t-il des sanctions qui pourraient bloquer certaines destinations ?</div>
+  <div class="prompt">Comment prévoir les droits de douane pour exporter en Afrique ?</div>
+  <div class="prompt">Comment profiter des accords UE–Canada ?</div>
+</details>
 
-        <details>
-          <summary>▶ Veille & analyses</summary>
-          <div class="prompt">Quels sont les flux logistiques qui augmentent en ce moment ?</div>
-          <div class="prompt">Y a-t-il des risques géopolitiques à suivre de près ?</div>
-          <div class="prompt">Tu peux me sortir un résumé des dernières tendances logistiques ?</div>
-          <div class="prompt">Quels indicateurs économiques impacteront le fret maritime ?</div>
-          <div class="prompt">Donne-moi une analyse sur le marché Asie–Europe aujourd’hui</div>
-        </details>
+<details>
+  <summary>▶ Veille & analyses</summary>
+  <div class="prompt">Quels sont les flux logistiques qui augmentent en ce moment ?</div>
+  <div class="prompt">Y a-t-il des risques géopolitiques à suivre de près ?</div>
+  <div class="prompt">Tu peux me sortir un résumé des dernières tendances logistiques ?</div>
+  <div class="prompt">Quels indicateurs économiques impacteront le fret maritime ?</div>
+  <div class="prompt">Donne-moi une analyse sur le marché Asie–Europe aujourd’hui</div>
+</details>
 
-        <details>
-          <summary>▶ Marché & tendances</summary>
-          <div class="prompt">Quelles routes gagnent en popularité en 2024 ?</div>
-          <div class="prompt">Quels ports sont en train de monter en puissance ?</div>
-          <div class="prompt">Tu vois des ruptures ou innovations dans le transport cette année ?</div>
-          <div class="prompt">Y a-t-il une tendance vers le rail ou le fluvial ?</div>
-          <div class="prompt">Comment évoluent les attentes clients en matière de logistique ?</div>
-        </details>
+<details>
+  <summary>▶ Marché & tendances</summary>
+  <div class="prompt">Quelles routes gagnent en popularité en 2024 ?</div>
+  <div class="prompt">Quels ports sont en train de monter en puissance ?</div>
+  <div class="prompt">Tu vois des ruptures ou innovations dans le transport cette année ?</div>
+  <div class="prompt">Y a-t-il une tendance vers le rail ou le fluvial ?</div>
+  <div class="prompt">Comment évoluent les attentes clients en matière de logistique ?</div>
+</details>
 
-        <details>
-          <summary>▶ Stratégie & gestion</summary>
-          <div class="prompt">Tu peux m’aider à faire un benchmark de transporteurs ?</div>
-          <div class="prompt">Quelle est la meilleure stratégie pour mon service logistique ?</div>
-          <div class="prompt">Comment optimiser ma gestion des stocks entre 2 continents ?</div>
-          <div class="prompt">Faut-il mieux un entrepôt central ou plusieurs hubs ?</div>
-          <div class="prompt">Comment améliorer le service client dans la chaîne logistique ?</div>
-        </details>
+<details>
+  <summary>▶ Stratégie & gestion</summary>
+  <div class="prompt">Tu peux m’aider à faire un benchmark de transporteurs ?</div>
+  <div class="prompt">Quelle est la meilleure stratégie pour mon service logistique ?</div>
+  <div class="prompt">Comment optimiser ma gestion des stocks entre 2 continents ?</div>
+  <div class="prompt">Faut-il mieux un entrepôt central ou plusieurs hubs ?</div>
+  <div class="prompt">Comment améliorer le service client dans la chaîne logistique ?</div>
+</details>
 
-        <details>
-          <summary>▶ Cas pratiques & simulations</summary>
-          <div class="prompt">Je t’envoie un doc, tu peux me résumer les infos clés ?</div>
-          <div class="prompt">Peux-tu m’écrire une synthèse à partir de ces trois fichiers ?</div>
-          <div class="prompt">Tu peux créer une instruction transport depuis ce modèle ?</div>
-          <div class="prompt">Lis ce PDF et dis-moi s’il manque des infos critiques</div>
-          <div class="prompt">Peux-tu vérifier la cohérence de cette liasse documentaire ?</div>
-        </details>
-      </div> <!-- .sidebar-content -->
-    </div> <!-- #promptPanel -->
-  `;
+<details>
+  <summary>▶ Cas pratiques & simulations</summary>
+  <div class="prompt">Je t’envoie un doc, tu peux me résumer les infos clés ?</div>
+  <div class="prompt">Peux-tu m’écrire une synthèse à partir de ces trois fichiers ?</div>
+  <div class="prompt">Tu peux créer une instruction transport depuis ce modèle ?</div>
+  <div class="prompt">Lis ce PDF et dis-moi s’il manque des infos critiques</div>
+  <div class="prompt">Peux-tu vérifier la cohérence de cette liasse documentaire ?</div>
+</details>
+
+ </div>
+</div>
+</div>
+</div>
+
+  ;
 
   const container = document.getElementById("chat-container");
   if (!container) return;
   container.appendChild(wrapper);
 
-
 const dropZone = document.createElement("div");
 dropZone.id = "drop-zone";
-dropZone.style.cssText = `
+dropZone.style.cssText = 
   border: 2px dashed #ccc;
   padding: 40px;
   text-align: center;
@@ -216,8 +276,8 @@ dropZone.style.cssText = `
   z-index: 10000;
   transition: opacity 0.3s ease;
   pointer-events: all;
-`;
 
+;
 dropZone.innerText = "📂 Déposez votre fichier ici";
 document.body.appendChild(dropZone);
 
@@ -381,13 +441,13 @@ document.body.appendChild(dropZone);
 
 
   function appendMessage(message, className) {
-  const msg = document.createElement("div");
-  msg.className = `message ${className}`;
-  msg.innerHTML = message;
-  chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
-  saveChatToLocalStorage();
-}
+    const msg = document.createElement("div");
+    msg.className = message ${className};
+    msg.innerHTML = message;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+    saveChatToLocalStorage();
+  }
 
   function saveChatToLocalStorage() {
     const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
@@ -480,7 +540,7 @@ dropZone.addEventListener("drop", async (e) => {
   formData.append("chat_id", chat_id);
   formData.append("type","file");
 
-  appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
+  appendMessage(📎 Fichier reçu : ${file.name}, "user-message");
 
   try {
     const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68", {
@@ -513,6 +573,6 @@ dropZone.addEventListener("drop", async (e) => {
 
   // En dernier, la fonction utilitaire generateSessionID
   function generateSessionID() {
-  return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-}
+    return ${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)};
+  }
 });
