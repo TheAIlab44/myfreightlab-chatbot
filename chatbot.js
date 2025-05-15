@@ -374,13 +374,13 @@ document.body.appendChild(dropZone);
 
 
   function appendMessage(message, className) {
-    const msg = document.createElement("div");
-    msg.className = message ${className};
-    msg.innerHTML = message;
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
-    saveChatToLocalStorage();
-  }
+  const msg = document.createElement("div");
+  msg.className = `message ${className}`;
+  msg.innerHTML = message;
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+  saveChatToLocalStorage();
+}
 
   function saveChatToLocalStorage() {
     const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
@@ -506,6 +506,6 @@ dropZone.addEventListener("drop", async (e) => {
 
   // En dernier, la fonction utilitaire generateSessionID
   function generateSessionID() {
-    return ${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)};
-  }
+  return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+}
 });
