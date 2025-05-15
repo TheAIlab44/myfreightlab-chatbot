@@ -7,20 +7,21 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("🧩 user_id récupéré :", user_id);
   let chat_id = localStorage.getItem("chat_id");
 
-  if (!chat_id) {
-    chat_id = generateSessionID();
-    localStorage.setItem("chat_id", chat_id);
-  }
+if (!chat_id) {
+  chat_id = generateSessionID();
+  localStorage.setItem("chat_id", chat_id);
+}
+
 
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
-  wrapper.innerHTML = `
+  wrapper.innerHTML = 
     <style>
       html, body {
         height: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden;
+        overflow: hidden; /* empêche le scroll de la page */
       }
 
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
@@ -41,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       #chat {
-        height: 100%;
         flex: 1;
         overflow-y: auto;
         padding: 1rem;
@@ -113,6 +113,70 @@ document.addEventListener("DOMContentLoaded", () => {
         cursor: pointer;
         font-size: 13px;
       }
+
+      .dynamic-sidebar {
+        position: fixed;
+        top: 0;
+        right: -320px;
+        width: 320px;
+        height: 100vh;
+        background: #fff;
+        border-left: 1px solid #ddd;
+        box-shadow: -2px 0 6px rgba(0,0,0,0.05);
+        transition: right 0.3s ease-in-out;
+        z-index: 9999;
+        overflow-y: auto;
+      }
+
+      .dynamic-sidebar.open {
+        right: 0;
+      }
+
+      .sidebar-header {
+        padding: 16px;
+        background: #0077c8;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .sidebar-content {
+        padding: 10px;
+      }
+
+      .prompt {
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        cursor: grab;
+        font-size: 14px;
+      }
+
+      details summary {
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+        padding: 10px 0;
+      }
+
+      .floating-toggle {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        background-color: #0077c8;
+        color: white;
+        padding: 10px;
+        border-radius: 8px 0 0 8px;
+        cursor: pointer;
+        font-size: 20px;
+        z-index: 99999;
+      }
+
+      #toggleHistory {
+        top: 40%;
+      }
     </style>
 
     <button id="resetBtn">✨ Nouveau chat</button>
@@ -132,8 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="dynamic-sidebar" id="promptPanel">
       <div class="sidebar-header">💡 Idées de prompts</div>
       <div class="sidebar-content">
-        <details>
-
         <!-- Ajoute ici tes <details> comme dans ton code -->
         <details>
   <summary>▶ Opérations logistiques</summary>
@@ -188,33 +250,36 @@ document.addEventListener("DOMContentLoaded", () => {
   <div class="prompt">Lis ce PDF et dis-moi s’il manque des infos critiques</div>
   <div class="prompt">Peux-tu vérifier la cohérence de cette liasse documentaire ?</div>
 </details>
-      </div> <!-- .sidebar-content -->
-    </div> <!-- #promptPanel -->
-  `;
+
+ </div>
+</div>
+</div>
+</div>
+
+  ;
 
   const container = document.getElementById("chat-container");
   if (!container) return;
   container.appendChild(wrapper);
 
-  const chat = wrapper.querySelector("#chat"); // ✅ À ne pas oublier
+const dropZone = document.createElement("div");
+dropZone.id = "drop-zone";
+dropZone.style.cssText = 
+  border: 2px dashed #ccc;
+  padding: 40px;
+  text-align: center;
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 18px;
+  z-index: 10000;
+  transition: opacity 0.3s ease;
+  pointer-events: all;
 
-  const dropZone = document.createElement("div");
-  dropZone.id = "drop-zone";
-  dropZone.style.cssText = `
-    border: 2px dashed #ccc;
-    padding: 40px;
-    text-align: center;
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255, 255, 255, 0.95);
-    font-size: 18px;
-    z-index: 10000;
-    transition: opacity 0.3s ease;
-    pointer-events: all;
-  `;
-  dropZone.innerText = "📂 Déposez votre fichier ici";
-  document.body.appendChild(dropZone);
+;
+dropZone.innerText = "📂 Déposez votre fichier ici";
+document.body.appendChild(dropZone);
 
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
@@ -231,13 +296,12 @@ document.addEventListener("DOMContentLoaded", () => {
   toggleHistoryBtn.addEventListener("click", () => historyPanel.classList.toggle("open"));
 
   prompts.forEach(prompt => {
-    prompt.addEventListener("click", () => {
-      userInput.value = prompt.textContent;
-      userInput.focus();
-      sidebar.classList.remove("open");
-    });
+  prompt.addEventListener("click", () => {
+    userInput.value = prompt.textContent;
+    userInput.focus();
+    sidebar.classList.remove("open");
   });
-
+});
 
   userInput.addEventListener("dragover", e => e.preventDefault());
   userInput.addEventListener("drop", e => {
@@ -377,16 +441,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   function appendMessage(message, className) {
-  const msg = document.createElement("div");
-  msg.className = `message ${className}`;
-  msg.innerHTML = message;
-  chat.appendChild(msg);
-
-  // Scroll ciblé dans #chat uniquement
-  chat.scrollTop = chat.scrollHeight;
-
-  saveChatToLocalStorage();
-}
+    const msg = document.createElement("div");
+    msg.className = message ${className};
+    msg.innerHTML = message;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+    saveChatToLocalStorage();
+  }
 
   function saveChatToLocalStorage() {
     const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
@@ -404,42 +465,32 @@ document.addEventListener("DOMContentLoaded", () => {
   sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
   if (!text) return;
-
   appendMessage(text, "user-message");
   userInput.value = "";
 
-  // Création du message de chargement
+
   const loader = document.createElement("div");
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis...";
   chat.appendChild(loader);
 
-  // ✅ Scroll interne au chat uniquement
-  chat.scrollTop = chat.scrollHeight;
+try {
+  const res = await fetch(webhookURL, {
+    method: "POST",
+    body: JSON.stringify({ question: text, user_id, chat_id , type : "text"}),
+    headers: { "Content-Type": "application/json" },
+  });
 
-  try {
-    const res = await fetch(webhookURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        question: text,
-        user_id,
-        chat_id,
-        type: "text"
-      })
-    });
+  const data = await res.json(); // ✅ cette ligne est indispensable AVANT d'utiliser 'data'
 
-    const data = await res.json();
-
-    loader.remove();
-    appendMessage(data.output || "Pas de réponse", "bot-message");
-    loadChatHistory();
-  } catch (err) {
-    loader.remove();
-    appendMessage("Erreur de connexion", "bot-message");
-  }
+  loader.remove();
+  appendMessage(data.output || "Pas de réponse", "bot-message");
+  loadChatHistory(); // ✅ ici c'est bon, 'data' est bien défini
+} catch (err) {
+  loader.remove();
+  appendMessage("Erreur de connexion", "bot-message");
+}
 });
-
 
 userInput.addEventListener("keypress", function (e) {
   if (e.key === "Enter") sendBtn.click();
@@ -489,7 +540,7 @@ dropZone.addEventListener("drop", async (e) => {
   formData.append("chat_id", chat_id);
   formData.append("type","file");
 
-  appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
+  appendMessage(📎 Fichier reçu : ${file.name}, "user-message");
 
   try {
     const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68", {
@@ -522,7 +573,6 @@ dropZone.addEventListener("drop", async (e) => {
 
   // En dernier, la fonction utilitaire generateSessionID
   function generateSessionID() {
-    return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    return ${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)};
   }
 });
-
