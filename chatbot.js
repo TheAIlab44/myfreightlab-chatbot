@@ -15,18 +15,10 @@ wrapper.innerHTML = `
     * { font-family: 'Inter', sans-serif; }
 
     html, body {
-      height: 100%;
       margin: 0;
       padding: 0;
-      overflow: hidden;
-    }
-
-    body > #chat-container {
       height: 100vh;
       overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
     }
 
     #chat-wrapper {
@@ -35,7 +27,7 @@ wrapper.innerHTML = `
       justify-content: flex-end;
       height: 90vh;
       width: 80vw;
-      margin: 0 auto;
+      margin: 5vh auto;
       background: #f9fbfc;
       border-radius: 12px;
       overflow: hidden;
@@ -44,15 +36,16 @@ wrapper.innerHTML = `
     }
 
     #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      align-items: center;
-      max-height: calc(90vh - 80px); /* ajustable selon la taille de ton input */
-    }
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  height: calc(90vh - 100px); /* ← limite la hauteur pour que seul le chat scroll */
+}
+
 
     .message {
       padding: 14px 18px;
@@ -181,27 +174,27 @@ wrapper.innerHTML = `
       top: 40%;
     }
   </style>
-`;
 
-    <button id="resetBtn">✨ Nouveau chat</button>
-    <div id="chat"></div>
-    <div id="input-area">
-      <input type="text" id="userInput" placeholder="Pose ta question ici..." />
-      <button id="sendBtn">▶</button>
-    </div>
+  <button id="resetBtn">✨ Nouveau chat</button>
+  <div id="chat"></div>
+  <div id="input-area">
+    <input type="text" id="userInput" placeholder="Pose ta question ici..." />
+    <button id="sendBtn">▶</button>
+  </div>
 
-    <div class="floating-toggle" id="toggleHistory">🕓</div>
-    <div class="dynamic-sidebar" id="historyPanel">
-      <div class="sidebar-header">🕓 Historique des conversations</div>
-      <div class="sidebar-content" id="historyList"></div>
-    </div>
+  <div class="floating-toggle" id="toggleHistory">🕓</div>
+  <div class="dynamic-sidebar" id="historyPanel">
+    <div class="sidebar-header">🕓 Historique des conversations</div>
+    <div class="sidebar-content" id="historyList"></div>
+  </div>
 
-    <div class="floating-toggle" id="togglePrompt">💡</div>
-    <div class="dynamic-sidebar" id="promptPanel">
-      <div class="sidebar-header">💡 Idées de prompts</div>
-      <div class="sidebar-content">
-        <!-- Ajoute ici tes <details> comme dans ton code -->
-        <details>
+  <div class="floating-toggle" id="togglePrompt">💡</div>
+  <div class="dynamic-sidebar" id="promptPanel">
+    <div class="sidebar-header">💡 Idées de prompts</div>
+    <div class="sidebar-content">
+      <!-- Ajoute ici tes <details> comme dans ton code -->
+      <!-- Tu peux copier/coller tes prompts ici -->
+  <details>
   <summary>▶ Opérations logistiques</summary>
   <div class="prompt">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
   <div class="prompt">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
@@ -447,7 +440,7 @@ document.body.appendChild(dropZone);
     msg.className = `message ${className}`;
     msg.innerHTML = message;
     chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
+    chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
     saveChatToLocalStorage();
   }
 
