@@ -7,11 +7,10 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("🧩 user_id récupéré :", user_id);
   let chat_id = localStorage.getItem("chat_id");
 
-if (!chat_id) {
-  chat_id = generateSessionID();
-  localStorage.setItem("chat_id", chat_id);
-}
-
+  if (!chat_id) {
+    chat_id = generateSessionID();
+    localStorage.setItem("chat_id", chat_id);
+  }
 
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
@@ -42,8 +41,9 @@ if (!chat_id) {
       }
 
       #chat {
+        height: 100%; /* ✅ Ajout important */
         flex: 1;
-        overflow-y: auto;
+        overflow-y: auto; /* ✅ Assure le scroll interne */
         padding: 1rem;
         display: flex;
         flex-direction: column;
@@ -112,70 +112,6 @@ if (!chat_id) {
         border-radius: 12px;
         cursor: pointer;
         font-size: 13px;
-      }
-
-      .dynamic-sidebar {
-        position: fixed;
-        top: 0;
-        right: -320px;
-        width: 320px;
-        height: 100vh;
-        background: #fff;
-        border-left: 1px solid #ddd;
-        box-shadow: -2px 0 6px rgba(0,0,0,0.05);
-        transition: right 0.3s ease-in-out;
-        z-index: 9999;
-        overflow-y: auto;
-      }
-
-      .dynamic-sidebar.open {
-        right: 0;
-      }
-
-      .sidebar-header {
-        padding: 16px;
-        background: #0077c8;
-        color: white;
-        font-weight: bold;
-        font-size: 16px;
-      }
-
-      .sidebar-content {
-        padding: 10px;
-      }
-
-      .prompt {
-        padding: 10px;
-        background: #f0f0f0;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        cursor: grab;
-        font-size: 14px;
-      }
-
-      details summary {
-        font-weight: 600;
-        cursor: pointer;
-        list-style: none;
-        padding: 10px 0;
-      }
-
-      .floating-toggle {
-        position: fixed;
-        top: 50%;
-        right: 0;
-        transform: translateY(-50%);
-        background-color: #0077c8;
-        color: white;
-        padding: 10px;
-        border-radius: 8px 0 0 8px;
-        cursor: pointer;
-        font-size: 20px;
-        z-index: 99999;
-      }
-
-      #toggleHistory {
-        top: 40%;
       }
     </style>
 
@@ -445,10 +381,12 @@ document.body.appendChild(dropZone);
   msg.className = `message ${className}`;
   msg.innerHTML = message;
   chat.appendChild(msg);
-  msg.scrollIntoView({ behavior: "smooth" }); // <== Ajout ici
+
+  // Scroll ciblé dans #chat uniquement
+  chat.scrollTop = chat.scrollHeight;
+
   saveChatToLocalStorage();
 }
-
 
   function saveChatToLocalStorage() {
     const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
@@ -470,18 +408,25 @@ document.body.appendChild(dropZone);
   appendMessage(text, "user-message");
   userInput.value = "";
 
-  // Ajout du loader
+  // Création du message de chargement
   const loader = document.createElement("div");
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis...";
   chat.appendChild(loader);
-  loader.scrollIntoView({ behavior: "smooth" });
+
+  // ✅ Scroll interne au chat uniquement
+  chat.scrollTop = chat.scrollHeight;
 
   try {
     const res = await fetch(webhookURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: text, user_id, chat_id, type: "text" })
+      body: JSON.stringify({
+        question: text,
+        user_id,
+        chat_id,
+        type: "text"
+      })
     });
 
     const data = await res.json();
@@ -494,6 +439,7 @@ document.body.appendChild(dropZone);
     appendMessage("Erreur de connexion", "bot-message");
   }
 });
+
 
 userInput.addEventListener("keypress", function (e) {
   if (e.key === "Enter") sendBtn.click();
