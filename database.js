@@ -189,44 +189,65 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (folderName) createFolder(folderName);
   });
 
-  folderContainer.addEventListener("dragover", e => {
+  // 🎯 Drag & Drop pour la zone de fichier
+let dragCounter = 0;
+
+["dragenter", "dragover"].forEach(eventType => {
+  document.addEventListener(eventType, e => {
     e.preventDefault();
-    const dragging = folderContainer.querySelector(".dragging");
-    const afterElement = getDragAfterElement(folderContainer, e.clientX);
-    if (afterElement == null) {
-      folderContainer.appendChild(dragging);
-    } else {
-      folderContainer.insertBefore(dragging, afterElement);
+    dragCounter++;
+    dropZone.style.display = "block";
+    dropZone.style.opacity = "1";
+    dropZone.style.pointerEvents = "all";
+  });
+});
+
+["dragleave"].forEach(eventType => {
+  document.addEventListener(eventType, e => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dropZone.style.opacity = "0";
+      dropZone.style.pointerEvents = "none";
+      dropZone.style.display = "none";
     }
   });
+});
 
-  dropZone.addEventListener("dragover", e => {
-    e.preventDefault();
-    dropZone.classList.add("dragover");
-  });
+document.addEventListener("drop", e => {
+  e.preventDefault();
+  dragCounter = 0; // reset
+  dropZone.style.opacity = "0";
+  dropZone.style.pointerEvents = "none";
+  dropZone.style.display = "none";
+});
 
-  dropZone.addEventListener("dragleave", () => {
-    dropZone.classList.remove("dragover");
-  });
+dropZone.addEventListener("drop", async (e) => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
 
-  dropZone.addEventListener("drop", async (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("dragover");
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("user_id", user_id);
+  formData.append("chat_id", chat_id);
 
-    const files = e.dataTransfer.files;
-    if (!files.length) return;
+  appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
 
-    for (const file of files) {
-      const filePath = `docs/${file.name}`;
-      const { error } = await supabase.storage.from(bucketName).upload(filePath, file, { upsert: true });
-      if (error) {
-        alert("Erreur d'upload : " + error.message);
-      } else {
-        alert("✅ Fichier ajouté !");
-      }
-    }
-  });
+  try {
+    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
+      method: "POST",
+      body: formData
+    });
+    const result = await res.json();
+    appendMessage(result.output || "✅ Fichier traité avec succès !", "bot-message");
+  } catch (err) {
+    console.error(err);
+    appendMessage("❌ Erreur lors de l’envoi du fichier", "bot-message");
+  }
+});
 
+  
   function getDragAfterElement(container, x) {
     const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
     return draggableElements.reduce((closest, child) => {
