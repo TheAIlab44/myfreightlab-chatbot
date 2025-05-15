@@ -480,6 +480,8 @@ document.body.appendChild(dropZone);
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis...";
   chat.appendChild(loader);
+    chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+
 
 try {
   const res = await fetch(webhookURL, {
