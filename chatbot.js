@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
         height: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden; /* empêche le scroll de la page */
+        overflow: hidden;
       }
 
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
@@ -41,9 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       #chat {
-        height: 100%; /* ✅ Ajout important */
+        height: 100%;
         flex: 1;
-        overflow-y: auto; /* ✅ Assure le scroll interne */
+        overflow-y: auto;
         padding: 1rem;
         display: flex;
         flex-direction: column;
@@ -132,6 +132,8 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="dynamic-sidebar" id="promptPanel">
       <div class="sidebar-header">💡 Idées de prompts</div>
       <div class="sidebar-content">
+        <details>
+
         <!-- Ajoute ici tes <details> comme dans ton code -->
         <details>
   <summary>▶ Opérations logistiques</summary>
@@ -186,36 +188,33 @@ document.addEventListener("DOMContentLoaded", () => {
   <div class="prompt">Lis ce PDF et dis-moi s’il manque des infos critiques</div>
   <div class="prompt">Peux-tu vérifier la cohérence de cette liasse documentaire ?</div>
 </details>
-
- </div>
-</div>
-</div>
-</div>
-
+      </div> <!-- .sidebar-content -->
+    </div> <!-- #promptPanel -->
   `;
 
   const container = document.getElementById("chat-container");
   if (!container) return;
   container.appendChild(wrapper);
 
-const dropZone = document.createElement("div");
-dropZone.id = "drop-zone";
-dropZone.style.cssText = `
-  border: 2px dashed #ccc;
-  padding: 40px;
-  text-align: center;
-  display: none;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
-  font-size: 18px;
-  z-index: 10000;
-  transition: opacity 0.3s ease;
-  pointer-events: all;
+  const chat = wrapper.querySelector("#chat"); // ✅ À ne pas oublier
 
-`;
-dropZone.innerText = "📂 Déposez votre fichier ici";
-document.body.appendChild(dropZone);
+  const dropZone = document.createElement("div");
+  dropZone.id = "drop-zone";
+  dropZone.style.cssText = `
+    border: 2px dashed #ccc;
+    padding: 40px;
+    text-align: center;
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    font-size: 18px;
+    z-index: 10000;
+    transition: opacity 0.3s ease;
+    pointer-events: all;
+  `;
+  dropZone.innerText = "📂 Déposez votre fichier ici";
+  document.body.appendChild(dropZone);
 
   const userInput = wrapper.querySelector("#userInput");
   const sendBtn = wrapper.querySelector("#sendBtn");
@@ -232,12 +231,13 @@ document.body.appendChild(dropZone);
   toggleHistoryBtn.addEventListener("click", () => historyPanel.classList.toggle("open"));
 
   prompts.forEach(prompt => {
-  prompt.addEventListener("click", () => {
-    userInput.value = prompt.textContent;
-    userInput.focus();
-    sidebar.classList.remove("open");
+    prompt.addEventListener("click", () => {
+      userInput.value = prompt.textContent;
+      userInput.focus();
+      sidebar.classList.remove("open");
+    });
   });
-});
+
 
   userInput.addEventListener("dragover", e => e.preventDefault());
   userInput.addEventListener("drop", e => {
