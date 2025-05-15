@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const dropZone = document.createElement("div");
 dropZone.id = "drop-zone";
-dropZone.style.cssText = 
+dropZone.style.cssText = `
   border: 2px dashed #ccc;
   padding: 40px;
   text-align: center;
@@ -209,8 +209,8 @@ dropZone.style.cssText =
   z-index: 10000;
   transition: opacity 0.3s ease;
   pointer-events: all;
+`;
 
-;
 dropZone.innerText = "📂 Déposez votre fichier ici";
 document.body.appendChild(dropZone);
 
@@ -473,7 +473,7 @@ dropZone.addEventListener("drop", async (e) => {
   formData.append("chat_id", chat_id);
   formData.append("type","file");
 
-  appendMessage(📎 Fichier reçu : ${file.name}, "user-message");
+  appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
 
   try {
     const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68", {
