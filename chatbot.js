@@ -441,13 +441,14 @@ document.body.appendChild(dropZone);
 
 
   function appendMessage(message, className) {
-    const msg = document.createElement("div");
-    msg.className = `message ${className}`;
-    msg.innerHTML = message;
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
-    saveChatToLocalStorage();
-  }
+  const msg = document.createElement("div");
+  msg.className = `message ${className}`;
+  msg.innerHTML = message;
+  chat.appendChild(msg);
+  msg.scrollIntoView({ behavior: "smooth" }); // <== Ajout ici
+  saveChatToLocalStorage();
+}
+
 
   function saveChatToLocalStorage() {
     const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
@@ -465,31 +466,33 @@ document.body.appendChild(dropZone);
   sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
   if (!text) return;
+
   appendMessage(text, "user-message");
   userInput.value = "";
 
-
+  // Ajout du loader
   const loader = document.createElement("div");
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis...";
   chat.appendChild(loader);
+  loader.scrollIntoView({ behavior: "smooth" });
 
-try {
-  const res = await fetch(webhookURL, {
-    method: "POST",
-    body: JSON.stringify({ question: text, user_id, chat_id , type : "text"}),
-    headers: { "Content-Type": "application/json" },
-  });
+  try {
+    const res = await fetch(webhookURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: text, user_id, chat_id, type: "text" })
+    });
 
-  const data = await res.json(); // ✅ cette ligne est indispensable AVANT d'utiliser 'data'
+    const data = await res.json();
 
-  loader.remove();
-  appendMessage(data.output || "Pas de réponse", "bot-message");
-  loadChatHistory(); // ✅ ici c'est bon, 'data' est bien défini
-} catch (err) {
-  loader.remove();
-  appendMessage("Erreur de connexion", "bot-message");
-}
+    loader.remove();
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+    loadChatHistory();
+  } catch (err) {
+    loader.remove();
+    appendMessage("Erreur de connexion", "bot-message");
+  }
 });
 
 userInput.addEventListener("keypress", function (e) {
