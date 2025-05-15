@@ -12,6 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("chat_id", chat_id);
   }
 
+  // Ajoute la police Inter dans le head proprement
+  const fontLink = document.createElement("link");
+  fontLink.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap";
+  fontLink.rel = "stylesheet";
+  document.head.appendChild(fontLink);
+
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
@@ -23,16 +29,17 @@ document.addEventListener("DOMContentLoaded", () => {
         overflow: hidden;
       }
 
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-      * { font-family: 'Inter', sans-serif; }
+      * {
+        font-family: 'Inter', sans-serif;
+      }
 
       #chat-wrapper {
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
         height: 90vh;
-        width: 80vw;
-        margin: 0 auto;
+        width: 100%;
+        margin: 0;
         background: #f9fbfc;
         border-radius: 12px;
         overflow: hidden;
@@ -132,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="dynamic-sidebar" id="promptPanel">
       <div class="sidebar-header">💡 Idées de prompts</div>
       <div class="sidebar-content">
-        <!-- Ajoute ici tes <details> comme dans ton code -->
+        <!-- Tes <details> de prompts viendront ici -->
         <details>
           <summary>▶ Opérations logistiques</summary>
           <div class="prompt">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
