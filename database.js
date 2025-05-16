@@ -295,4 +295,6 @@ function getDragAfterElement(container, x) {
     return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
   }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
+  });
+
 
