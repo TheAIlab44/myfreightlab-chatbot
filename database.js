@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const bucketName = "myfreightlab";
   const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // remplace par ta vraie clé
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc"; // remplace par ta vraie clé
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
   const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -269,6 +269,8 @@ dropZone.addEventListener("drop", async (e) => {
     formData.append("file_name", file.name);
     formData.append("file_url", fileUrl);
     formData.append("folder_id", currentFolderId);
+    formData.append("file", file);
+
 
     try {
       const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook-test/34e003f9-99db-4b40-a513-9304c01a1182", {
