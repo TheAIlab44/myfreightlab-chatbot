@@ -1,14 +1,9 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const bucketName = "myfreightlab";
   const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // remplace par ta vraie clé
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
   const supabase = createClient(supabaseUrl, supabaseKey);
-  // ⚠️ À remplacer dynamiquement par tes vraies valeurs selon ta logique de session
-let user_id = localStorage.getItem("user_id") || "demo_user";
-let chat_id = localStorage.getItem("chat_id") || "demo_chat";
-let currentFolderId = "root"; // peut être modifié quand un dossier est cliqué
-
 
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
@@ -17,13 +12,18 @@ let currentFolderId = "root"; // peut être modifié quand un dossier est cliqu�
         padding: 20px;
         font-family: "Segoe UI", sans-serif;
         min-height: calc(100vh - 100px);
-        transition: background 0.3s;
+        height: 100%;
+        flex: 1;
+        border: 2px dashed transparent;
+        transition: background 0.3s, border-color 0.3s;
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
       }
 
       .explorer.dragover {
-        background: #f6fff6;
-        outline: 2px dashed #00aa00;
+        border-color: #00aa00;
+        background: linear-gradient(90deg, #f0fff0 0%, #eaffea 100%);
       }
 
       .explorer-grid {
@@ -36,27 +36,39 @@ let currentFolderId = "root"; // peut être modifié quand un dossier est cliqu�
       .add-folder {
         width: 90px;
         height: 110px;
-        background: transparent;
+        background: white;
+        border: 2px dashed green;
+        border-radius: 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-size: 34px;
+        font-size: 28px;
         color: green;
+        box-shadow: 0 2px 4px rgba(0, 128, 0, 0.1);
         cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .add-folder:hover {
+        background-color: #f0fff0;
       }
 
       .folder-item {
         width: 90px;
         height: 110px;
-        background: transparent;
+        background: white;
+        border: 1px solid #c0c0c0;
+        border-radius: 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
         font-size: 14px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         cursor: pointer;
+        padding: 6px;
         position: relative;
       }
 
@@ -113,15 +125,20 @@ let currentFolderId = "root"; // peut être modifié quand un dossier est cliqu�
 
   document.body.appendChild(wrapper);
 
-  let folderCount = 1;
   const folderContainer = wrapper.querySelector("#folder-container");
   const createBtn = wrapper.querySelector("#create-folder");
   const dropZone = wrapper.querySelector("#drop-zone");
+  let folderCount = 1;
 
+  // Fermer tous les menus contextuels
   function closeMenus() {
     document.querySelectorAll(".context-menu").forEach(menu => menu.remove());
   }
 
+  // Écouteur global pour fermer les menus quand on clique ailleurs
+  document.addEventListener("click", closeMenus);
+
+  // Créer un dossier
   function createFolder(nameText = `Dossier ${folderCount++}`) {
     const folder = document.createElement("div");
     folder.className = "folder-item";
@@ -164,8 +181,6 @@ let currentFolderId = "root"; // peut être modifié quand un dossier est cliqu�
       folder.appendChild(menu);
     });
 
-    document.addEventListener("click", closeMenus);
-
     name.addEventListener("dblclick", () => {
       name.contentEditable = true;
       name.focus();
@@ -180,120 +195,60 @@ let currentFolderId = "root"; // peut être modifié quand un dossier est cliqu�
     folder.appendChild(menuBtn);
     folderContainer.appendChild(folder);
 
-    folder.addEventListener("dragstart", () => {
-      folder.classList.add("dragging");
-    });
-
-    folder.addEventListener("dragend", () => {
-      folder.classList.remove("dragging");
-    });
+    folder.addEventListener("dragstart", () => folder.classList.add("dragging"));
+    folder.addEventListener("dragend", () => folder.classList.remove("dragging"));
   }
 
-  createBtn.addEventListener("click", () => {
-    const folderName = prompt("Nom du nouveau dossier :");
-    if (folderName) createFolder(folderName);
-  });
+  // Création via le bouton "+"
+  createBtn.addEventListener("click", () => createFolder());
 
-  // 🎯 Drag & Drop pour la zone de fichier
-let dragCounter = 0;
-
-["dragenter", "dragover"].forEach(eventType => {
-  document.addEventListener(eventType, e => {
+  // Drag & drop dossier (réorganisation)
+  folderContainer.addEventListener("dragover", e => {
     e.preventDefault();
-    dragCounter++;
-    dropZone.style.display = "block";
-    dropZone.style.opacity = "1";
-    dropZone.style.pointerEvents = "all";
-  });
-});
-
-["dragleave"].forEach(eventType => {
-  document.addEventListener(eventType, e => {
-    e.preventDefault();
-    dragCounter--;
-    if (dragCounter <= 0) {
-      dropZone.style.opacity = "0";
-      dropZone.style.pointerEvents = "none";
-      dropZone.style.display = "none";
+    const dragging = folderContainer.querySelector(".dragging");
+    const afterElement = getDragAfterElement(folderContainer, e.clientX);
+    if (!afterElement) {
+      folderContainer.appendChild(dragging);
+    } else {
+      folderContainer.insertBefore(dragging, afterElement);
     }
   });
-});
 
-document.addEventListener("drop", e => {
-  e.preventDefault();
-  dragCounter = 0; // reset
-  dropZone.style.opacity = "0";
-  dropZone.style.pointerEvents = "none";
-  dropZone.style.display = "none";
-});
-
-dropZone.addEventListener("drop", async (e) => {
-  e.preventDefault();
-  dragCounter = 0;
-  dropZone.style.opacity = "0";
-  dropZone.style.pointerEvents = "none";
-  dropZone.style.display = "none";
-
-  const file = e.dataTransfer.files[0];
-  if (!file) return;
-
-  const folderId = currentFolderId || "root"; // ← à adapter si tu gères les dossiers cliqués
-
-  // 1. Upload dans Supabase Storage
-  const path = `${user_id}/${folderId}/${file.name}`;
-  const { data, error } = await supabase.storage.from(bucketName).upload(path, file, {
-    cacheControl: "3600",
-    upsert: true,
+  // Drag & drop fichier (upload dans la drop zone)
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
   });
 
-  if (error) {
-    console.error("❌ Erreur upload Supabase :", error.message);
-    appendMessage("❌ Upload échoué", "bot-message");
-    return;
-  }
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
 
-  // 2. URL publique
-  const { data: publicURLData } = supabase.storage.from(bucketName).getPublicUrl(path);
-  const fileUrl = publicURLData.publicUrl;
+  dropZone.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
 
-  // 3. Envoi au webhook N8N
-  const formData = new FormData();
-  formData.append("user_id", user_id);
-  formData.append("chat_id", chat_id);
-  formData.append("file_name", file.name);
-  formData.append("file_url", fileUrl);
-  formData.append("folder_id", folderId);
+    const files = e.dataTransfer.files;
+    if (!files.length) return;
 
-  appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
+    for (const file of files) {
+      const filePath = `docs/${file.name}`;
+      const { error } = await supabase.storage.from(bucketName).upload(filePath, file, { upsert: true });
+      if (error) {
+        alert("Erreur d'upload : " + error.message);
+      } else {
+        alert("✅ Fichier ajouté !");
+      }
+    }
+  });
 
-  try {
-    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook-test/34e003f9-99db-4b40-a513-9304c01a1182", {
-      method: "POST",
-      body: formData
-    });
-    const result = await res.json();
-    appendMessage(result.output || "✅ Fichier vectorisé !", "bot-message");
-
-    // (optionnel) Affichage dans l’UI
-    // addFileToUI(file.name, fileUrl);
-  } catch (err) {
-    console.error(err);
-    appendMessage("❌ Erreur lors de l’envoi au webhook", "bot-message");
-  }
-});
-
-
-  
+  // Fonction utilitaire pour le placement en drag
   function getDragAfterElement(container, x) {
-    const draggableElements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
-    return draggableElements.reduce((closest, child) => {
+    const elements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
+    return elements.reduce((closest, child) => {
       const box = child.getBoundingClientRect();
       const offset = x - box.left - box.width / 2;
-      if (offset < 0 && offset > closest.offset) {
-        return { offset: offset, element: child };
-      } else {
-        return closest;
-      }
+      return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
     }, { offset: Number.NEGATIVE_INFINITY }).element;
   }
 });
