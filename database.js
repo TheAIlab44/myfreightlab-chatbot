@@ -4,6 +4,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
   const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
   const supabase = createClient(supabaseUrl, supabaseKey);
+  // ⚠️ À remplacer dynamiquement par tes vraies valeurs selon ta logique de session
+let user_id = localStorage.getItem("user_id") || "demo_user";
+let chat_id = localStorage.getItem("chat_id") || "demo_chat";
+let currentFolderId = "root"; // peut être modifié quand un dossier est cliqué
+
 
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
@@ -224,13 +229,40 @@ document.addEventListener("drop", e => {
 
 dropZone.addEventListener("drop", async (e) => {
   e.preventDefault();
+  dragCounter = 0;
+  dropZone.style.opacity = "0";
+  dropZone.style.pointerEvents = "none";
+  dropZone.style.display = "none";
+
   const file = e.dataTransfer.files[0];
   if (!file) return;
 
+  const folderId = currentFolderId || "root"; // ← à adapter si tu gères les dossiers cliqués
+
+  // 1. Upload dans Supabase Storage
+  const path = `${user_id}/${folderId}/${file.name}`;
+  const { data, error } = await supabase.storage.from(bucketName).upload(path, file, {
+    cacheControl: "3600",
+    upsert: true,
+  });
+
+  if (error) {
+    console.error("❌ Erreur upload Supabase :", error.message);
+    appendMessage("❌ Upload échoué", "bot-message");
+    return;
+  }
+
+  // 2. URL publique
+  const { data: publicURLData } = supabase.storage.from(bucketName).getPublicUrl(path);
+  const fileUrl = publicURLData.publicUrl;
+
+  // 3. Envoi au webhook N8N
   const formData = new FormData();
-  formData.append("file", file);
   formData.append("user_id", user_id);
   formData.append("chat_id", chat_id);
+  formData.append("file_name", file.name);
+  formData.append("file_url", fileUrl);
+  formData.append("folder_id", folderId);
 
   appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
 
@@ -240,12 +272,16 @@ dropZone.addEventListener("drop", async (e) => {
       body: formData
     });
     const result = await res.json();
-    appendMessage(result.output || "✅ Fichier traité avec succès !", "bot-message");
+    appendMessage(result.output || "✅ Fichier vectorisé !", "bot-message");
+
+    // (optionnel) Affichage dans l’UI
+    // addFileToUI(file.name, fileUrl);
   } catch (err) {
     console.error(err);
-    appendMessage("❌ Erreur lors de l’envoi du fichier", "bot-message");
+    appendMessage("❌ Erreur lors de l’envoi au webhook", "bot-message");
   }
 });
+
 
   
   function getDragAfterElement(container, x) {
