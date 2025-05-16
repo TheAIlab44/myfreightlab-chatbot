@@ -214,41 +214,85 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Drag & drop fichier (upload dans la drop zone)
-  dropZone.addEventListener("dragover", e => {
-    e.preventDefault();
-    dropZone.classList.add("dragover");
-  });
+ // Valeurs par défaut pour test (à remplacer selon ton auth plus tard)
+let user_id = localStorage.getItem("user_id") || "demo_user";
+let chat_id = localStorage.getItem("chat_id") || "demo_chat";
+let currentFolderId = "root";
 
-  dropZone.addEventListener("dragleave", () => {
-    dropZone.classList.remove("dragover");
-  });
-
-  dropZone.addEventListener("drop", async (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("dragover");
-
-    const files = e.dataTransfer.files;
-    if (!files.length) return;
-
-    for (const file of files) {
-      const filePath = `docs/${file.name}`;
-      const { error } = await supabase.storage.from(bucketName).upload(filePath, file, { upsert: true });
-      if (error) {
-        alert("Erreur d'upload : " + error.message);
-      } else {
-        alert("✅ Fichier ajouté !");
-      }
-    }
-  });
-
-  // Fonction utilitaire pour le placement en drag
-  function getDragAfterElement(container, x) {
-    const elements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
-    return elements.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = x - box.left - box.width / 2;
-      return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
+// Rendre les dossiers cliquables pour changer de currentFolderId
+document.addEventListener("click", (e) => {
+  const folder = e.target.closest(".folder-item");
+  if (folder) {
+    const folderName = folder.querySelector(".name").textContent.trim();
+    currentFolderId = folderName.replace(/\s+/g, "_").toLowerCase();
+    console.log("📁 Dossier sélectionné :", currentFolderId);
+    alert(`📁 Dossier sélectionné : ${folderName}`);
   }
 });
+
+// Drag & drop fichier (upload dans la drop zone)
+dropZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+
+dropZone.addEventListener("dragleave", () => {
+  dropZone.classList.remove("dragover");
+});
+
+dropZone.addEventListener("drop", async (e) => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+
+  const files = e.dataTransfer.files;
+  if (!files.length) return;
+
+  for (const file of files) {
+    const path = `${user_id}/${currentFolderId}/${file.name}`;
+    const { data: uploaded, error: uploadError } = await supabase.storage.from(bucketName).upload(path, file, {
+      cacheControl: "3600",
+      upsert: true,
+    });
+
+    if (uploadError) {
+      console.error("❌ Upload Supabase échoué :", uploadError.message);
+      alert("Erreur d'upload : " + uploadError.message);
+      continue;
+    }
+
+    const { data: publicURLData } = supabase.storage.from(bucketName).getPublicUrl(path);
+    const fileUrl = publicURLData.publicUrl;
+
+    const formData = new FormData();
+    formData.append("user_id", user_id);
+    formData.append("chat_id", chat_id);
+    formData.append("file_name", file.name);
+    formData.append("file_url", fileUrl);
+    formData.append("folder_id", currentFolderId);
+
+    try {
+      const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook-test/34e003f9-99db-4b40-a513-9304c01a1182", {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await res.json();
+      console.log("🧠 Webhook réponse :", result);
+      alert("✅ Fichier vectorisé avec succès !");
+    } catch (err) {
+      console.error("❌ Webhook échoué :", err);
+      alert("Erreur lors de l’envoi au webhook !");
+    }
+  }
+});
+
+// Fonction utilitaire pour le placement en drag
+function getDragAfterElement(container, x) {
+  const elements = [...container.querySelectorAll(".folder-item:not(.dragging)")];
+  return elements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = x - box.left - box.width / 2;
+    return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
