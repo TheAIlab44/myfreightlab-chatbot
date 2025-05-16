@@ -551,32 +551,17 @@ dropZone.addEventListener("drop", async (e) => {
   appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
 
   try {
-    console.log("Envoi du fichier", file.name, user_id, chat_id); // LOG avant fetch
-try {
-  const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68", {
-    method: "POST",
-    body: formData
-  });
-
-  const text = await res.text();  // On récupère la réponse brute en texte
-  console.log("Réponse brute du serveur :", text);
-
-  let result;
-  try {
-    result = JSON.parse(text);  // On essaie de parser en JSON
-  } catch {
-    console.warn("La réponse n'est pas un JSON valide");
-    result = {}; // On met un objet vide par défaut
+    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/upload-file", {
+      method: "POST",
+      body: formData
+    });
+    const result = await res.json();
+    appendMessage(result.output || "✅ Fichier traité avec succès !", "bot-message");
+  } catch (err) {
+    console.error(err);
+    appendMessage("❌ Erreur lors de l’envoi du fichier", "bot-message");
   }
-
-  appendMessage(result.output || "✅ Fichier traité avec succès !", "bot-message");
-
-} catch (err) {
-  console.error(err);
-  appendMessage("❌ Erreur lors de l’envoi du fichier", "bot-message");
-}
-
-
+});
 
 
   const currentChatId = localStorage.getItem("chat_id");
