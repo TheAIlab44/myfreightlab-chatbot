@@ -241,7 +241,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
 let currentFolderId = "root";
-let user_id = localStorage.getItem("user_id");
+const user_id = urlParams.get("user_id");
 
 // Rendre les dossiers cliquables pour changer de currentFolderId
 document.addEventListener("click", (e) => {
