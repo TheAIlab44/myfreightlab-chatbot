@@ -486,7 +486,7 @@ document.body.appendChild(dropZone);
 try {
   const res = await fetch(webhookURL, {
     method: "POST",
-    body: JSON.stringify({ question: text, user_id, chat_id }),
+    body: JSON.stringify({ question: text, user_id, chat_id, type:"text" }),
     headers: { "Content-Type": "application/json" },
   });
 
@@ -581,6 +581,6 @@ dropZone.addEventListener("drop", async (e) => {
 
   // En dernier, la fonction utilitaire generateSessionID
   function generateSessionID() {
-    return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    return ${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)};
   }
 });
