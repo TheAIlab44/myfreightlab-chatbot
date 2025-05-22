@@ -547,6 +547,7 @@ dropZone.addEventListener("drop", async (e) => {
   formData.append("file", file);
   formData.append("user_id", user_id);
   formData.append("chat_id", chat_id);
+  formData.append("type","file");
 
   appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
 
