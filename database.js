@@ -187,10 +187,10 @@ document.addEventListener("DOMContentLoaded", async () => {
    */
   async function loadUserFiles() {
     try {
-      const res = await fetch(`${filesWebhookUrl}?user_id=${encodeURIComponent(user_id)}`);
+      const res = await fetch(`${filesWebhookUrl}?user_id=${user_id}`);
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const files = await res.json();
-
+      console.log (files);
       // On vide d'abord l'ancien contenu (au cas où)
       uploadedContainer.innerHTML = "";
 
