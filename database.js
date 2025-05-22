@@ -187,7 +187,13 @@ document.addEventListener("DOMContentLoaded", async () => {
    */
   async function loadUserFiles() {
     try {
-      const res = await fetch(`${filesWebhookUrl}?user_id=${user_id}`);
+      const formData = new FormData();
+        formData.append("user_id", user_id);
+      const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937", {
+            method: "POST",
+            body: formData
+          });
+      
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const files = await res.json();
       console.log (files);
