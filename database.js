@@ -1,14 +1,8 @@
-document.addEventListener("DOMContentLoaded", async () => {
-  const bucketName = "myfreightlab";
-  const supabaseUrl = "https://asjqmzgcajcizutrldqw.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc"; // remplace par ta vraie clé
-  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
+document.addEventListener("DOMContentLoaded", async () => { 
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
     <style>
-      .explorer {
+     .explorer {
         padding: 20px;
         font-family: "Segoe UI", sans-serif;
         min-height: calc(100vh - 100px);
@@ -114,23 +108,55 @@ document.addEventListener("DOMContentLoaded", async () => {
       .dragging {
         opacity: 0.5;
       }
+      /* Styles pour les fichiers uploadés */
+      .uploaded-files {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      .file-item {
+        width: 90px;
+        height: 110px;
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 14px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        padding: 6px;
+      }
+      .file-item .emoji {
+        font-size: 32px;
+        margin-bottom: 4px;
+      }
+      .file-item .name {
+        font-size: 12px;
+        word-break: break-all;
+      }
     </style>
 
     <div class="explorer" id="drop-zone">
       <div class="explorer-grid" id="folder-container">
         <div class="add-folder" id="create-folder">➕</div>
       </div>
+      <!-- Nouvelle zone pour les fichiers vectorisés -->
+      <div class="uploaded-files" id="uploaded-files-container"></div>
     </div>
   `;
-
   document.body.appendChild(wrapper);
 
   const folderContainer = wrapper.querySelector("#folder-container");
+  const uploadedContainer = wrapper.querySelector("#uploaded-files-container");
   const createBtn = wrapper.querySelector("#create-folder");
   const dropZone = wrapper.querySelector("#drop-zone");
   let folderCount = 1;
 
-  // Fermer tous les menus contextuels
+// Fermer tous les menus contextuels
   function closeMenus() {
     document.querySelectorAll(".context-menu").forEach(menu => menu.remove());
   }
@@ -214,10 +240,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
- // Valeurs par défaut pour test (à remplacer selon ton auth plus tard)
-let user_id = localStorage.getItem("user_id") || "demo_user";
-let chat_id = localStorage.getItem("chat_id") || "demo_chat";
 let currentFolderId = "root";
+let user_id = localStorage.getItem("user_id");
 
 // Rendre les dossiers cliquables pour changer de currentFolderId
 document.addEventListener("click", (e) => {
@@ -230,45 +254,60 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Drag & drop fichier (upload dans la drop zone)
-dropZone.addEventListener("dragover", e => {
-  e.preventDefault();
-  dropZone.classList.add("dragover");
-});
+  // Drag & drop fichier (upload dans la drop zone)
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
 
-dropZone.addEventListener("dragleave", () => {
-  dropZone.classList.remove("dragover");
-});
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
 
-dropZone.addEventListener("drop", async (e) => {
-  e.preventDefault();
-  dropZone.classList.remove("dragover");
+  dropZone.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
 
-  const files = e.dataTransfer.files;
-  if (!files.length) return;
+    const files = e.dataTransfer.files;
+    if (!files.length) return;
 
-  for (const file of files) {
-   
-    const formData = new FormData();
-  formData.append("file", file);
-  formData.append("user_id", user_id);
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("user_id", user_id);
 
+      try {
+        const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
+          method: "POST",
+          body: formData
+        });
+        const result = await res.json();
+        console.log("🧠 Webhook réponse :", result);
+        alert("✅ Fichier vectorisé avec succès !");
 
-    try {
-      const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
-        method: "POST",
-        body: formData
-      });
+        // **Ajout de l'icône + nom du fichier dans la zone**
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-item";
 
-      const result = await res.json();
-      console.log("🧠 Webhook réponse :", result);
-      alert("✅ Fichier vectorisé avec succès !");
-    } catch (err) {
-      console.error("❌ Webhook échoué :", err);
-      alert("Erreur lors de l’envoi au webhook !");
+        const emoji = document.createElement("div");
+        emoji.className = "emoji";
+        emoji.textContent = "📄"; // ou autre icône selon le type
+
+        const nameDiv = document.createElement("div");
+        nameDiv.className = "name";
+        nameDiv.textContent = file.name;
+
+        fileItem.appendChild(emoji);
+        fileItem.appendChild(nameDiv);
+        uploadedContainer.appendChild(fileItem);
+
+      } catch (err) {
+        console.error("❌ Webhook échoué :", err);
+        alert("Erreur lors de l’envoi au webhook !");
+      }
     }
-  }
-});
+  });
+
 
 // Fonction utilitaire pour le placement en drag
 function getDragAfterElement(container, x) {
@@ -279,6 +318,5 @@ function getDragAfterElement(container, x) {
     return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
   }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
-  });
 
-
+});
