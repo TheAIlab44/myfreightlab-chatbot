@@ -1,4 +1,9 @@
 document.addEventListener("DOMContentLoaded", async () => { 
+  const urlParams = new URLSearchParams(window.location.search);
+  const user_id = urlParams.get("user_id");
+  
+  const filesWebhookUrl = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
+
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
     <style>
@@ -155,6 +160,54 @@ document.addEventListener("DOMContentLoaded", async () => {
   const createBtn = wrapper.querySelector("#create-folder");
   const dropZone = wrapper.querySelector("#drop-zone");
   let folderCount = 1;
+  
+  /**
+   * Crée et injecte un élément visuel pour un fichier.
+   * @param {string} name — nom du fichier à afficher
+   */
+  function renderFileItem(name) {
+    const fileItem = document.createElement("div");
+    fileItem.className = "file-item";
+
+    const emoji = document.createElement("div");
+    emoji.className = "emoji";
+    emoji.textContent = "📄";
+
+    const nameDiv = document.createElement("div");
+    nameDiv.className = "name";
+    nameDiv.textContent = name || "Sans nom";
+
+    fileItem.appendChild(emoji);
+    fileItem.appendChild(nameDiv);
+    uploadedContainer.appendChild(fileItem);
+  }
+
+  /**
+   * Va chercher tous les fichiers de l'utilisateur et les affiche.
+   */
+  async function loadUserFiles() {
+    try {
+      const res = await fetch(`${filesWebhookUrl}?user_id=${encodeURIComponent(user_id)}`);
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      const files = await res.json();
+
+      // On vide d'abord l'ancien contenu (au cas où)
+      uploadedContainer.innerHTML = "";
+
+      files.forEach(item => {
+        // file_name peut être null : on utilise le file_id comme fallback
+        const displayName = item.file_name || item.file_id;
+        renderFileItem(displayName);
+      });
+    } catch (err) {
+      console.error("❌ Impossible de charger les fichiers :", err);
+      // Vous pouvez afficher un message utilisateur ici
+    }
+  }
+
+  // Charger les fichiers au démarrage
+  await loadUserFiles();
+  
 
 // Fermer tous les menus contextuels
   function closeMenus() {
@@ -241,9 +294,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
 let currentFolderId = "root";
-const urlParams = new URLSearchParams(window.location.search);
-const user_id = urlParams.get("user_id");
-
+let user_id = localStorage.getItem("user_id");
 
 // Rendre les dossiers cliquables pour changer de currentFolderId
 document.addEventListener("click", (e) => {
