@@ -581,6 +581,6 @@ dropZone.addEventListener("drop", async (e) => {
 
   // En dernier, la fonction utilitaire generateSessionID
   function generateSessionID() {
-    return ${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)};
+    return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   }
 });
