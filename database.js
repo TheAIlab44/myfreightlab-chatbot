@@ -248,32 +248,17 @@ dropZone.addEventListener("drop", async (e) => {
   if (!files.length) return;
 
   for (const file of files) {
-    const path = `${user_id}/${currentFolderId}/${file.name}`;
-    const { data: uploaded, error: uploadError } = await supabase.storage.from(bucketName).upload(path, file, {
-      cacheControl: "3600",
-      upsert: true,
-    });
-
-    if (uploadError) {
-      console.error("❌ Upload Supabase échoué :", uploadError.message);
-      alert("Erreur d'upload : " + uploadError.message);
-      continue;
-    }
-
-    const { data: publicURLData } = supabase.storage.from(bucketName).getPublicUrl(path);
-    const fileUrl = publicURLData.publicUrl;
-
+   
     const formData = new FormData();
-    formData.append("user_id", user_id);
-    formData.append("chat_id", chat_id);
-    formData.append("file_name", file.name);
-    formData.append("file_url", fileUrl);
-    formData.append("folder_id", currentFolderId);
-    formData.append("file", file);
+  formData.append("file", file);
+  formData.append("user_id", user_id);
+
+  appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
+    
 
 
     try {
-      const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook-test/34e003f9-99db-4b40-a513-9304c01a1182", {
+      const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
         method: "POST",
         body: formData
       });
