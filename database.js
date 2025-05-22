@@ -253,9 +253,6 @@ dropZone.addEventListener("drop", async (e) => {
   formData.append("file", file);
   formData.append("user_id", user_id);
 
-  appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
-    
-
 
     try {
       const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
