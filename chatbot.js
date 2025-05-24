@@ -309,7 +309,7 @@ document.body.appendChild(dropZone);
 
   async function fetchUserMessages(userId) {
     try {
-      const response = await fetch("https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937", {
+      const response = await fetch("https://myfreightlab.app.n8n.cloud/webhook/fetchmessagehistory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId })
