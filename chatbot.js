@@ -314,7 +314,6 @@ document.body.appendChild(dropZone);
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId })
       });
-      console.log("lol",response)
       if (!response.ok) throw new Error("Erreur lors de la requête");
       return await response.json();
     } catch (error) {
@@ -325,15 +324,18 @@ document.body.appendChild(dropZone);
 
   function getLastMessages(messages) {
     const map = new Map();
+    console.log('COUCOU', messages)
     messages.forEach(msg => {
       if (!map.has(msg.session_id) || msg.id > map.get(msg.session_id).id) {
         map.set(msg.session_id, msg);
       }
     });
+    console.log('map', map)
     return Array.from(map.values())
       .sort((a, b) => b.id - a.id)
       .map(m => {
         const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+        console.log(parsed)
         const tmp = document.createElement("div");
         tmp.innerHTML = parsed.content || '';
         const textOnly = tmp.textContent || tmp.innerText || "";
