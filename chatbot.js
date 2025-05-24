@@ -314,6 +314,7 @@ document.body.appendChild(dropZone);
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId })
       });
+      console.log("lol",response)
       if (!response.ok) throw new Error("Erreur lors de la requête");
       return await response.json();
     } catch (error) {
