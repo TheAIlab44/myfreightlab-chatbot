@@ -25,7 +25,42 @@ document.addEventListener("DOMContentLoaded", async () => {
   const wrapper = document.createElement('div');
   wrapper.innerHTML = `
     <style>
-      /* ... styles inchangés ... */
+      body { margin:0; font-family:"Segoe UI",sans-serif; background:#f4f6fa; }
+      .explorer { padding:20px; min-height:100vh; box-sizing:border-box; }
+      .explorer-grid { display:flex; flex-wrap:wrap; gap:15px; }
+      .add-folder, .folder-item, .file-item {
+        width:100px; height:120px; border-radius:10px;
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        cursor:pointer; transition:background 0.2s, box-shadow 0.2s; position:relative;
+      }
+      .add-folder {
+        border:2px dashed #6c63ff; background:#fff; color:#6c63ff; font-size:32px;
+      }
+      .add-folder:hover { background:#f0f0ff; }
+      .folder-item {
+        background:#fff; border:1px solid #d1d5db; box-shadow:0 1px 3px rgba(0,0,0,0.1);
+      }
+      .folder-item.dragover { border-color:#00aa00; background:#f0fff0; }
+      .file-item {
+        background:#fff; border:1px solid #d1d5db; box-shadow:0 1px 3px rgba(0,0,0,0.1);
+      }
+      .emoji { font-size:36px; margin-bottom:6px; }
+      .name { font-size:12px; text-align:center; word-break:break-all; }
+      .menu-button { position:absolute; top:6px; right:6px; font-size:18px; }
+      .context-menu {
+        position:absolute; background:#fff; border:1px solid #ccc; border-radius:5px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:1000; width:100px;
+      }
+      .context-menu div { padding:6px 12px; cursor:pointer; }
+      .context-menu div:hover { background:#f0f0f0; }
+      .dragging { opacity:0.5; }
+      .folder-contents {
+        margin-top:6px; display:flex; flex-wrap:wrap; gap:4px; justify-content:center;
+      }
+      .file-item-mini {
+        width:20px; height:20px; font-size:10px; text-align:center;
+        line-height:20px; border:1px solid #ccc; border-radius:3px;
+      }
     </style>
     <div class="explorer" id="drop-zone">
       <div class="explorer-grid" id="folder-container">
