@@ -54,13 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .context-menu div { padding:6px 12px; cursor:pointer; }
       .context-menu div:hover { background:#f0f0f0; }
       .dragging { opacity:0.5; }
-      .folder-contents {
-        margin-top:6px; display:flex; flex-wrap:wrap; gap:4px; justify-content:center;
-      }
-      .file-item-mini {
-        width:20px; height:20px; font-size:10px; text-align:center;
-        line-height:20px; border:1px solid #ccc; border-radius:3px;
-      }
+      
       /* Affichage horizontal des fichiers uploadés */
       .uploaded-files {
         display: flex;
@@ -112,14 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (e.target.classList.contains('menu-button')) return;
       openFolder(folder.id);
     });
-    // context btn
     const btn = document.createElement('div'); btn.className='menu-button'; btn.textContent='⋮'; el.appendChild(btn);
-    // mini-files
-    const contents = document.createElement('div'); contents.className='folder-contents'; el.appendChild(contents);
-    files.filter(f=>f.folderId===folder.id).forEach(file=>{
-      const mini = document.createElement('div'); mini.className='file-item-mini'; mini.textContent=file.name;
-      contents.appendChild(mini);
-    });
     // drop into folder
     el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('dragover') });
     el.addEventListener('dragleave', ()=>el.classList.remove('dragover'));
@@ -149,6 +136,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       menu.append(ren,del); el.appendChild(menu);
     });
     folderContainer.appendChild(el);
+  }
   }
   // render file
   function renderFileItem(file) {
