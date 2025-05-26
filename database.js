@@ -109,11 +109,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.appendChild(btn);
-    // mini-aperçu
-    const contents = document.createElement("div");
-    contents.className = "folder-contents";
-    el.appendChild(contents);
-    files.filter(f => f.folderId === folder.id).forEach(file => {
       const mini = document.createElement("div");
       mini.className = "file-item-mini";
       mini.textContent = file.name;
