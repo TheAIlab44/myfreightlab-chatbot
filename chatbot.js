@@ -558,12 +558,12 @@ dropZone.addEventListener("drop", async (e) => {
   formData.append("file", file);
   formData.append("user_id", user_id);
   formData.append("chat_id", chat_id);
-  formData.append("type","file");
+  formData.append("type", "file");
 
   appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
 
   try {
-    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68", {
+    const res = await fetch(webhookURL, {
       method: "POST",
       body: formData
     });
@@ -575,13 +575,12 @@ dropZone.addEventListener("drop", async (e) => {
   }
 });
 
-
-      loadChatHistory(); // on recharge les sessions dans la sidebar
-    });
-  }
-
-  // En dernier, la fonction utilitaire generateSessionID
-  function generateSessionID() {
-    return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-  }
+// Après avoir configuré tous les listeners, on initialise uniquement la sidebar
+loadChatHistory();
 });
+
+// En dernier, la fonction utilitaire generateSessionID
+function generateSessionID() {
+  return `${user_id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+}
+
