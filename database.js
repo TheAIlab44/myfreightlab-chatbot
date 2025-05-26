@@ -202,20 +202,36 @@ function renderFileItem(file) {
   el.className = "file-item";
   el.dataset.id = file.id;
   el.draggable = true;
-  el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
-  // drag
+  el.innerHTML = `
+    <div class="emoji">📄</div>
+    <div class="name">${file.name}</div>
+  `;
+
+  // 1) Click principal → ouvre l'URL dans un nouvel onglet
+  el.addEventListener("click", e => {
+    // si on a cliqué sur ⋮, on ne fait pas le open()
+    if (!e.target.classList.contains("menu-button") && file.url) {
+      window.open(file.url, "_blank");
+    }
+  });
+
+  // 2) Drag handlers (pour déplacer vers un dossier)
   el.addEventListener("dragstart", () => el.classList.add("dragging"));
-  el.addEventListener("dragend", () => el.classList.remove("dragging"));
-  // menu contextuel fichier
+  el.addEventListener("dragend",   () => el.classList.remove("dragging"));
+
+  // 3) Menu contextuel (Renommer / Supprimer)
   const btn = document.createElement("div");
   btn.className = "menu-button";
   btn.textContent = "⋮";
   btn.addEventListener("click", e => {
     e.stopPropagation();
     closeMenus();
+
     const menu = document.createElement("div");
     menu.className = "context-menu";
-    const ren = document.createElement("div"); ren.textContent = "Renommer";
+
+    const ren = document.createElement("div");
+    ren.textContent = "Renommer";
     ren.onclick = () => {
       const nm = prompt("Nom du fichier", file.name);
       if (nm) {
@@ -224,19 +240,24 @@ function renderFileItem(file) {
         clearAndRender();
       }
     };
-    const del = document.createElement("div"); del.textContent = "Supprimer";
+
+    const del = document.createElement("div");
+    del.textContent = "Supprimer";
     del.onclick = () => {
       files = files.filter(x => x.id !== file.id);
       saveFiles();
       clearAndRender();
     };
+
     menu.append(ren, del);
     el.appendChild(menu);
   });
   el.appendChild(btn);
 
+  // 4) Enfin on ajoute l’élément au container
   uploadedContainer.appendChild(el);
 }
+
 
 
   // ————— Création de dossier —————
@@ -260,15 +281,20 @@ async function loadUserFiles() {
     const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
     if (!res.ok) throw new Error(res.statusText);
     const data = await res.json();
-    // Merge with existing folder assignments
+
     files = data.map(item => {
+      // récupère l'ancien nom/folderId si déjà existant
       const existing = files.find(f => f.id === item.file_id);
       return {
         id: item.file_id,
-        name: existing && existing.name !== item.file_name ? existing.name : (item.file_name || item.file_id),
-        folderId: existing ? existing.folderId : null
+        name: existing && existing.name !== item.file_name 
+                ? existing.name 
+                : (item.file_name || item.file_id),
+        folderId: existing ? existing.folderId : null,
+        url: item.file_url           // <-- on récupère ici le vrai lien
       };
     });
+
     saveFiles();
     clearAndRender();
   } catch (err) {
@@ -277,6 +303,7 @@ async function loadUserFiles() {
   }
 }
 await loadUserFiles();
+
 
   // Wrapper drop pour nouveaux uploads
   dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
