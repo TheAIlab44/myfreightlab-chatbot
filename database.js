@@ -115,6 +115,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.textContent = "⋮";
     el.appendChild(btn);
 
+    // click pour entrer dans le dossier (sauf sur le bouton ⋮)
+el.addEventListener("click", e => {
+  if (!e.target.classList.contains("menu-button")) {
+    openFolder(folder.id);
+  }
+});
+
+
     // drop files into folder
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
