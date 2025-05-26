@@ -63,6 +63,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       .context-menu div { padding:6px 12px; cursor:pointer; }
       .context-menu div:hover { background:#f0f0f0; }
       .dragging { opacity:0.5; }
+      .folder-contents {
+        margin-top:6px; display:flex; flex-wrap:wrap; gap:4px; justify-content:center;
+      }
+      .file-item-mini {
+        width:20px; height:20px; font-size:10px; text-align:center;
+        line-height:20px; border:1px solid #ccc; border-radius:3px;
       }
     </style>
     <div class="explorer" id="drop-zone">
@@ -109,10 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.appendChild(btn);
-      const mini = document.createElement("div");
-      mini.className = "file-item-mini";
-      mini.textContent = file.name;
-      contents.appendChild(mini);
+
     });
     // drop
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
