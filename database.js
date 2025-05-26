@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // State
   let folders = [];
-  let files = []; // { name, id, folderId }
+  let files = [];
 
   // Persistence
   function saveState() {
@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Render
   function clearAndRender() {
     folderContainer.innerHTML = '';
-    createBtn && folderContainer.appendChild(createBtn);
+    folderContainer.appendChild(createBtn);
     folders.forEach(f => renderFolderItem(f));
     uploadedContainer.innerHTML = '';
     files.forEach(f => renderFileItem(f));
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.appendChild(btn);
     folderContainer.appendChild(el);
 
-    // Drag&drop files into folder
+    // Drag files into folder
     el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
     el.addEventListener('dragleave', () => el.classList.remove('dragover'));
     el.addEventListener('drop', e => {
@@ -94,7 +94,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.addEventListener('dragstart', () => el.classList.add('dragging'));
     el.addEventListener('dragend', () => {
       el.classList.remove('dragging');
-      // Update order
       const order = Array.from(folderContainer.querySelectorAll('.folder-item')).map(n=>n.dataset.id);
       folders.sort((a,b)=> order.indexOf(a.id)-order.indexOf(b.id));
       saveState();
@@ -105,16 +104,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       e.stopPropagation(); closeMenus();
       const menu = document.createElement('div'); menu.className='context-menu';
       const ren = document.createElement('div'); ren.textContent='Renommer';
-      ren.onclick = () => {
-        const nm = prompt('Nom du dossier', folder.name);
-        if(nm){ folder.name=nm; saveState(); clearAndRender(); }
-      };
+      ren.onclick = () => { const nm = prompt('Nom du dossier', folder.name); if(nm){ folder.name=nm; saveState(); clearAndRender(); }};
       const del = document.createElement('div'); del.textContent='Supprimer';
-      del.onclick = () => {
-        folders = folders.filter(x=>x.id!==folder.id);
-        files = files.filter(x=>x.folderId!==folder.id);
-        saveState(); clearAndRender();
-      };
+      del.onclick = () => { folders = folders.filter(x=>x.id!==folder.id); files = files.filter(x=>x.folderId!==folder.id); saveState(); clearAndRender(); };
       menu.append(ren,del); el.appendChild(menu);
     });
   }
@@ -126,20 +118,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
     uploadedContainer.appendChild(el);
 
-    // Drag events
     el.addEventListener('dragstart', ()=>el.classList.add('dragging'));
     el.addEventListener('dragend', ()=>el.classList.remove('dragging'));
 
-    // Context menu
     const btn = document.createElement('div'); btn.className='menu-button'; btn.textContent='⋮'; el.appendChild(btn);
     btn.addEventListener('click', e=>{
       e.stopPropagation(); closeMenus();
       const menu=document.createElement('div'); menu.className='context-menu';
       const ren=document.createElement('div'); ren.textContent='Renommer';
-      ren.onclick=()=>{
-        const nm = prompt('Nom du fichier', file.name);
-        if(nm){ file.name=nm; saveState(); clearAndRender(); }
-      };
+      ren.onclick=()=>{ const nm = prompt('Nom du fichier', file.name); if(nm){ file.name=nm; saveState(); clearAndRender(); }};
       const del=document.createElement('div'); del.textContent='Supprimer';
       del.onclick=()=>{ files=files.filter(x=>x.id!==file.id); saveState(); clearAndRender(); };
       menu.append(ren,del); el.appendChild(menu);
@@ -149,14 +136,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   function closeMenus() { document.querySelectorAll('.context-menu').forEach(m=>m.remove()); }
   document.addEventListener('click', closeMenus);
 
-  // Create new folder
   createBtn.addEventListener('click', ()=>{
     const name = prompt('Nom du dossier', `Dossier ${folders.length+1}`);
     if(!name) return;
     const id = crypto.randomUUID(); folders.push({id,name}); saveState(); clearAndRender();
   });
 
-  // Drop files on main container
   const dropzone = wrapper.querySelector('.explorer');
   dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
   dropzone.addEventListener('dragleave', ()=>dropzone.classList.remove('dragover'));
@@ -167,15 +152,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     for(const file of dt){
       const formData=new FormData(); formData.append('file',file); formData.append('user_id',user_id);
       try{
-        const res=await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",{method:'POST',body:formData});
-        const json=await res.json(); console.log(json);
-        const id=crypto.randomUUID();
-        files.push({id, name:file.name, folderId:null});
+        await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",{method:'POST',body:formData});
+        const id=crypto.randomUUID(); files.push({id, name:file.name, folderId:null});
         saveState(); clearAndRender();
       }catch(err){ console.error(err); alert('Erreur upload'); }
     }
   });
 
-  // Initialize
   loadState(); clearAndRender();
 });
