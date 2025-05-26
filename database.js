@@ -196,7 +196,6 @@ function openFolder(folderId) {
     folderContainer.appendChild(el);
   }
 
-// ————— Rendu d’un fichier —————
 function renderFileItem(file) {
   const el = document.createElement("div");
   el.className = "file-item";
@@ -207,7 +206,7 @@ function renderFileItem(file) {
     <div class="name">${file.name}</div>
   `;
 
-  // 1) Clic principal ouvre l'URL
+  // 1) Clic principal → ouverture du document
   el.addEventListener("click", e => {
     if (!e.target.classList.contains("menu-button") && file.url) {
       window.open(file.url, "_blank");
@@ -218,7 +217,7 @@ function renderFileItem(file) {
   el.addEventListener("dragstart", () => el.classList.add("dragging"));
   el.addEventListener("dragend",   () => el.classList.remove("dragging"));
 
-  // 3) Menu contextuel Renommer/Supprimer
+  // 3) Menu contextuel Renommer / Supprimer
   const btn = document.createElement("div");
   btn.className = "menu-button";
   btn.textContent = "⋮";
@@ -252,10 +251,9 @@ function renderFileItem(file) {
   });
   el.appendChild(btn);
 
-  // 4) On ajoute l’élément au container
+  // 4) On injecte enfin l’élément dans le container
   uploadedContainer.appendChild(el);
 }
-
 
 
   // ————— Création de dossier —————
@@ -272,6 +270,7 @@ function renderFileItem(file) {
 loadFolders();
 loadFiles();
 clearAndRender();
+  
 async function loadUserFiles() {
   try {
     const fd = new FormData();
@@ -279,15 +278,20 @@ async function loadUserFiles() {
     const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
     if (!res.ok) throw new Error(res.statusText);
     const data = await res.json();
-    // Merge with existing folder assignments
+
+    // on merge avec l’existant pour ne pas perdre les folderId & renames
     files = data.map(item => {
       const existing = files.find(f => f.id === item.file_id);
       return {
         id: item.file_id,
-        name: existing && existing.name !== item.file_name ? existing.name : (item.file_name || item.file_id),
-        folderId: existing ? existing.folderId : null
+        name: existing && existing.name !== item.file_name
+                ? existing.name
+                : (item.file_name || item.file_id),
+        folderId: existing ? existing.folderId : null,
+        url: item.file_url    // ← on stocke le lien ici
       };
     });
+
     saveFiles();
     clearAndRender();
   } catch (err) {
@@ -296,6 +300,7 @@ async function loadUserFiles() {
   }
 }
 await loadUserFiles();
+
 
   // Wrapper drop pour nouveaux uploads
   dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
