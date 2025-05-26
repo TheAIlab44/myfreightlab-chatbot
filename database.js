@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     <div class="explorer" id="drop-zone">
       <div class="explorer-grid" id="folder-container">
         <div class="add-folder" id="create-folder">＋</div>
-      <//div>
+      </div>
       <div class="explorer-grid" id="uploaded-files-container"></div>
     </div>
   `;
