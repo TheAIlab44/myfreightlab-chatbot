@@ -92,51 +92,71 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   document.addEventListener("click", closeMenus);
 
-  // ————— Rendu unifié —————
-  function clearAndRender() {
-    // Dossiers
-    folderContainer.innerHTML = "";
-    folderContainer.appendChild(createBtn);
-    folders.forEach(f => renderFolderItem(f));
-    // Fichiers racine
-    uploadedContainer.innerHTML = "";
-    files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
-  }
-  // ————— Ouvrir un dossier —————
-function openFolder(folderId) {
-  // masque la vue dossiers
+// ————— Rendu unifié —————
+function clearAndRender() {
+  // ré-affiche la grille des dossiers
+  folderContainer.style.display = "flex";
+  createBtn.style.display = "flex";
+  folderContainer.innerHTML = "";
+  folderContainer.appendChild(createBtn);
+  folders.forEach(f => renderFolderItem(f));
+
+  // fichiers racine
+  uploadedContainer.innerHTML = "";
+  files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
+}
+// ————— Ouvrir un dossier —————
+function openFolder(id) {
+  // cache la grille dossiers
   folderContainer.style.display = "none";
   createBtn.style.display = "none";
+
   // bouton Retour
   const back = document.createElement("button");
   back.textContent = "← Retour";
   back.style.margin = "10px";
   back.addEventListener("click", () => {
     back.remove();
-    folderContainer.style.display = "flex";
-    createBtn.style.display = "flex";
     clearAndRender();
   });
   wrapper.prepend(back);
-  // affiche uniquement les fichiers du dossier
+
+  // n’affiche que les fichiers du dossier
   uploadedContainer.innerHTML = "";
-  files
-    .filter(f => f.folderId === folderId)
-    .forEach(f => renderFileItem(f));
+  files.filter(f => f.folderId === id).forEach(f => renderFileItem(f));
 }
 
-  // ————— Rendu d’un dossier —————
-  function renderFolderItem(folder) {
-    const el = document.createElement("div");
-    el.className = "folder-item";
-    el.dataset.id = folder.id;
-    el.draggable = true;
-    el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
-    // bouton contexte
-    const btn = document.createElement("div");
-    btn.className = "menu-button";
-    btn.textContent = "⋮";
-    el.appendChild(btn);
+function renderFolderItem(folder) {
+  const el = document.createElement("div");
+  el.className = "folder-item";
+  el.dataset.id = folder.id;
+  el.draggable = true;
+  el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
+
+  // ❶ ouverture au clic (hitbox totale, sauf menu-button)
+  el.addEventListener("click", e => {
+    if (!e.target.classList.contains("menu-button")) {
+      openFolder(folder.id);
+    }
+  });
+
+  // ❷ bouton “⋮” et son menu
+  const btn = document.createElement("div");
+  btn.className = "menu-button";
+  btn.textContent = "⋮";
+  el.appendChild(btn);
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    closeMenus();
+    // … ton code de renommer/supprimer …
+  });
+
+  // ❸ suivi du reste (drag & drop, reorder…)
+  // … dragover / drop / dragstart / dragend …
+  
+  folderContainer.appendChild(el);
+}
+
     // drop
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
