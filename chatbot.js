@@ -309,7 +309,7 @@ document.body.appendChild(dropZone);
 
   async function fetchUserMessages(userId) {
     try {
-      const response = await fetch("https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937", {
+      const response = await fetch("https://myfreightlab.app.n8n.cloud/webhook/fetchmessagehistory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId })
@@ -324,15 +324,18 @@ document.body.appendChild(dropZone);
 
   function getLastMessages(messages) {
     const map = new Map();
+    console.log('COUCOU', messages)
     messages.forEach(msg => {
       if (!map.has(msg.session_id) || msg.id > map.get(msg.session_id).id) {
         map.set(msg.session_id, msg);
       }
     });
+    console.log('map', map)
     return Array.from(map.values())
       .sort((a, b) => b.id - a.id)
       .map(m => {
         const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+        console.log(parsed)
         const tmp = document.createElement("div");
         tmp.innerHTML = parsed.content || '';
         const textOnly = tmp.textContent || tmp.innerText || "";
@@ -486,7 +489,7 @@ document.body.appendChild(dropZone);
 try {
   const res = await fetch(webhookURL, {
     method: "POST",
-    body: JSON.stringify({ question: text, user_id, chat_id }),
+    body: JSON.stringify({ question: text, user_id, chat_id, type:"text" }),
     headers: { "Content-Type": "application/json" },
   });
 
@@ -547,11 +550,12 @@ dropZone.addEventListener("drop", async (e) => {
   formData.append("file", file);
   formData.append("user_id", user_id);
   formData.append("chat_id", chat_id);
+  formData.append("type","file");
 
   appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
 
   try {
-    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/upload-file", {
+    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68", {
       method: "POST",
       body: formData
     });
