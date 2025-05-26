@@ -102,6 +102,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     uploadedContainer.innerHTML = "";
     files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
   }
+  // ————— Ouvrir un dossier —————
+function openFolder(folderId) {
+  // masque la vue dossiers
+  folderContainer.style.display = "none";
+  createBtn.style.display = "none";
+  // bouton Retour
+  const back = document.createElement("button");
+  back.textContent = "← Retour";
+  back.style.margin = "10px";
+  back.addEventListener("click", () => {
+    back.remove();
+    folderContainer.style.display = "flex";
+    createBtn.style.display = "flex";
+    clearAndRender();
+  });
+  wrapper.prepend(back);
+  // affiche uniquement les fichiers du dossier
+  uploadedContainer.innerHTML = "";
+  files
+    .filter(f => f.folderId === folderId)
+    .forEach(f => renderFileItem(f));
+}
 
   // ————— Rendu d’un dossier —————
   function renderFolderItem(folder) {
