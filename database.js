@@ -30,43 +30,55 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-// ————— Création du wrapper + CSS —————
-const wrapper = document.createElement("div");
-wrapper.innerHTML = `
-  <style>
-    body { margin:0; font-family:"Segoe UI",sans-serif; background:#f4f6fa; }
-    .explorer { padding:20px; min-height:100vh; box-sizing:border-box; }
-    .explorer-grid { display:flex; flex-wrap:wrap; gap:15px; }
-    .add-folder, .folder-item, .file-item {
-      width:100px; height:120px; border-radius:10px;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      cursor:pointer; transition:background 0.2s, box-shadow 0.2s; position:relative;
-    }
-    .add-folder { border:2px dashed #6c63ff; background:#fff; color:#6c63ff; font-size:32px; }
-    .add-folder:hover { background:#f0f0ff; }
-    .folder-item { background:#fff; border:1px solid #d1d5db; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
-    .folder-item.dragover { border-color:#00aa00; background:#f0fff0; }
-    .file-item { background:#fff; border:1px solid #d1d5db; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
-    .emoji { font-size:36px; margin-bottom:6px; }
-    .name { font-size:12px; text-align:center; word-break:break-all; }
-    .menu-button { position:absolute; top:6px; right:6px; font-size:18px; }
-    .context-menu {
-      position:absolute; background:#fff; border:1px solid #ccc; border-radius:5px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:1000; width:100px;
-    }
-    .context-menu div { padding:6px 12px; cursor:pointer; }
-    .context-menu div:hover { background:#f0f0f0; }
-    .dragging { opacity:0.5; }
-  </style>
-  <div class="explorer" id="drop-zone">
-    <div class="explorer-grid" id="folder-container">
-      <div class="add-folder" id="create-folder">＋</div>
+  // ————— Création du wrapper + CSS —————
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <style>
+      body { margin:0; font-family:"Segoe UI",sans-serif; background:#f4f6fa; }
+      .explorer { padding:20px; min-height:100vh; box-sizing:border-box; }
+      .explorer-grid { display:flex; flex-wrap:wrap; gap:15px; }
+      .add-folder, .folder-item, .file-item {
+        width:100px; height:120px; border-radius:10px;
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        cursor:pointer; transition:background 0.2s, box-shadow 0.2s; position:relative;
+      }
+      .add-folder {
+        border:2px dashed #6c63ff; background:#fff; color:#6c63ff; font-size:32px;
+      }
+      .add-folder:hover { background:#f0f0ff; }
+      .folder-item {
+        background:#fff; border:1px solid #d1d5db; box-shadow:0 1px 3px rgba(0,0,0,0.1);
+      }
+      .folder-item.dragover { border-color:#00aa00; background:#f0fff0; }
+      .file-item {
+        background:#fff; border:1px solid #d1d5db; box-shadow:0 1px 3px rgba(0,0,0,0.1);
+      }
+      .emoji { font-size:36px; margin-bottom:6px; }
+      .name { font-size:12px; text-align:center; word-break:break-all; }
+      .menu-button { position:absolute; top:6px; right:6px; font-size:18px; }
+      .context-menu {
+        position:absolute; background:#fff; border:1px solid #ccc; border-radius:5px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:1000; width:100px;
+      }
+      .context-menu div { padding:6px 12px; cursor:pointer; }
+      .context-menu div:hover { background:#f0f0f0; }
+      .dragging { opacity:0.5; }
+      .folder-contents {
+        margin-top:6px; display:flex; flex-wrap:wrap; gap:4px; justify-content:center;
+      }
+      .file-item-mini {
+        width:20px; height:20px; font-size:10px; text-align:center;
+        line-height:20px; border:1px solid #ccc; border-radius:3px;
+      }
+    </style>
+    <div class="explorer" id="drop-zone">
+      <div class="explorer-grid" id="folder-container">
+        <div class="add-folder" id="create-folder">＋</div>
+      </div>
+      <div class="explorer-grid" id="uploaded-files-container"></div>
     </div>
-    <div class="explorer-grid" id="uploaded-files-container"></div>
-  </div>
-`;
-document.body.appendChild(wrapper);
-
+  `;
+  document.body.appendChild(wrapper);
 
   // ————— Refs DOM —————
   const folderContainer = wrapper.querySelector("#folder-container");
@@ -90,23 +102,23 @@ document.body.appendChild(wrapper);
     uploadedContainer.innerHTML = "";
     files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
   }
-// ————— Ouvrir un dossier —————
+  // ————— Ouvrir un dossier —————
 function openFolder(folderId) {
-  // Cache la grille des dossiers
+  // masque la vue dossiers
   folderContainer.style.display = "none";
   createBtn.style.display = "none";
-
-  // Bouton “← Retour”
+  // bouton Retour
   const back = document.createElement("button");
   back.textContent = "← Retour";
   back.style.margin = "10px";
   back.addEventListener("click", () => {
     back.remove();
+    folderContainer.style.display = "flex";
+    createBtn.style.display = "flex";
     clearAndRender();
   });
   wrapper.prepend(back);
-
-  // N’affiche que les fichiers de ce dossier
+  // affiche uniquement les fichiers du dossier
   uploadedContainer.innerHTML = "";
   files
     .filter(f => f.folderId === folderId)
@@ -190,23 +202,11 @@ function renderFileItem(file) {
   el.className = "file-item";
   el.dataset.id = file.id;
   el.draggable = true;
-  el.innerHTML = `
-    <div class="emoji">📄</div>
-    <div class="name">${file.name}</div>
-  `;
-
-  // 1) Click principal → ouvre l'URL (ou téléchargement)
-  el.addEventListener("click", e => {
-    if (!e.target.classList.contains("menu-button") && file.url) {
-      window.open(file.url, "_blank");
-    }
-  });
-
-  // 2) Drag handlers
+  el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
+  // drag
   el.addEventListener("dragstart", () => el.classList.add("dragging"));
-  el.addEventListener("dragend",   () => el.classList.remove("dragging"));
-
-  // 3) Menu contextuel (Renommer / Supprimer)
+  el.addEventListener("dragend", () => el.classList.remove("dragging"));
+  // menu contextuel fichier
   const btn = document.createElement("div");
   btn.className = "menu-button";
   btn.textContent = "⋮";
@@ -235,9 +235,9 @@ function renderFileItem(file) {
   });
   el.appendChild(btn);
 
-  // 4) On ajoute l’élément au container
   uploadedContainer.appendChild(el);
 }
+
 
   // ————— Création de dossier —————
   createBtn.addEventListener("click", () => {
@@ -256,26 +256,19 @@ clearAndRender();
 async function loadUserFiles() {
   try {
     const fd = new FormData();
-    console.log(files);
-    
     fd.append("user_id", user_id);
     const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
     if (!res.ok) throw new Error(res.statusText);
     const data = await res.json();
-
+    // Merge with existing folder assignments
     files = data.map(item => {
-      // récupère l'ancien nom/folderId si déjà existant
       const existing = files.find(f => f.id === item.file_id);
       return {
         id: item.file_id,
-        name: existing && existing.name !== item.file_name 
-                ? existing.name 
-                : (item.file_name || item.file_id),
-        folderId: existing ? existing.folderId : null,
-        url: item.file_url           // <-- on récupère ici le vrai lien
+        name: existing && existing.name !== item.file_name ? existing.name : (item.file_name || item.file_id),
+        folderId: existing ? existing.folderId : null
       };
     });
-
     saveFiles();
     clearAndRender();
   } catch (err) {
@@ -284,7 +277,6 @@ async function loadUserFiles() {
   }
 }
 await loadUserFiles();
-
 
   // Wrapper drop pour nouveaux uploads
   dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
