@@ -54,14 +54,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       .context-menu div { padding:6px 12px; cursor:pointer; }
       .context-menu div:hover { background:#f0f0f0; }
       .dragging { opacity:0.5; }
-      
-      /* Affichage horizontal des fichiers uploadés */
-      .uploaded-files {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-top: 20px;
-      }
+      /* Uploaded files horizontal */
+      .uploaded-files { display:flex; flex-wrap:wrap; gap:15px; margin-top:20px; }
     </style>
     <div class="explorer" id="drop-zone">
       <div class="explorer-grid" id="folder-container">
@@ -77,55 +71,51 @@ document.addEventListener("DOMContentLoaded", async () => {
   const dropZone = wrapper.querySelector('#drop-zone');
 
   // --- Context menus ---
-  function closeMenus() { document.querySelectorAll('.context-menu').forEach(m=>m.remove()) }
+  function closeMenus() { document.querySelectorAll('.context-menu').forEach(m=>m.remove()); }
   document.addEventListener('click', closeMenus);
 
   // --- Rendering ---
   function clearAndRender() {
-    // global view
     folderContainer.style.display = '';
     createBtn.style.display = '';
-    document.querySelectorAll('.back-button').forEach(b => b.remove());
-
-    // Dossiers
+    document.querySelectorAll('.back-button').forEach(b=>b.remove());
+    // render folders
     folderContainer.innerHTML = '';
     folderContainer.appendChild(createBtn);
-    folders.forEach(f => renderFolderItem(f));
-    // Fichiers racine
+    folders.forEach(renderFolderItem);
+    // render root files
     uploadedContainer.innerHTML = '';
-    files.filter(f=>f.folderId===null).forEach(f=>renderFileItem(f));
+    files.filter(f=>f.folderId===null).forEach(renderFileItem);
   }
 
-  // Render folder with click, drop & mini-files
+  // --- Folder Item ---
   function renderFolderItem(folder) {
     const el = document.createElement('div');
     el.className = 'folder-item'; el.dataset.id = folder.id; el.draggable = true;
     el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
     // click to open
-    el.addEventListener('click', e => {
-      if (e.target.classList.contains('menu-button')) return;
-      openFolder(folder.id);
-    });
+    el.addEventListener('click', e=>{ if(e.target!==el && e.target.classList.contains('menu-button')) return; openFolder(folder.id); });
+    // context button
     const btn = document.createElement('div'); btn.className='menu-button'; btn.textContent='⋮'; el.appendChild(btn);
-    // drop into folder
-    el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('dragover') });
+    // drop
+    el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('dragover'); });
     el.addEventListener('dragleave', ()=>el.classList.remove('dragover'));
     el.addEventListener('drop', e=>{
       e.preventDefault(); el.classList.remove('dragover');
-      const dragging = document.querySelector('.file-item.dragging');
-      if (!dragging) return;
-      const fid = dragging.dataset.id;
+      const dragging=document.querySelector('.file-item.dragging');
+      if(!dragging) return;
+      const fid=dragging.dataset.id;
       files.find(x=>x.id===fid).folderId = folder.id;
       saveFiles(); clearAndRender();
     });
-    // reorder folder
+    // reorder
     el.addEventListener('dragstart', ()=>el.classList.add('dragging'));
     el.addEventListener('dragend', ()=>{
       el.classList.remove('dragging');
-      const order = Array.from(folderContainer.querySelectorAll('.folder-item')).map(n=>n.dataset.id);
+      const order=Array.from(folderContainer.querySelectorAll('.folder-item')).map(n=>n.dataset.id);
       folders.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id)); saveFolders();
     });
-    // context menu rename/delete
+    // context menu
     btn.addEventListener('click', e=>{
       e.stopPropagation(); closeMenus();
       const menu=document.createElement('div'); menu.className='context-menu';
@@ -137,14 +127,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     folderContainer.appendChild(el);
   }
-  }
-  // render file
+
+  // --- File Item ---
   function renderFileItem(file) {
-    const el = document.createElement('div'); el.className='file-item'; el.dataset.id=file.id; el.draggable=true;
+    const el=document.createElement('div'); el.className='file-item'; el.dataset.id=file.id; el.draggable=true;
     el.innerHTML=`<div class="emoji">📄</div><div class="name">${file.name}</div>`;
     el.addEventListener('dragstart',()=>el.classList.add('dragging'));
     el.addEventListener('dragend',()=>el.classList.remove('dragging'));
-    // file context
     const btn=document.createElement('div'); btn.className='menu-button'; btn.textContent='⋮';
     btn.addEventListener('click',e=>{
       e.stopPropagation(); closeMenus();
@@ -158,49 +147,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     uploadedContainer.appendChild(el);
   }
 
-  // open folder view
+  // --- Folder View ---
   function openFolder(folderId) {
     folderContainer.style.display='none'; createBtn.style.display='none';
     const back=document.createElement('button'); back.textContent='← Retour'; back.className='back-button'; back.style.margin='10px';
     back.addEventListener('click',()=>{ back.remove(); clearAndRender(); });
     wrapper.prepend(back);
-    uploadedContainer.innerHTML = '';
-    files.filter(f=>f.folderId===folderId).forEach(f=>renderFileItem(f));
+    uploadedContainer.innerHTML=''; files.filter(f=>f.folderId===folderId).forEach(renderFileItem);
   }
 
-  // create folder btn
+  // --- Create Folder ---
   createBtn.addEventListener('click',()=>{
     const nm=prompt('Nom du dossier',`Dossier ${folders.length+1}`);
-    if(!nm) return;
-    const id=crypto.randomUUID(); folders.push({id,name:nm}); saveFolders(); clearAndRender();
+    if(!nm) return; const id=crypto.randomUUID(); folders.push({id,name:nm}); saveFolders(); clearAndRender();
   });
 
-  // initial load
+  // --- Init ---
   loadFolders(); loadFiles(); clearAndRender();
-
-  // fetch external files
   async function loadUserFiles() {
     try {
       const fd=new FormData(); fd.append('user_id',user_id);
-      const res=await fetch(filesWebhookUrl,{method:'POST',body:fd});
-      if(!res.ok) throw new Error(res.statusText);
-      const data=await res.json();
-      files=data.map(i=>({id:i.file_id,name:i.file_name||i.file_id,folderId:null}));
-      saveFiles(); clearAndRender();
-    } catch(e) { clearAndRender(); }
+      const res=await fetch(filesWebhookUrl,{method:'POST',body:fd}); if(!res.ok) throw;
+      const data=await res.json(); files=data.map(i=>({id:i.file_id,name:i.file_name||i.file_id,folderId:null})); saveFiles(); clearAndRender();
+    } catch { clearAndRender(); }
   }
   await loadUserFiles();
 
-  // wrapper drop for new files
+  // --- Upload Drop ---
   dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover')});
   dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
   dropZone.addEventListener('drop',async e=>{
     e.preventDefault(); dropZone.classList.remove('dragover');
-    for(const f of e.dataTransfer.files){
+    for(const f of e.dataTransfer.files) {
       const fd=new FormData(); fd.append('file',f); fd.append('user_id',user_id);
       try{ await fetch('https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182',{method:'POST',body:fd});
-      const id=crypto.randomUUID(); files.push({id,name:f.name,folderId:null}); }
-      catch{} }
+      const id=crypto.randomUUID(); files.push({id,name:f.name,folderId:null}); } catch {}
+    }
     saveFiles(); clearAndRender();
   });
 });
