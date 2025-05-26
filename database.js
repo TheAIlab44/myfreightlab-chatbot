@@ -249,33 +249,34 @@ function renderFileItem(file) {
     clearAndRender();
   });
 
-  // ————— Drag & drop pour upload initial —————
-  // Charge d’abord l’état local
-  loadFolders();
-  loadFiles();
-  // puis charge depuis le webhook
-  async function loadUserFiles() {
-    try {
-      const fd = new FormData();
-      fd.append("user_id", user_id);
-      const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
-      if (!res.ok) throw new Error(res.statusText);
-      const data = await res.json();
-      // initialise files[] puis override localStorage
-      files = data.map(item => ({
+    // ————— Init + Webhook + Drop —————
+loadFolders();
+loadFiles();
+clearAndRender();
+async function loadUserFiles() {
+  try {
+    const fd = new FormData();
+    fd.append("user_id", user_id);
+    const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    // Merge with existing folder assignments
+    files = data.map(item => {
+      const existing = files.find(f => f.id === item.file_id);
+      return {
         id: item.file_id,
         name: item.file_name || item.file_id,
-        folderId: null
-      }));
-      saveFiles();
-      clearAndRender();
-    } catch (err) {
-      console.error("❌ Impossible de charger les fichiers webhook :", err);
-      // Charge juste le localStorage si échec
-      clearAndRender();
-    }
+        folderId: existing ? existing.folderId : null
+      };
+    });
+    saveFiles();
+    clearAndRender();
+  } catch (err) {
+    console.error("❌ Impossible de charger les fichiers webhook :", err);
+    clearAndRender();
   }
-  await loadUserFiles();
+}
+await loadUserFiles();
 
   // Wrapper drop pour nouveaux uploads
   dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
