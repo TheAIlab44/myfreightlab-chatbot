@@ -115,15 +115,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.appendChild(btn);
-    // mini-aperçu
-    const contents = document.createElement("div");
-    contents.className = "folder-contents";
-    el.appendChild(contents);
-    files.filter(f => f.folderId === folder.id).forEach(file => {
-      const mini = document.createElement("div");
-      mini.textContent = file.name;
-      contents.appendChild(mini);
-    });
     // drop
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
