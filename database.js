@@ -196,6 +196,12 @@ function openFolder(folderId) {
     el.dataset.id = file.id;
     el.draggable = true;
     el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
+    el.addEventListener("click", e => {
+  if (!e.target.classList.contains("menu-button")) {
+    openFolder(folder.id);
+  }
+});
+
     // drag
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend", () => el.classList.remove("dragging"));
