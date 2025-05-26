@@ -110,6 +110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.dataset.id = folder.id;
     el.draggable = true;
     el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
+    });
     // bouton contexte
     const btn = document.createElement("div");
     btn.className = "menu-button";
