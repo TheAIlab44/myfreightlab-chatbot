@@ -1,3 +1,5 @@
+// == Explorateur de fichiers vectorisés avec dossiers et persistence ==
+
 document.addEventListener("DOMContentLoaded", async () => {
   // ————— Paramètres & états —————
   const urlParams = new URLSearchParams(window.location.search);
@@ -8,25 +10,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   let folderCount = 1;
 
   // ————— Helpers localStorage —————
-  function saveFolders() {
-    localStorage.setItem("myFolders", JSON.stringify(folders));
-  }
+  function saveFolders() { localStorage.setItem("myFolders", JSON.stringify(folders)); }
   function loadFolders() {
     const d = localStorage.getItem("myFolders");
     if (d) {
-      try { folders = JSON.parse(d); }
-      catch { folders = []; }
+      try { folders = JSON.parse(d); } catch { folders = []; }
     }
   }
-
-  function saveFiles() {
-    localStorage.setItem("myFiles", JSON.stringify(files));
-  }
+  function saveFiles() { localStorage.setItem("myFiles", JSON.stringify(files)); }
   function loadFiles() {
     const d = localStorage.getItem("myFiles");
     if (d) {
-      try { files = JSON.parse(d); }
-      catch { files = []; }
+      try { files = JSON.parse(d); } catch { files = []; }
     }
   }
 
@@ -63,12 +58,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       .context-menu div { padding:6px 12px; cursor:pointer; }
       .context-menu div:hover { background:#f0f0f0; }
       .dragging { opacity:0.5; }
-      }
+      .uploaded-files { display:flex; flex-wrap:wrap; gap:15px; margin-top:20px; }
     </style>
     <div class="explorer" id="drop-zone">
       <div class="explorer-grid" id="folder-container">
         <div class="add-folder" id="create-folder">＋</div>
-      </div>
+      <//div>
       <div class="explorer-grid" id="uploaded-files-container"></div>
     </div>
   `;
@@ -81,20 +76,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const dropZone = wrapper.querySelector("#drop-zone");
 
   // ————— Context menu helper —————
-  function closeMenus() {
-    document.querySelectorAll(".context-menu").forEach(m => m.remove());
-  }
+  function closeMenus() { document.querySelectorAll(".context-menu").forEach(m => m.remove()); }
   document.addEventListener("click", closeMenus);
 
   // ————— Rendu unifié —————
   function clearAndRender() {
-    // Dossiers
     folderContainer.innerHTML = "";
-    folderContainer.appendChild(createBtn);
-    folders.forEach(f => renderFolderItem(f));
-    // Fichiers racine
+    folderContainer.append(createBtn);
+    folders.forEach(renderFolderItem);
     uploadedContainer.innerHTML = "";
-    files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
+    files.filter(f => f.folderId === null).forEach(renderFileItem);
   }
 
   // ————— Rendu d’un dossier —————
@@ -104,35 +95,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.dataset.id = folder.id;
     el.draggable = true;
     el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
-    // bouton contexte
+
+    // contexte
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
-    el.appendChild(btn);
-    });
-    // drop
+    el.append(btn);
+
+    // drop files into folder
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
     el.addEventListener("drop", e => {
-      e.preventDefault();
-      el.classList.remove("dragover");
+      e.preventDefault(); el.classList.remove("dragover");
       const dragging = document.querySelector(".file-item.dragging");
       if (!dragging) return;
       const fid = dragging.dataset.id;
-      const fobj = files.find(x => x.id === fid);
-      fobj.folderId = folder.id;
-      saveFiles();
-      clearAndRender();
+      files.find(x => x.id === fid).folderId = folder.id;
+      saveFiles(); clearAndRender();
     });
-    // reorder dossiers
+
+    // reorder folders
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend", () => {
       el.classList.remove("dragging");
-      const order = Array.from(folderContainer.querySelectorAll(".folder-item"))
-        .map(n => n.dataset.id);
+      const order = Array.from(folderContainer.querySelectorAll(".folder-item")).map(n => n.dataset.id);
       folders.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
       saveFolders();
     });
+
     // menu contextuel dossier
     btn.addEventListener("click", e => {
       e.stopPropagation(); closeMenus();
@@ -140,66 +130,39 @@ document.addEventListener("DOMContentLoaded", async () => {
       const ren = document.createElement("div"); ren.textContent = "Renommer";
       ren.onclick = () => {
         const nm = prompt("Nom du dossier", folder.name);
-        if (nm) {
-          folder.name = nm;
-          saveFolders();
-          clearAndRender();
-        }
+        if (nm) { folder.name = nm; saveFolders(); clearAndRender(); }
       };
       const del = document.createElement("div"); del.textContent = "Supprimer";
       del.onclick = () => {
         folders = folders.filter(x => x.id !== folder.id);
-        // retirer fichiers du dossier
         files.forEach(f => { if (f.folderId === folder.id) f.folderId = null; });
-        saveFolders();
-        saveFiles();
-        clearAndRender();
+        saveFolders(); saveFiles(); clearAndRender();
       };
-      menu.append(ren, del);
-      el.appendChild(menu);
+      menu.append(ren, del); el.append(menu);
     });
 
-    folderContainer.appendChild(el);
+    folderContainer.append(el);
   }
 
   // ————— Rendu d’un fichier —————
   function renderFileItem(file) {
-    const el = document.createElement("div");
-    el.className = "file-item";
-    el.dataset.id = file.id;
-    el.draggable = true;
+    const el = document.createElement("div"); el.className = "file-item"; el.dataset.id = file.id; el.draggable = true;
     el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
-    // drag
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend", () => el.classList.remove("dragging"));
-    // menu contextuel fichier
-    const btn = document.createElement("div");
-    btn.className = "menu-button";
-    btn.textContent = "⋮";
+
+    const btn = document.createElement("div"); btn.className = "menu-button"; btn.textContent = "⋮";
     btn.addEventListener("click", e => {
       e.stopPropagation(); closeMenus();
       const menu = document.createElement("div"); menu.className = "context-menu";
       const ren = document.createElement("div"); ren.textContent = "Renommer";
-      ren.onclick = () => {
-        const nm = prompt("Nom du fichier", file.name);
-        if (nm) {
-          file.name = nm;
-          saveFiles();
-          clearAndRender();
-        }
-      };
+      ren.onclick = () => { const nm = prompt("Nom du fichier", file.name); if (nm) { file.name = nm; saveFiles(); clearAndRender(); }};
       const del = document.createElement("div"); del.textContent = "Supprimer";
-      del.onclick = () => {
-        files = files.filter(x => x.id !== file.id);
-        saveFiles();
-        clearAndRender();
-      };
-      menu.append(ren, del);
-      el.appendChild(menu);
+      del.onclick = () => { files = files.filter(x => x.id !== file.id); saveFiles(); clearAndRender(); };
+      menu.append(ren, del); el.append(menu);
     });
-    el.appendChild(btn);
-
-    uploadedContainer.appendChild(el);
+    el.append(btn);
+    uploadedContainer.append(el);
   }
 
   // ————— Création de dossier —————
@@ -207,59 +170,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     const nm = prompt("Nom du dossier", `Dossier ${folders.length + 1}`);
     if (!nm) return;
     const id = crypto.randomUUID();
-    folders.push({ id, name: nm });
-    saveFolders();
-    clearAndRender();
+    folders.push({ id, name: nm }); saveFolders(); clearAndRender();
   });
 
-  // ————— Drag & drop pour upload initial —————
-  // Charge d’abord l’état local
-  loadFolders();
-  loadFiles();
-  // puis charge depuis le webhook
+  // ————— Init + Webhook + Drop —————
+  loadFolders(); loadFiles(); clearAndRender();
   async function loadUserFiles() {
     try {
-      const fd = new FormData();
-      fd.append("user_id", user_id);
-      const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
-      if (!res.ok) throw new Error(res.statusText);
-      const data = await res.json();
-      // initialise files[] puis override localStorage
-      files = data.map(item => ({
-        id: item.file_id,
-        name: item.file_name || item.file_id,
-        folderId: null
-      }));
-      saveFiles();
-      clearAndRender();
-    } catch (err) {
-      console.error("❌ Impossible de charger les fichiers webhook :", err);
-      // Charge juste le localStorage si échec
-      clearAndRender();
-    }
+      const fd = new FormData(); fd.append("user_id", user_id);
+      const res = await fetch(filesWebhookUrl, { method: "POST", body: fd }); if (!res.ok) throw;
+      const data = await res.json(); files = data.map(i => ({ id: i.file_id, name: i.file_name || i.file_id, folderId: null }));
+      saveFiles(); clearAndRender();
+    } catch { clearAndRender(); }
   }
   await loadUserFiles();
 
-  // Wrapper drop pour nouveaux uploads
   dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
   dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
   dropZone.addEventListener("drop", async e => {
     e.preventDefault(); dropZone.classList.remove("dragover");
     for (const f of e.dataTransfer.files) {
-      const fd = new FormData();
-      fd.append("file", f);
-      fd.append("user_id", user_id);
-      try {
-        await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
-          method: "POST", body: fd
-        });
-        const id = crypto.randomUUID();
-        files.push({ id, name: f.name, folderId: null });
-      } catch {
-        alert("Erreur upload fichier");
-      }
+      const fd = new FormData(); fd.append("file", f); fd.append("user_id", user_id);
+      try { await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", { method: "POST", body: fd });
+        const id = crypto.randomUUID(); files.push({ id, name: f.name, folderId: null });
+      } catch {}
     }
-    saveFiles();
-    clearAndRender();
+    saveFiles(); clearAndRender();
   });
 });
