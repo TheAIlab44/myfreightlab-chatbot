@@ -101,7 +101,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.append(btn);
-
     // drop files into folder
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
