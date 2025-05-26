@@ -127,8 +127,6 @@ function openFolder(folderId) {
 
   // ————— Rendu d’un dossier —————
   function renderFolderItem(folder) {
-      // 1) Clic pour entrer dans le dossier
-  el.addEventListener("click", () => openFolder(folder.id));
     const el = document.createElement("div");
     el.className = "folder-item";
     el.dataset.id = folder.id;
