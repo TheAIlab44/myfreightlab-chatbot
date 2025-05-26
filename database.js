@@ -3,208 +3,179 @@ document.addEventListener("DOMContentLoaded", async () => {
   const user_id = urlParams.get("user_id");
   const filesWebhookUrl = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
 
+  // Create wrapper and inject HTML/CSS
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
     <style>
-      /* ... (styles unchanged) ... */
+      body { margin:0; font-family:"Segoe UI",sans-serif; background:#f4f6fa; }
+      .explorer { padding:20px; min-height:100vh; box-sizing:border-box; }
+      .explorer-grid { display:flex; flex-wrap:wrap; gap:15px; }
+      .add-folder, .folder-item, .file-item {
+        width:100px; height:120px; border-radius:10px; display:flex;
+        flex-direction:column; align-items:center; justify-content:center;
+        cursor:pointer; transition:background 0.2s, box-shadow 0.2s;
+      }
+      .add-folder { border:2px dashed #6c63ff; background:#fff; color:#6c63ff; font-size:32px; }
+      .add-folder:hover { background:#f0f0ff; }
+      .folder-item { background:#fff; border:1px solid #d1d5db; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+      .folder-item.dragover { border-color:#6c63ff; background:#f9f9ff; }
+      .file-item { background:#fff; border:1px solid #d1d5db; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+      .emoji { font-size:36px; margin-bottom:6px; }
+      .name { font-size:12px; text-align:center; word-break:break-all; }
+      .menu-button { position:absolute; top:6px; right:6px; font-size:18px; }
+      .context-menu { position:absolute; background:#fff; border:1px solid #ccc; border-radius:5px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:1000; width:100px; }
+      .context-menu div { padding:6px 12px; cursor:pointer; }
+      .context-menu div:hover { background:#f0f0f0; }
+      .dropzone { flex:1; padding:20px; border:2px dashed transparent; }
+      .dropzone.dragover { border-color:#6c63ff; background:rgba(108,99,255,0.05); }
     </style>
 
-    <div class="explorer" id="drop-zone">
+    <div class="explorer">
       <div class="explorer-grid" id="folder-container">
-        <div class="add-folder" id="create-folder">➕</div>
+        <div class="add-folder" id="create-folder">＋</div>
       </div>
-      <div class="uploaded-files" id="uploaded-files-container"></div>
+      <div class="explorer-grid" id="uploaded-files-container"></div>
     </div>
   `;
   document.body.appendChild(wrapper);
 
-  const folderContainer = wrapper.querySelector("#folder-container");
-  const uploadedContainer = wrapper.querySelector("#uploaded-files-container");
-  const createBtn = wrapper.querySelector("#create-folder");
-  const dropZone = wrapper.querySelector("#drop-zone");
-  let folderCount = 1;
+  const folderContainer = document.getElementById('folder-container');
+  const uploadedContainer = document.getElementById('uploaded-files-container');
+  const createBtn = document.getElementById('create-folder');
+
+  // State
   let folders = [];
+  let files = []; // { name, id, folderId }
 
-  // --- Persistence helpers ---
-  function saveFolders() {
-    const names = folders.map(f => f.name);
-    localStorage.setItem('folders', JSON.stringify(names));
+  // Persistence
+  function saveState() {
+    localStorage.setItem('vf_folders', JSON.stringify(folders));
+    localStorage.setItem('vf_files', JSON.stringify(files));
   }
-  function loadFolders() {
-    const data = localStorage.getItem('folders');
-    if (data) {
-      try {
-        const names = JSON.parse(data);
-        names.forEach(name => createFolder(name, false));
-      } catch {}
-    }
+  function loadState() {
+    try { folders = JSON.parse(localStorage.getItem('vf_folders')) || []; } catch { folders = []; }
+    try { files = JSON.parse(localStorage.getItem('vf_files')) || []; } catch { files = []; }
   }
 
-  // --- Rendering items ---
-  function renderFileItem(name) {
-    const fileItem = document.createElement("div");
-    fileItem.className = "file-item";
-    fileItem.setAttribute('draggable', 'true');
+  // Render
+  function clearAndRender() {
+    folderContainer.innerHTML = '';
+    createBtn && folderContainer.appendChild(createBtn);
+    folders.forEach(f => renderFolderItem(f));
+    uploadedContainer.innerHTML = '';
+    files.forEach(f => renderFileItem(f));
+  }
 
-    const emoji = document.createElement("div");
-    emoji.className = "emoji";
-    emoji.textContent = "📄";
+  // Folder
+  function renderFolderItem(folder) {
+    const el = document.createElement('div');
+    el.className = 'folder-item'; el.dataset.id = folder.id; el.draggable = true;
+    el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
+    const btn = document.createElement('div'); btn.className='menu-button'; btn.textContent='⋮';
+    el.appendChild(btn);
+    folderContainer.appendChild(el);
 
-    const nameDiv = document.createElement("div");
-    nameDiv.className = "name";
-    nameDiv.textContent = name || "Sans nom";
-    nameDiv.contentEditable = false;
-
-    // Context menu button
-    const menuBtn = document.createElement("div");
-    menuBtn.className = "menu-button";
-    menuBtn.textContent = "⋮";
-
-    menuBtn.addEventListener("click", e => {
-      e.stopPropagation(); closeMenus();
-      const menu = document.createElement('div'); menu.className = 'context-menu';
-      const renameOpt = document.createElement('div'); renameOpt.textContent = 'Renommer';
-      renameOpt.onclick = () => { nameDiv.contentEditable = true; nameDiv.focus(); menu.remove(); };
-      const deleteOpt = document.createElement('div'); deleteOpt.textContent = 'Supprimer';
-      deleteOpt.onclick = () => fileItem.remove();
-      menu.append(renameOpt, deleteOpt);
-      fileItem.appendChild(menu);
+    // Drag&drop files into folder
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); el.classList.remove('dragover');
+      const dragging = document.querySelector('.file-item.dragging');
+      if (dragging) {
+        const fid = dragging.dataset.id;
+        const f = files.find(x=>x.id===fid);
+        f.folderId = folder.id;
+        saveState(); clearAndRender();
+      }
     });
 
-    nameDiv.addEventListener('blur', () => nameDiv.contentEditable = false);
-    nameDiv.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nameDiv.blur(); } });
+    // Reorder folders
+    el.addEventListener('dragstart', () => el.classList.add('dragging'));
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      // Update order
+      const order = Array.from(folderContainer.querySelectorAll('.folder-item')).map(n=>n.dataset.id);
+      folders.sort((a,b)=> order.indexOf(a.id)-order.indexOf(b.id));
+      saveState();
+    });
 
-    fileItem.append(emoji, nameDiv, menuBtn);
-    uploadedContainer.appendChild(fileItem);
-
-    // Drag events for reordering
-    fileItem.addEventListener('dragstart', () => fileItem.classList.add('dragging'));
-    fileItem.addEventListener('dragend', () => fileItem.classList.remove('dragging'));
+    // Context menu
+    btn.addEventListener('click', e => {
+      e.stopPropagation(); closeMenus();
+      const menu = document.createElement('div'); menu.className='context-menu';
+      const ren = document.createElement('div'); ren.textContent='Renommer';
+      ren.onclick = () => {
+        const nm = prompt('Nom du dossier', folder.name);
+        if(nm){ folder.name=nm; saveState(); clearAndRender(); }
+      };
+      const del = document.createElement('div'); del.textContent='Supprimer';
+      del.onclick = () => {
+        folders = folders.filter(x=>x.id!==folder.id);
+        files = files.filter(x=>x.folderId!==folder.id);
+        saveState(); clearAndRender();
+      };
+      menu.append(ren,del); el.appendChild(menu);
+    });
   }
 
-  async function loadUserFiles() {
-    try {
-      const formData = new FormData(); formData.append("user_id", user_id);
-      const res = await fetch(filesWebhookUrl, { method: 'POST', body: formData });
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      const files = await res.json();
-      uploadedContainer.innerHTML = '';
-      files.forEach(item => {
-        const displayName = item.file_name || item.originalName || item.file_id;
-        renderFileItem(displayName);
-      });
-    } catch (err) {
-      console.error("❌ Impossible de charger les fichiers :", err);
-    }
+  // File
+  function renderFileItem(file) {
+    const el = document.createElement('div');
+    el.className='file-item'; el.dataset.id=file.id; el.draggable=true;
+    el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
+    uploadedContainer.appendChild(el);
+
+    // Drag events
+    el.addEventListener('dragstart', ()=>el.classList.add('dragging'));
+    el.addEventListener('dragend', ()=>el.classList.remove('dragging'));
+
+    // Context menu
+    const btn = document.createElement('div'); btn.className='menu-button'; btn.textContent='⋮'; el.appendChild(btn);
+    btn.addEventListener('click', e=>{
+      e.stopPropagation(); closeMenus();
+      const menu=document.createElement('div'); menu.className='context-menu';
+      const ren=document.createElement('div'); ren.textContent='Renommer';
+      ren.onclick=()=>{
+        const nm = prompt('Nom du fichier', file.name);
+        if(nm){ file.name=nm; saveState(); clearAndRender(); }
+      };
+      const del=document.createElement('div'); del.textContent='Supprimer';
+      del.onclick=()=>{ files=files.filter(x=>x.id!==file.id); saveState(); clearAndRender(); };
+      menu.append(ren,del); el.appendChild(menu);
+    });
   }
 
-  // Load persisted folders and files
-  loadFolders();
-  await loadUserFiles();
-
-  function closeMenus() { document.querySelectorAll('.context-menu').forEach(m => m.remove()); }
+  function closeMenus() { document.querySelectorAll('.context-menu').forEach(m=>m.remove()); }
   document.addEventListener('click', closeMenus);
 
-  // Create folder function, with persistence
-  function createFolder(nameText = `Dossier ${folderCount++}`, persist = true) {
-    const folder = document.createElement('div');
-    folder.className = 'folder-item'; folder.setAttribute('draggable','true');
-
-    const emoji = document.createElement('div'); emoji.className = 'emoji'; emoji.textContent = '📁';
-    const nameDiv = document.createElement('div'); nameDiv.className = 'name'; nameDiv.textContent = nameText; nameDiv.contentEditable = false;
-    const menuBtn = document.createElement('div'); menuBtn.className = 'menu-button'; menuBtn.textContent = '⋮';
-
-    menuBtn.addEventListener('click', e => {
-      e.stopPropagation(); closeMenus();
-      const menu = document.createElement('div'); menu.className = 'context-menu';
-      const renameOpt = document.createElement('div'); renameOpt.textContent = 'Renommer';
-      renameOpt.onclick = () => { nameDiv.contentEditable = true; nameDiv.focus(); menu.remove(); };
-      const deleteOpt = document.createElement('div'); deleteOpt.textContent = 'Supprimer';
-      deleteOpt.onclick = () => { folder.remove(); if (persist) { folders = folders.filter(f => f.name !== nameDiv.textContent); saveFolders(); } };
-      menu.append(renameOpt, deleteOpt); folder.appendChild(menu);
-    });
-
-    nameDiv.addEventListener('blur', () => {
-      nameDiv.contentEditable = false;
-      if (persist) {
-        const idx = folders.findIndex(f => f.element === folder);
-        if (idx !== -1) { folders[idx].name = nameDiv.textContent; saveFolders(); }
-      }
-    });
-    nameDiv.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nameDiv.blur(); } });
-
-    folder.append(emoji, nameDiv, menuBtn);
-    folderContainer.appendChild(folder);
-
-    // Persist
-    if (persist) {
-      folders.push({ name: nameText, element: folder });
-      saveFolders();
-    }
-
-    // Drag for reorder
-    folder.addEventListener('dragstart', () => folder.classList.add('dragging'));
-    folder.addEventListener('dragend', () => folder.classList.remove('dragging'));
-
-    // Select folder
-    folder.addEventListener('click', () => {
-      const folderName = nameDiv.textContent.trim();
-      currentFolderId = folderName.replace(/\s+/g, '_').toLowerCase();
-      console.log("📁 Dossier sélectionné :", currentFolderId);
-      alert(`📁 Dossier sélectionné : ${folderName}`);
-    });
-  }
-
-  createBtn.addEventListener('click', () => createFolder());
-
-  // Reordering folders
-  folderContainer.addEventListener('dragover', e => {
-    e.preventDefault();
-    const dragging = folderContainer.querySelector('.dragging');
-    const after = getDragAfterElement(folderContainer, e.clientX);
-    if (!after) folderContainer.appendChild(dragging);
-    else folderContainer.insertBefore(dragging, after);
-    // Update folder order in memory
-    folders = Array.from(folderContainer.querySelectorAll('.folder-item')).map(el => ({ name: el.querySelector('.name').textContent, element: el }));
-    saveFolders();
+  // Create new folder
+  createBtn.addEventListener('click', ()=>{
+    const name = prompt('Nom du dossier', `Dossier ${folders.length+1}`);
+    if(!name) return;
+    const id = crypto.randomUUID(); folders.push({id,name}); saveState(); clearAndRender();
   });
 
-  // Reordering file items
-  uploadedContainer.addEventListener('dragover', e => {
-    e.preventDefault();
-    const dragging = uploadedContainer.querySelector('.dragging');
-    const after = getDragAfterElement(uploadedContainer, e.clientX);
-    if (!after) uploadedContainer.appendChild(dragging);
-    else uploadedContainer.insertBefore(dragging, after);
-  });
-
-  // File upload drag & drop
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-  dropZone.addEventListener('drop', async e => {
-    e.preventDefault(); dropZone.classList.remove('dragover');
-    const files = e.dataTransfer.files;
-    if (!files.length) return;
-    for (const file of files) {
-      const formData = new FormData(); formData.append('file', file); formData.append('user_id', user_id);
-      try {
-        const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", { method: 'POST', body: formData });
-        const result = await res.json(); console.log("🧠 Webhook réponse :", result);
-        alert("✅ Fichier vectorisé avec succès !");
-        renderFileItem(file.name);
-      } catch (err) {
-        console.error("❌ Webhook échoué :", err); alert("Erreur lors de l’envoi au webhook !");
-      }
+  // Drop files on main container
+  const dropzone = wrapper.querySelector('.explorer');
+  dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', ()=>dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', async e=>{
+    e.preventDefault(); dropzone.classList.remove('dragover');
+    const dt = e.dataTransfer.files;
+    if(!dt.length) return;
+    for(const file of dt){
+      const formData=new FormData(); formData.append('file',file); formData.append('user_id',user_id);
+      try{
+        const res=await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",{method:'POST',body:formData});
+        const json=await res.json(); console.log(json);
+        const id=crypto.randomUUID();
+        files.push({id, name:file.name, folderId:null});
+        saveState(); clearAndRender();
+      }catch(err){ console.error(err); alert('Erreur upload'); }
     }
   });
 
-  function getDragAfterElement(container, x) {
-    const elements = [...container.querySelectorAll(':scope > .folder-item, :scope > .file-item:not(.dragging)')];
-    return elements.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = x - box.left - box.width / 2;
-      if (offset < 0 && offset > closest.offset) return { offset, element: child };
-      return closest;
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-  }
+  // Initialize
+  loadState(); clearAndRender();
 });
