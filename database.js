@@ -207,8 +207,16 @@ function renderFileItem(file) {
     <div class="name">${file.name}</div>
   `;
 
+  console.log("Attaching click for", file.id, file.url);
+
   // 1) Click principal → ouvre l'URL dans un nouvel onglet
   el.addEventListener("click", e => {
+  // if (!e.target.classList.contains("menu-button")) {
+    console.log("Click on file, url:", file.url);
+    window.open(file.url, "_blank");
+  // }
+});
+
     // si on a cliqué sur ⋮, on ne fait pas le open()
     if (!e.target.classList.contains("menu-button") && file.url) {
       window.open(file.url, "_blank");
@@ -277,6 +285,8 @@ clearAndRender();
 async function loadUserFiles() {
   try {
     const fd = new FormData();
+    console.log(files);
+    
     fd.append("user_id", user_id);
     const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
     if (!res.ok) throw new Error(res.statusText);
