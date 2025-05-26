@@ -110,12 +110,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.dataset.id = folder.id;
     el.draggable = true;
     el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
-    });
     // bouton contexte
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.appendChild(btn);
+    // mini-aperçu
+    const contents = document.createElement("div");
+    contents.className = "folder-contents";
+    el.appendChild(contents);
+    files.filter(f => f.folderId === folder.id).forEach(file => {
+      const mini = document.createElement("div");
+      mini.textContent = file.name;
+      contents.appendChild(mini);
     });
     // drop
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
