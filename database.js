@@ -223,69 +223,125 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Écouteur global pour fermer les menus quand on clique ailleurs
   document.addEventListener("click", closeMenus);
 
-  // Créer un dossier
-  function createFolder(nameText = `Dossier ${folderCount++}`) {
-    const folder = document.createElement("div");
-    folder.className = "folder-item";
-    folder.setAttribute("draggable", "true");
-
-    const emoji = document.createElement("div");
-    emoji.className = "emoji";
-    emoji.textContent = "📁";
-
-    const name = document.createElement("div");
-    name.className = "name";
-    name.textContent = nameText;
-    name.contentEditable = false;
-
-    const menuBtn = document.createElement("div");
-    menuBtn.className = "menu-button";
-    menuBtn.textContent = "⋮";
-
-    menuBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      closeMenus();
-
-      const menu = document.createElement("div");
-      menu.className = "context-menu";
-
-      const renameOption = document.createElement("div");
-      renameOption.textContent = "Renommer";
-      renameOption.onclick = () => {
-        name.contentEditable = true;
-        name.focus();
-        menu.remove();
-      };
-
-      const deleteOption = document.createElement("div");
-      deleteOption.textContent = "Supprimer";
-      deleteOption.onclick = () => folder.remove();
-
-      menu.appendChild(renameOption);
-      menu.appendChild(deleteOption);
-      folder.appendChild(menu);
-    });
-
-    name.addEventListener("dblclick", () => {
-      name.contentEditable = true;
-      name.focus();
-    });
-
-    name.addEventListener("blur", () => {
-      name.contentEditable = false;
-    });
-
-    folder.appendChild(emoji);
-    folder.appendChild(name);
-    folder.appendChild(menuBtn);
-    folderContainer.appendChild(folder);
-
-    folder.addEventListener("dragstart", () => folder.classList.add("dragging"));
-    folder.addEventListener("dragend", () => folder.classList.remove("dragging"));
+  // À placer en haut de ton script
+let folders = [];
+function saveFolders() {
+  localStorage.setItem('myFolders', JSON.stringify(folders));
+}
+function loadFolders() {
+  const data = localStorage.getItem('myFolders');
+  if (data) {
+    try {
+      folders = JSON.parse(data);
+    } catch {
+      folders = [];
+    }
   }
+}
+// Appelle loadFolders() avant de rendre les dossiers :
+loadFolders();
+folders.forEach(f => createFolder(f.name, false, f.id));
 
-  // Création via le bouton "+"
-  createBtn.addEventListener("click", () => createFolder());
+// Ensuite, ta fonction createFolder :
+function createFolder(nameText = `Dossier ${folderCount++}`, persist = true, providedId = null) {
+  const id = providedId || crypto.randomUUID();
+  const folder = document.createElement("div");
+  folder.className = "folder-item";
+  folder.setAttribute("draggable", "true");
+  folder.dataset.id = id;
+
+  const emoji = document.createElement("div");
+  emoji.className = "emoji";
+  emoji.textContent = "📁";
+
+  const nameDiv = document.createElement("div");
+  nameDiv.className = "name";
+  nameDiv.textContent = nameText;
+  nameDiv.contentEditable = false;
+
+  const menuBtn = document.createElement("div");
+  menuBtn.className = "menu-button";
+  menuBtn.textContent = "⋮";
+
+  // Menu contextuel
+  menuBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    closeMenus();
+
+    const menu = document.createElement("div");
+    menu.className = "context-menu";
+
+    const renameOption = document.createElement("div");
+    renameOption.textContent = "Renommer";
+    renameOption.onclick = () => {
+      const newName = prompt("Nom du dossier", nameDiv.textContent);
+      if (!newName) return;
+      nameDiv.textContent = newName;
+      // mettre à jour l'état et sauvegarder
+      const f = folders.find(x => x.id === id);
+      if (f) f.name = newName;
+      saveFolders();
+      menu.remove();
+    };
+
+    const deleteOption = document.createElement("div");
+    deleteOption.textContent = "Supprimer";
+    deleteOption.onclick = () => {
+      folder.remove();
+      // retirer du state et sauvegarder
+      folders = folders.filter(x => x.id !== id);
+      saveFolders();
+    };
+
+    menu.append(renameOption, deleteOption);
+    folder.appendChild(menu);
+  });
+
+  // Double-clic pour renommer en place
+  nameDiv.addEventListener("dblclick", () => {
+    nameDiv.contentEditable = true;
+    nameDiv.focus();
+  });
+  nameDiv.addEventListener("blur", () => {
+    nameDiv.contentEditable = false;
+    // maj state après édition inline
+    const f = folders.find(x => x.id === id);
+    if (f) {
+      f.name = nameDiv.textContent.trim() || f.name;
+      saveFolders();
+    }
+  });
+  nameDiv.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      nameDiv.blur();
+    }
+  });
+
+  folder.append(emoji, nameDiv, menuBtn);
+  folderContainer.appendChild(folder);
+
+  // drag pour réordonner
+  folder.addEventListener("dragstart", () => folder.classList.add("dragging"));
+  folder.addEventListener("dragend", () => {
+    folder.classList.remove("dragging");
+    // recalculer l'ordre puis sauvegarder
+    const orderedIds = Array.from(folderContainer.children)
+      .filter(el => el.classList.contains("folder-item"))
+      .map(el => el.dataset.id);
+    folders.sort((a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id));
+    saveFolders();
+  });
+
+  // persister dans le state
+  if (persist) {
+    folders.push({ id, name: nameText });
+    saveFolders();
+  }
+}
+
+// Lancer la création via le bouton
+createBtn.addEventListener("click", () => createFolder());
 
   // Drag & drop dossier (réorganisation)
   folderContainer.addEventListener("dragover", e => {
