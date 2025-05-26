@@ -430,13 +430,21 @@ document.body.appendChild(dropZone);
     }
   }
 
-  resetBtn.addEventListener("click", () => {
-    localStorage.removeItem("chatHistory");
-    savesessionIDtolocalStorage();
-    chat_id = loadsessionIDfromlocalstorage();
-    chat.innerHTML = "";
-    appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
-  });
+resetBtn.addEventListener("click", () => {
+  // On vide l’historique stocké et on supprime l’ancien ID
+  localStorage.removeItem("chatHistory");
+  localStorage.removeItem("chat_id");
+
+  // Génère un tout nouveau session_id
+  savesessionIDtolocalStorage();
+  chat_id = loadsessionIDfromlocalstorage();
+
+  // Vide l’affichage et affiche le message d’accueil
+  chat.innerHTML = "";
+  appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
+});
+
+
 
   function appendMessage(message, className) {
     const msg = document.createElement("div");
@@ -568,17 +576,6 @@ dropZone.addEventListener("drop", async (e) => {
 });
 
 
-  const currentChatId = localStorage.getItem("chat_id");
-  if (currentChatId) {
-    fetchUserMessages(user_id).then(data => {
-      const full = data.filter(m => m.session_id === currentChatId);
-            chat.innerHTML = ""; // 🔹 nettoyer avant de recharger
-      full.forEach(m => {
-        const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
-        if (parsed.content) {
-          appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
-        }
-      });
       loadChatHistory(); // on recharge les sessions dans la sidebar
     });
   }
