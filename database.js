@@ -127,11 +127,18 @@ function openFolder(folderId) {
 
   // ————— Rendu d’un dossier —————
   function renderFolderItem(folder) {
-    const el = document.createElement("div");
-    el.className = "folder-item";
-    el.dataset.id = folder.id;
-    el.draggable = true;
-    el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
+  const el = document.createElement("div");
+  el.className = "folder-item";
+  el.dataset.id = folder.id;
+  el.draggable = true;
+  el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
+
+  // ❶ ouverture au clic (hitbox totale, sauf menu-button)
+  el.addEventListener("click", e => {
+    if (!e.target.classList.contains("menu-button")) {
+      openFolder(folder.id);
+    }
+  });
     // bouton contexte
     const btn = document.createElement("div");
     btn.className = "menu-button";
