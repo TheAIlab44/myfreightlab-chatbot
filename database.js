@@ -61,6 +61,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         width:20px; height:20px; font-size:10px; text-align:center;
         line-height:20px; border:1px solid #ccc; border-radius:3px;
       }
+      /* Affichage horizontal des fichiers uploadés */
+      .uploaded-files {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 20px;
+      }
     </style>
     <div class="explorer" id="drop-zone">
       <div class="explorer-grid" id="folder-container">
