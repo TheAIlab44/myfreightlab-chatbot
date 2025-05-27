@@ -24,203 +24,205 @@ document.addEventListener("DOMContentLoaded", () => {
   let chat_id = loadSessionID();
 
   // — Build UI
-  const wrapper = document.createElement("div");
-  wrapper.id = "chat-wrapper";
-  wrapper.innerHTML = `
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-    * { font-family: 'Inter', sans-serif; }
+const wrapper = document.createElement("div");
+wrapper.id = "chat-wrapper";
+wrapper.innerHTML = `
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+  * { font-family: 'Inter', sans-serif; }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-    #chat-wrapper {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      height: 90vh;
-      width: 80vw;
-      margin: 5vh auto;
-      background: #f9fbfc;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #d3dce6;
-      position: relative;
-    }
+  #chat-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 90vh;
+    width: 80vw;
+    margin: 5vh auto;
+    background: #f9fbfc;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #d3dce6;
+    position: relative;
+  }
 
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      align-items: center;
-      height: calc(90vh - 100px);
-    }
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+    height: calc(90vh - 100px);
+  }
 
-    .message {
-      padding: 14px 18px;
-      border-radius: 18px;
-      max-width: 80%;
-      font-size: 15px;
-      line-height: 1.6;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      animation: fadeInUp 0.4s ease-out;
-    }
+  .message {
+    padding: 14px 18px;
+    border-radius: 18px;
+    max-width: 80%;
+    font-size: 15px;
+    line-height: 1.6;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    animation: fadeInUp 0.4s ease-out;
+  }
 
-    .user-message {
-      align-self: flex-start;
-      background: #e6f0ff;
-      color: #003366;
-      border-bottom-right-radius: 0;
-    }
+  .user-message {
+    align-self: flex-start;
+    background: #e6f0ff;
+    color: #003366;
+    border-bottom-right-radius: 0;
+  }
 
-    .bot-message {
-      align-self: flex-end;
-      background: #fff;
-      color: #222;
-      border-bottom-left-radius: 0;
-    }
+  .bot-message {
+    align-self: flex-end;
+    background: #fff;
+    color: #222;
+    border-bottom-left-radius: 0;
+  }
 
-    /* on rend input-area relatif pour le file-preview absolu */
-    #input-area {
-      position: relative;
-      display: flex;
-      padding: 12px 16px;
-      border-top: 1px solid #ccc;
-      gap: 10px;
-      background: white;
-    }
+  /* on rend input-area relatif pour le file-preview absolu */
+  #input-area {
+    position: relative;
+    display: flex;
+    padding: 12px 16px;
+    border-top: 1px solid #ccc;
+    gap: 10px;
+    background: white;
+  }
 
-    #userInput {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      outline: none;
-      font-size: 15px;
-    }
+  #userInput {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    font-size: 15px;
+  }
 
-    #sendBtn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
-      background: #0077c8;
-      color: white;
-      cursor: pointer;
-    }
+  #sendBtn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: #0077c8;
+    color: white;
+    cursor: pointer;
+  }
 
-    #resetBtn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: white;
-      border: 1px solid #ccc;
-      padding: 4px 8px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 13px;
-    }
+  #resetBtn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13px;
+  }
 
-    /* dropZone */
-    #drop-zone {
-      border: 2px dashed #ccc;
-      padding: 40px;
-      text-align: center;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.95);
-      display: none;
-      z-index: 10000;
-    }
+  /* dropZone */
+  #drop-zone {
+    border: 2px dashed #ccc;
+    padding: 40px;
+    text-align: center;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: none;
+    z-index: 10000;
+  }
 
-    /* preview mini icônes */
-    #file-preview {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      display: flex;
-      gap: 4px;
-      pointer-events: none;
-    }
-    /* chaque icône */
-    #file-preview .file-item {
-      width: 24px;
-      height: 24px;
-      background: #fff;
-      border: 1px solid #d3dce6;
-      border-radius: 4px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    /* image ou extension */
-    #file-preview .file-item img,
-    #file-preview .file-item .file-icon {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+  /* preview mini icônes (au-dessus de l’input-area) */
+  #file-preview {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 20;
+  }
+  /* chaque icône */
+  #file-preview .file-item {
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border: 1px solid #d3dce6;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* image ou extension */
+  #file-preview .file-item img,
+  #file-preview .file-item .file-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-    /* sidebars et prompts */
-    .dynamic-sidebar {
-      position: fixed; top: 0; right: -320px;
-      width: 320px; height: 100vh;
-      background: #fff; border-left: 1px solid #ddd;
-      box-shadow: -2px 0 6px rgba(0,0,0,0.05);
-      transition: right 0.3s ease-in-out; z-index: 9999;
-      overflow-y: auto;
-    }
-    .dynamic-sidebar.open { right: 0; }
-    .sidebar-header {
-      padding: 16px; background: #0077c8; color: white;
-      font-weight: bold; font-size: 16px;
-    }
-    .sidebar-content { padding: 10px; }
-    .prompt {
-      padding: 10px; background: #f0f0f0;
-      border-radius: 6px; margin-bottom: 8px;
-      cursor: grab; font-size: 14px;
-    }
-    details summary { font-weight: 600; cursor: pointer; }
-    .floating-toggle {
-      position: fixed; top: 50%; right: 0;
-      transform: translateY(-50%);
-      background-color: #0077c8; color: white;
-      padding: 10px; border-radius: 8px 0 0 8px;
-      cursor: pointer; font-size: 20px; z-index: 99999;
-    }
-    #toggleHistory { top: 40%; }
-  </style>
+  /* sidebars et prompts */
+  .dynamic-sidebar {
+    position: fixed; top: 0; right: -320px;
+    width: 320px; height: 100vh;
+    background: #fff; border-left: 1px solid #ddd;
+    box-shadow: -2px 0 6px rgba(0,0,0,0.05);
+    transition: right 0.3s ease-in-out; z-index: 9999;
+    overflow-y: auto;
+  }
+  .dynamic-sidebar.open { right: 0; }
+  .sidebar-header {
+    padding: 16px; background: #0077c8; color: white;
+    font-weight: bold; font-size: 16px;
+  }
+  .sidebar-content { padding: 10px; }
+  .prompt {
+    padding: 10px; background: #f0f0f0;
+    border-radius: 6px; margin-bottom: 8px;
+    cursor: grab; font-size: 14px;
+  }
+  details summary { font-weight: 600; cursor: pointer; }
+  .floating-toggle {
+    position: fixed; top: 50%; right: 0;
+    transform: translateY(-50%);
+    background-color: #0077c8; color: white;
+    padding: 10px; border-radius: 8px 0 0 8px;
+    cursor: pointer; font-size: 20px; z-index: 99999;
+  }
+  #toggleHistory { top: 40%; }
+</style>
 
-  <button id="resetBtn">✨ Nouveau chat</button>
-  <div id="chat"></div>
-  <div id="input-area">
-    <textarea id="userInput" placeholder="Pose ta question ici…" rows="2"
-      style="resize:none; padding:10px; border-radius:8px; border:1px solid #ccc;
-             font-size:15px; flex:1; overflow-y:auto;"></textarea>
-    <button id="sendBtn">▶</button>
-  </div>
-  <div id="drop-zone">📂 Déposez vos fichiers…</div>
+<button id="resetBtn">✨ Nouveau chat</button>
+<div id="chat"></div>
+<div id="input-area">
+  <textarea id="userInput" placeholder="Pose ta question ici…" rows="2"
+    style="resize:none; padding:10px; border-radius:8px; border:1px solid #ccc;
+           font-size:15px; flex:1; overflow-y:auto;"></textarea>
+  <button id="sendBtn">▶</button>
+  <div id="file-preview"></div>
+</div>
+<div id="drop-zone">📂 Déposez vos fichiers…</div>
 
-  <div class="floating-toggle" id="toggleHistory">🕓</div>
-  <div class="dynamic-sidebar" id="historyPanel">
-    <div class="sidebar-header">🕓 Historique des conversations</div>
-    <div class="sidebar-content" id="historyList"></div>
-  </div>
-  <div class="floating-toggle" id="togglePrompt">💡</div>
-  <div class="dynamic-sidebar" id="promptPanel">
-    <div class="sidebar-header">💡 Idées de prompts</div>
-    <div class="sidebar-content"><!-- vos <details> ici --></div>
-  </div>
+<div class="floating-toggle" id="toggleHistory">🕓</div>
+<div class="dynamic-sidebar" id="historyPanel">
+  <div class="sidebar-header">🕓 Historique des conversations</div>
+  <div class="sidebar-content" id="historyList"></div>
+</div>
+<div class="floating-toggle" id="togglePrompt">💡</div>
+<div class="dynamic-sidebar" id="promptPanel">
+  <div class="sidebar-header">💡 Idées de prompts</div>
+  <div class="sidebar-content"><!-- vos <details> ici --></div>
+</div>
 `;
+
   document.getElementById("chat-container").appendChild(wrapper);
 
   // — Key elements
