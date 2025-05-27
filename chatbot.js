@@ -191,16 +191,45 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* aperçu des pièces jointes */
-    #file-preview {
-      display: none;
-      align-self: flex-start;
-      max-width: 80%;
-      padding: 8px;
-      background: #f0f0f0;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
+.file-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+}
+.file-preview .file-item {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d3dce6;
+  border-radius: 6px;
+  padding: 4px 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.file-preview .file-item img {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 6px;
+}
+.file-preview .file-item .file-name {
+  font-size: 13px;
+  color: #333;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.file-preview .file-item .remove-file {
+  margin-left: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #888;
+}
+.file-preview .file-item .remove-file:hover {
+  color: #e00;
+}
   </style>
 
   <button id="resetBtn">✨ Nouveau chat</button>
