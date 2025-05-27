@@ -383,59 +383,76 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // — Send logic
-  sendBtn.addEventListener("click", async () => {
-    const text = userInput.value.trim();
-    if (!text && pendingFiles.length===0) return;
-    if (text) appendMessage(text, "user-message");
+sendBtn.addEventListener("click", async () => {
+  const text = userInput.value.trim();
+  if (!text && pendingFiles.length === 0) return;
+  if (text) appendMessage(text, "user-message");
 
-    const loader = document.createElement("div");
-    loader.className = "message bot-message";
-    loader.innerHTML = "Je réfléchis…";
-    chat.appendChild(loader);
-    chat.scrollTop = chat.scrollHeight;
+  // loader
+  const loader = document.createElement("div");
+  loader.className = "message bot-message";
+  loader.innerHTML = "Je réfléchis…";
+  chat.appendChild(loader);
+  chat.scrollTop = chat.scrollHeight;
 
-    try {
-      let res, data;
-      if (pendingFiles.length > 0) {
-        const fd = new FormData();
-        pendingFiles.forEach(f => fd.append("file", f));
-        fd.append("question", text);
-        fd.append("user_id", user_id);
-        fd.append("chat_id", chat_id);
-        fd.append("type", text ? "filesWithText" : "files");
+  try {
+    let res, data;
 
-        // debug FormData
-        for (let [k,v] of fd.entries()) console.log("📦", k, v);
+    if (pendingFiles.length > 0) {
+      // 1) Prépare le FormData
+      const fd = new FormData();
+      pendingFiles.forEach((f) => fd.append("file", f, f.name));
+      fd.append("question", text);
+      fd.append("user_id", user_id);
+      fd.append("chat_id", chat_id);
+      fd.append("type", text ? "filesWithText" : "files");
 
-        res = await fetch(webhookURL, { method:"POST", body:fd });
-        const raw = await res.text();
-        console.log("⬅️ raw resp", raw);
-        data = JSON.parse(raw);
-
-        pendingFiles = [];
-        filePreview.style.display = "none";
-        filePreview.innerHTML = "";
-      } else {
-        res = await fetch(webhookURL, {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({question:text, user_id, chat_id, type:"text"})
-        });
-        data = await res.json();
+      // 2) Debug : inspecter le contenu sans renvoyer
+      for (let [key, val] of fd.entries()) {
+        console.log("📦 FormData:", key, val);
       }
 
-      loader.remove();
-      appendMessage(data.output || "Pas de réponse", "bot-message");
-      loadHistory();
-    } catch (e) {
-      loader.remove();
-      appendMessage("❌ Erreur de connexion", "bot-message");
-      console.error(e);
-    } finally {
-      userInput.value = "";
-      userInput.focus();
+      // 3) Fais UNE SEULE requête
+      res = await fetch(webhookURL, { method: "POST", body: fd });
+      console.log("⬅️ Statut:", res.status, res.statusText);
+
+      // 4) Récupère la réponse
+      data = await res.json();
+
+      // 5) Réinitialise
+      pendingFiles = [];
+      filePreview.style.display = "none";
+      filePreview.innerHTML = "";
+
+    } else {
+      // envoi texte seul
+      res = await fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: text,
+          user_id,
+          chat_id,
+          type: "text"
+        })
+      });
+      data = await res.json();
     }
-  });
+
+    // affiche la réponse et recharge l’historique
+    loader.remove();
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+    loadHistory();
+
+  } catch (err) {
+    loader.remove();
+    appendMessage("❌ Erreur de connexion", "bot-message");
+    console.error(err);
+  } finally {
+    userInput.value = "";
+    userInput.focus();
+  }
+});
 
   // — Enter vs Shift+Enter
   userInput.addEventListener("keydown", e => {
