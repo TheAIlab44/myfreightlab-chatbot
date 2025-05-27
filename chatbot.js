@@ -143,19 +143,19 @@ wrapper.innerHTML = `
   /* preview mini icônes (au-dessus de l’input-area) */
   #file-preview {
     position: absolute;
-    bottom: 12px;
-    left: 12px;
+    bottom: calc(100% + 8px);
+    left: 16px;
     display: flex;
-    gap: 6px;
+    gap: 8px;
     z-index: 20;
   }
-  /* chaque icône */
+  /* chaque icône agrandie */
   #file-preview .file-item {
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     background: #fff;
     border: 1px solid #d3dce6;
-    border-radius: 4px;
+    border-radius: 8px;
     overflow: hidden;
     display: flex;
     align-items: center;
