@@ -442,10 +442,15 @@ document.body.appendChild(dropZone);
     const msg = document.createElement("div");
     msg.className = `message ${className}`;
     msg.innerHTML = message;
-    chat.appendChild(msg);
-    chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
-    saveChatToLocalStorage();
-  }
+    const previousHeight = chat.scrollHeight;
+  chat.appendChild(msg);
+  const newHeight = chat.scrollHeight;
+  // on fait défiler juste de la différence, pas tout le chat
+  chat.scrollTop = previousHeight === 0
+    ? newHeight             // si c'est le 1er message, on scroll en bas
+    : chat.scrollTop + (newHeight - previousHeight);
+  saveChatToLocalStorage();
+}
 
   function saveChatToLocalStorage() {
     const messages = Array.from(chat.querySelectorAll(".message")).map(msg => ({
@@ -570,18 +575,27 @@ dropZone.addEventListener("drop", async (e) => {
 
   const currentChatId = localStorage.getItem("chat_id");
   if (currentChatId) {
-    fetchUserMessages(user_id).then(data => {
-      const full = data.filter(m => m.session_id === currentChatId);
-            chat.innerHTML = ""; // 🔹 nettoyer avant de recharger
-      full.forEach(m => {
-        const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
-        if (parsed.content) {
-          appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
-        }
-      });
-      loadChatHistory(); // on recharge les sessions dans la sidebar
+  fetchUserMessages(user_id).then(data => {
+    const full = data.filter(m => m.session_id === currentChatId);
+    // ① on mémorise la hauteur avant affichage
+    const previousHeight = chat.scrollHeight;
+    chat.innerHTML = "";
+    full.forEach(m => {
+      // on insère sans appeler appendMessage()
+      const parsed = typeof m.message === "string"
+        ? JSON.parse(m.message)
+        : m.message;
+      const msg = document.createElement("div");
+      msg.className = `message ${parsed.type === "human" ? "user-message" : "bot-message"}`;
+      msg.innerHTML = parsed.content;
+      chat.appendChild(msg);
     });
-  }
+    // ② on calcule la nouvelle hauteur et on ajuste le scroll
+    const newHeight = chat.scrollHeight;
+    chat.scrollTop = newHeight - previousHeight;
+    loadChatHistory();
+  });
+}
 
   // En dernier, la fonction utilitaire generateSessionID
   function generateSessionID() {
