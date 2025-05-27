@@ -366,70 +366,91 @@ wrapper.innerHTML = `
     userInput.focus();
   }));
 
-  // — Show/hide dropZone
-  ["dragenter","dragover"].forEach(evt =>
-    document.addEventListener(evt, e => {
-      e.preventDefault();
-      dropZone.style.display = "block";
-      dropZone.style.opacity = "1";
-    })
-  );
-  ["dragleave","drop"].forEach(evt =>
-    document.addEventListener(evt, e => {
-      e.preventDefault();
-      dropZone.style.opacity = "0";
-      setTimeout(() => dropZone.style.display = "none", 300);
-    })
-  );
-
-  // — Handle file drop with miniatures + bouton “fermer”
-  dropZone.addEventListener("drop", e => {
+// — Drag & Drop visual (éviter le “clignotement”)
+let dragCounter = 0;
+["dragenter", "dragover"].forEach(evt =>
+  document.addEventListener(evt, e => {
     e.preventDefault();
-    pendingFiles.push(...e.dataTransfer.files);
+    dragCounter++;
+    dropZone.style.display = "block";
+    dropZone.style.opacity = "1";
+  })
+);
+["dragleave"].forEach(evt =>
+  document.addEventListener(evt, e => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter === 0) {
+      dropZone.style.opacity = "0";
+      setTimeout(() => (dropZone.style.display = "none"), 300);
+    }
+  })
+);
+// Masquer la dropZone si on lâche en dehors
+document.addEventListener("drop", e => {
+  e.preventDefault();
+  dragCounter = 0;
+  dropZone.style.opacity = "0";
+  setTimeout(() => (dropZone.style.display = "none"), 300);
+});
 
-    filePreview.innerHTML = "";
-    filePreview.style.display = "flex";
+// — Handle file drop with miniatures + bouton “fermer”
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dragCounter = 0;
+  dropZone.style.opacity = "0";
+  setTimeout(() => (dropZone.style.display = "none"), 300);
 
-    pendingFiles.forEach(file => {
-      const item = document.createElement("div");
-      item.className = "file-item";
-      if (file.type.startsWith("image/")) {
-        const img = document.createElement("img");
-        const objectUrl = URL.createObjectURL(file);
-        file._objectUrl = objectUrl;
-        img.src = objectUrl;
-        img.addEventListener("load", () => URL.revokeObjectURL(objectUrl), { once: true });
-        item.appendChild(img);
-      } else {
-        const ico = document.createElement("div");
-        ico.className = "file-icon";
-        ico.textContent = file.name.split(".").pop().toUpperCase();
-        item.appendChild(ico);
-      }
-      filePreview.appendChild(item);
-    });
+  const files = Array.from(e.dataTransfer.files);
+  pendingFiles.push(...files);
 
-    const clearBtn = document.createElement("div");
-    clearBtn.className = "file-clear";
-    clearBtn.textContent = "×";
-    clearBtn.title = "Tout supprimer";
-    clearBtn.onclick = () => {
-      pendingFiles.forEach(f => {
-        if (f._objectUrl) {
-          URL.revokeObjectURL(f._objectUrl);
-          delete f._objectUrl;
-        }
+  filePreview.innerHTML = "";
+  filePreview.style.display = "flex";
+
+  files.forEach(file => {
+    const item = document.createElement("div");
+    item.className = "file-item";
+
+    if (file.type.startsWith("image/")) {
+      const img = document.createElement("img");
+      const objectUrl = URL.createObjectURL(file);
+      file._objectUrl = objectUrl;
+      img.src = objectUrl;
+      img.addEventListener("load", () => URL.revokeObjectURL(objectUrl), {
+        once: true,
       });
-      pendingFiles = [];
-      filePreview.innerHTML = "";
-      filePreview.style.display = "none";
-    };
-    filePreview.appendChild(clearBtn);
+      item.appendChild(img);
+    } else {
+      const ico = document.createElement("div");
+      ico.className = "file-icon";
+      ico.textContent = file.name.split(".").pop().toUpperCase();
+      item.appendChild(ico);
+    }
 
-    dropZone.style.opacity = "0";
-    setTimeout(() => dropZone.style.display = "none", 300);
-    console.log("📝 pendingFiles:", pendingFiles);
+    filePreview.appendChild(item);
   });
+
+  // — Bouton global “×” pour tout supprimer
+  const clearBtn = document.createElement("div");
+  clearBtn.className = "file-clear";
+  clearBtn.textContent = "×";
+  clearBtn.title = "Tout supprimer";
+  clearBtn.style.cursor = "pointer";              // curseur pointer
+  clearBtn.onclick = () => {
+    pendingFiles.forEach(f => {
+      if (f._objectUrl) {
+        URL.revokeObjectURL(f._objectUrl);
+        delete f._objectUrl;
+      }
+    });
+    pendingFiles = [];
+    filePreview.innerHTML = "";
+    filePreview.style.display = "none";
+  };
+  filePreview.appendChild(clearBtn);
+
+  console.log("📝 pendingFiles:", pendingFiles);
+});
 
   // — Append & save locally
   function appendMessage(html, cls) {
