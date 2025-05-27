@@ -1,7 +1,7 @@
 // === ChatBot MyFreightLab avec historique, prompts, sidebar, multi-PJ et édition avant envoi ===
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
-  const user_id   = new URLSearchParams(location.search).get("user_id");
+  const user_id    = new URLSearchParams(location.search).get("user_id");
 
   // — Session utilities
   function generateSessionID() {
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     #chat-wrapper {
       display: flex;
       flex-direction: column;
-      justify-content: flex-start; /* ← passe de flex-end à flex-start */
+      justify-content: flex-start;
       height: 90vh;
       width: 80vw;
       margin: 5vh auto;
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
       flex-direction: column;
       gap: 16px;
       align-items: center;
-      height: calc(90vh - 100px); /* ← limite la hauteur pour que seul le chat scroll */
+      height: calc(90vh - 100px);
     }
 
     .message {
@@ -87,7 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
       border-bottom-left-radius: 0;
     }
 
+    /* on rend input-area relatif pour le file-preview absolu */
     #input-area {
+      position: relative;
       display: flex;
       padding: 12px 16px;
       border-top: 1px solid #ccc;
@@ -126,283 +128,174 @@ document.addEventListener("DOMContentLoaded", () => {
       font-size: 13px;
     }
 
-    .dynamic-sidebar {
+    /* dropZone */
+    #drop-zone {
+      border: 2px dashed #ccc;
+      padding: 40px;
+      text-align: center;
       position: fixed;
-      top: 0;
-      right: -320px;
-      width: 320px;
-      height: 100vh;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: none;
+      z-index: 10000;
+    }
+
+    /* preview mini icônes */
+    #file-preview {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      display: flex;
+      gap: 4px;
+      pointer-events: none;
+    }
+    /* chaque icône */
+    #file-preview .file-item {
+      width: 24px;
+      height: 24px;
       background: #fff;
-      border-left: 1px solid #ddd;
+      border: 1px solid #d3dce6;
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* image ou extension */
+    #file-preview .file-item img,
+    #file-preview .file-item .file-icon {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* sidebars et prompts */
+    .dynamic-sidebar {
+      position: fixed; top: 0; right: -320px;
+      width: 320px; height: 100vh;
+      background: #fff; border-left: 1px solid #ddd;
       box-shadow: -2px 0 6px rgba(0,0,0,0.05);
-      transition: right 0.3s ease-in-out;
-      z-index: 9999;
+      transition: right 0.3s ease-in-out; z-index: 9999;
       overflow-y: auto;
     }
-
-    .dynamic-sidebar.open {
-      right: 0;
-    }
-
+    .dynamic-sidebar.open { right: 0; }
     .sidebar-header {
-      padding: 16px;
-      background: #0077c8;
-      color: white;
-      font-weight: bold;
-      font-size: 16px;
+      padding: 16px; background: #0077c8; color: white;
+      font-weight: bold; font-size: 16px;
     }
-
-    .sidebar-content {
-      padding: 10px;
-    }
-
+    .sidebar-content { padding: 10px; }
     .prompt {
-      padding: 10px;
-      background: #f0f0f0;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      cursor: grab;
-      font-size: 14px;
+      padding: 10px; background: #f0f0f0;
+      border-radius: 6px; margin-bottom: 8px;
+      cursor: grab; font-size: 14px;
     }
-
-    details summary {
-      font-weight: 600;
-      cursor: pointer;
-      list-style: none;
-      padding: 10px 0;
-    }
-
+    details summary { font-weight: 600; cursor: pointer; }
     .floating-toggle {
-      position: fixed;
-      top: 50%;
-      right: 0;
+      position: fixed; top: 50%; right: 0;
       transform: translateY(-50%);
-      background-color: #0077c8;
-      color: white;
-      padding: 10px;
-      border-radius: 8px 0 0 8px;
-      cursor: pointer;
-      font-size: 20px;
-      z-index: 99999;
+      background-color: #0077c8; color: white;
+      padding: 10px; border-radius: 8px 0 0 8px;
+      cursor: pointer; font-size: 20px; z-index: 99999;
     }
-
-    #toggleHistory {
-      top: 40%;
-    }
-
-/* Container des vignettes */
-.file-preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px;
-  background: #f9fbfc;
-  border-radius: 6px;
-  margin-bottom: 8px;
-}
-
-/* Chaque vignette */
-#file-preview .file-item {
-  display: flex;
-  align-items: center;
-  background: #fff;
-  border: 1px solid #d3dce6;
-  border-radius: 6px;
-  padding: 4px 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-
-/* Image réelle ou icône de type de fichier */
-#file-preview { … }
-#file-preview .file-item { … }
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  object-fit: cover;
-  margin-right: 6px;
-  flex-shrink: 0;
-}
-
-/* Pour les fichiers non-image on affiche un carré avec l’extension */
-.file-preview .file-item .file-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f0f0f0;
-  color: #666;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-/* Le nom de fichier */
-.file-preview .file-item .file-name {
-  font-size: 13px;
-  color: #333;
-  max-width: 120px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* La croix de suppression */
-.file-preview .file-item .remove-file {
-  margin-left: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #888;
-}
-.file-preview .file-item .remove-file:hover {
-  color: #e00;
-}
+    #toggleHistory { top: 40%; }
   </style>
 
   <button id="resetBtn">✨ Nouveau chat</button>
   <div id="chat"></div>
   <div id="input-area">
-    <textarea id="userInput" placeholder="Pose ta question ici…" rows="2" style="resize: none; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; flex: 1; overflow-y: auto;"></textarea>
+    <textarea id="userInput" placeholder="Pose ta question ici…" rows="2"
+      style="resize:none; padding:10px; border-radius:8px; border:1px solid #ccc;
+             font-size:15px; flex:1; overflow-y:auto;"></textarea>
     <button id="sendBtn">▶</button>
   </div>
+  <div id="drop-zone">📂 Déposez vos fichiers…</div>
 
   <div class="floating-toggle" id="toggleHistory">🕓</div>
   <div class="dynamic-sidebar" id="historyPanel">
     <div class="sidebar-header">🕓 Historique des conversations</div>
     <div class="sidebar-content" id="historyList"></div>
   </div>
-
   <div class="floating-toggle" id="togglePrompt">💡</div>
   <div class="dynamic-sidebar" id="promptPanel">
     <div class="sidebar-header">💡 Idées de prompts</div>
-    <div class="sidebar-content">
-      <!-- … vos <details> de prompts … -->
-    </div>
+    <div class="sidebar-content"><!-- vos <details> ici --></div>
   </div>
 `;
   document.getElementById("chat-container").appendChild(wrapper);
 
   // — Key elements
-  const chat           = wrapper.querySelector("#chat");
-  const userInput      = wrapper.querySelector("#userInput");
-  const sendBtn        = wrapper.querySelector("#sendBtn");
-  const resetBtn       = wrapper.querySelector("#resetBtn");
-  const toggleHistory  = wrapper.querySelector("#toggleHistory");
-  const historyPanel   = wrapper.querySelector("#historyPanel");
-  const historyList    = wrapper.querySelector("#historyList");
-  const togglePrompt   = wrapper.querySelector("#togglePrompt");
-  const promptPanel    = wrapper.querySelector("#promptPanel");
-  const prompts        = wrapper.querySelectorAll(".prompt");
+  const chat         = wrapper.querySelector("#chat");
+  const inputArea    = wrapper.querySelector("#input-area");
+  const userInput    = wrapper.querySelector("#userInput");
+  const sendBtn      = wrapper.querySelector("#sendBtn");
+  const resetBtn     = wrapper.querySelector("#resetBtn");
+  const dropZone     = wrapper.querySelector("#drop-zone");
+  const toggleHistory= wrapper.querySelector("#toggleHistory");
+  const historyPanel = wrapper.querySelector("#historyPanel");
+  const historyList  = wrapper.querySelector("#historyList");
+  const togglePrompt = wrapper.querySelector("#togglePrompt");
+  const promptPanel  = wrapper.querySelector("#promptPanel");
+  const prompts      = wrapper.querySelectorAll(".prompt");
 
-  // — File preview & storage
+  // — File preview container INSIDE input-area
   let pendingFiles = [];
   const filePreview = document.createElement("div");
   filePreview.id = "file-preview";
-  Object.assign(filePreview.style, {
-    display:    "none",
-    padding:    "8px",
-    borderRadius:"6px",
-    marginBottom:"8px",
-    maxWidth:   "80%",
-  });
-  userInput.before(filePreview);
+  filePreview.style.display = "none";
+  inputArea.appendChild(filePreview);
 
-  // — Global dropZone
-  const dropZone = document.createElement("div");
-  dropZone.id = "drop-zone";
-  Object.assign(dropZone.style, {
-    border:     "2px dashed #ccc",
-    padding:    "40px",
-    textAlign:  "center",
-    position:   "fixed",
-    top:0,left:0,right:0,bottom:0,
-    background: "rgba(255,255,255,0.95)",
-    display:    "none",
-    zIndex:     10000,
-  });
-  dropZone.textContent = "📂 Déposez vos fichiers…";
-  document.body.appendChild(dropZone);
-
-  // — Sidebar toggles & prompt clicks
+  // — sidebar toggles
   toggleHistory.addEventListener("click", () => historyPanel.classList.toggle("open"));
-  togglePrompt .addEventListener("click", () => promptPanel .classList.toggle("open"));
-  prompts.forEach(p => p.onclick = () => {
+  togglePrompt .addEventListener("click", () => promptPanel.classList.toggle("open"));
+  prompts.forEach(p => p.addEventListener("click", () => {
     userInput.value = p.textContent;
     promptPanel.classList.remove("open");
     userInput.focus();
-  });
+  }));
 
   // — Show/hide dropZone
-  ["dragenter","dragover"].forEach(evt => {
+  ["dragenter","dragover"].forEach(evt =>
     document.addEventListener(evt, e => {
       e.preventDefault();
       dropZone.style.display = "block";
       dropZone.style.opacity = "1";
-    });
-  });
-  ["dragleave","drop"].forEach(evt => {
+    })
+  );
+  ["dragleave","drop"].forEach(evt =>
     document.addEventListener(evt, e => {
       e.preventDefault();
       dropZone.style.opacity = "0";
       setTimeout(() => dropZone.style.display = "none", 300);
-    });
-  });
+    })
+  );
 
-  // — Handle file drop with miniatures & suppression
-dropZone.addEventListener("drop", e => {
-  e.preventDefault();
-  pendingFiles.push(...e.dataTransfer.files);
+  // — Handle file drop with miniatures
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    pendingFiles.push(...e.dataTransfer.files);
 
-  // On affiche la zone de preview
-  filePreview.style.display = "flex";
-  filePreview.innerHTML = "";
+    // affiche la preview *mini* et uniquement icônes/images
+    filePreview.innerHTML = "";
+    filePreview.style.display = "flex";
 
-  pendingFiles.forEach((file, idx) => {
-    const fileItem = document.createElement("div");
-    fileItem.className = "file-item";
-
-    // miniature pour les images, icône (extension) pour les autres
-    if (file.type.startsWith("image/")) {
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      fileItem.appendChild(img);
-    } else {
-      const icon = document.createElement("div");
-      icon.className = "file-icon";
-      icon.textContent = file.name.split(".").pop().toUpperCase();
-      fileItem.appendChild(icon);
-    }
-
-    // nom du fichier
-    const name = document.createElement("span");
-    name.className = "file-name";
-    name.textContent = file.name;
-    fileItem.appendChild(name);
-
-    // bouton supprimer
-    const rm = document.createElement("span");
-    rm.className = "remove-file";
-    rm.textContent = "×";
-    rm.onclick = () => {
-      pendingFiles = pendingFiles.filter(f => f !== file);
-      fileItem.remove();
-      if (pendingFiles.length === 0) {
-        filePreview.style.display = "none";
+    pendingFiles.forEach(file => {
+      const item = document.createElement("div");
+      item.className = "file-item";
+      if (file.type.startsWith("image/")) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        item.appendChild(img);
+      } else {
+        const ico = document.createElement("div");
+        ico.className = "file-icon";
+        ico.textContent = file.name.split(".").pop().toUpperCase();
+        item.appendChild(ico);
       }
-    };
-    fileItem.appendChild(rm);
+      filePreview.appendChild(item);
+    });
 
-    filePreview.appendChild(fileItem);
-  });
-
-  // indice pour l’utilisateur
-  const hint = document.createElement("div");
-  hint.style.flexBasis = "100%";
-  hint.style.fontStyle = "italic";
-  hint.textContent = "Rédigez la consigne puis ▶";
-  filePreview.appendChild(hint);
-
-  // on cache dropZone
-  dropZone.style.opacity = "0";
-  setTimeout(() => dropZone.style.display = "none", 300);
+    dropZone.style.opacity = "0";
+    setTimeout(() => dropZone.style.display = "none", 300);
 
     console.log("📝 pendingFiles:", pendingFiles);
   });
