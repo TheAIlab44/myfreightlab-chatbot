@@ -150,24 +150,34 @@ wrapper.innerHTML = `
     z-index: 20;
   }
   /* chaque icône agrandie */
-  #file-preview .file-item {
-    width: 56px;
-    height: 56px;
-    background: #fff;
-    border: 1px solid #d3dce6;
-    border-radius: 8px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  /* image ou extension */
-  #file-preview .file-item img,
-  #file-preview .file-item .file-icon {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+#file-preview .file-item {
+  width: 56px;
+  height: 56px;
+  background: #fff;
+  border: 1px solid #d3dce6;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* image */
+#file-preview .file-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* icône d’extension */
+#file-preview .file-item .file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #666;
+  background: #f0f0f0;
+}
 
   /* sidebars et prompts */
   .dynamic-sidebar {
