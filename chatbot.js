@@ -1,8 +1,8 @@
 // === ChatBot MyFreightLab avec historique, prompts, sidebar fermable, multi-PJ et édition avant envoi ===
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
-  const user_id = new URLSearchParams(location.search).get("user_id");
-  
+  const user_id    = new URLSearchParams(location.search).get("user_id");
+
   // — utilitaires session
   function generateSessionID() {
     return `${user_id}-${Date.now()}-${Math.floor(Math.random()*10000)}`;
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let chat_id = loadSessionID();
 
   // — construire l’UI
-const wrapper = document.createElement("div");
+    const wrapper = document.createElement("div");
 wrapper.id = "chat-wrapper";
 wrapper.innerHTML = `
   <style>
@@ -224,28 +224,37 @@ wrapper.innerHTML = `
     </div>
   </div>
 `;
+// → récupérer la zone de chat pour y injecter les messages
+const chat = wrapper.querySelector("#chat");
 
-  document.getElementById("chat-container").appendChild(wrapper);
+// → monter le wrapper dans la page
+const container = document.getElementById("chat-container");
+if (!container) return;
+container.appendChild(wrapper);  
 
   // — éléments clés
-  const chat           = wrapper.querySelector("#chat");
-  const userInput      = wrapper.querySelector("#userInput");
-  const sendBtn        = wrapper.querySelector("#sendBtn");
-  const resetBtn       = wrapper.querySelector("#resetBtn");
-  const togglePrompt   = wrapper.querySelector("#togglePrompt");
-  const toggleHistory  = wrapper.querySelector("#toggleHistory");
-  const promptPanel    = wrapper.querySelector("#promptPanel");
-  const historyPanel   = wrapper.querySelector("#historyPanel");
-  const historyList    = wrapper.querySelector("#historyList");
-  const prompts        = wrapper.querySelectorAll(".prompt");
+  const chat          = wrapper.querySelector("#chat");
+  const userInput     = wrapper.querySelector("#userInput");
+  const sendBtn       = wrapper.querySelector("#sendBtn");
+  const resetBtn      = wrapper.querySelector("#resetBtn");
+  const togglePrompt  = wrapper.querySelector("#togglePrompt");
+  const toggleHistory = wrapper.querySelector("#toggleHistory");
+  const promptPanel   = wrapper.querySelector("#promptPanel");
+  const historyPanel  = wrapper.querySelector("#historyPanel");
+  const historyList   = wrapper.querySelector("#historyList");
+  const prompts       = wrapper.querySelectorAll(".prompt");
 
   // — preview & tableau de fichiers
   let pendingFiles = [];
   const filePreview = document.createElement("div");
   filePreview.id = "file-preview";
   Object.assign(filePreview.style, {
-    display: "none", padding: "8px", background: "#f0f0f0",
-    borderRadius: "6px", marginBottom: "8px", maxWidth: "80%"
+    display:    "none",
+    padding:    "8px",
+    background: "#f0f0f0",
+    borderRadius:"6px",
+    marginBottom:"8px",
+    maxWidth:   "80%",
   });
   userInput.before(filePreview);
 
@@ -253,48 +262,57 @@ wrapper.innerHTML = `
   const dropZone = document.createElement("div");
   dropZone.id = "drop-zone";
   Object.assign(dropZone.style, {
-    border: "2px dashed #ccc", padding: "40px", textAlign: "center",
-    position: "fixed", top:0, left:0, right:0, bottom:0,
-    background:"rgba(255,255,255,0.95)", display:"none", zIndex:10000
+    border:     "2px dashed #ccc",
+    padding:    "40px",
+    textAlign:  "center",
+    position:   "fixed",
+    top:0,left:0,right:0,bottom:0,
+    background: "rgba(255,255,255,0.95)",
+    display:    "none",
+    zIndex:     10000,
   });
   dropZone.textContent = "📂 Déposez vos fichiers…";
   document.body.appendChild(dropZone);
 
   // — prompts & sidebars
-  togglePrompt.addEventListener("click", ()=>promptPanel.classList.toggle("open"));
-  toggleHistory.addEventListener("click", ()=>historyPanel.classList.toggle("open"));
-  prompts.forEach(p => p.onclick = ()=>{
+  togglePrompt .addEventListener("click", () => promptPanel .classList.toggle("open"));
+  toggleHistory.addEventListener("click", () => historyPanel.classList.toggle("open"));
+  prompts.forEach(p => p.onclick = () => {
     userInput.value = p.textContent;
-    promptPanel.classList.remove("open");
+    promptPanel .classList.remove("open");
     userInput.focus();
   });
 
   // — afficher/masker dropZone
-  ["dragenter","dragover"].forEach(evt =>
-    document.addEventListener(evt, e=>{
+  ["dragenter","dragover"].forEach(evt => {
+    document.addEventListener(evt, e => {
       e.preventDefault();
       dropZone.style.display = "block";
       dropZone.style.opacity = "1";
-    })
-  );
-  ["dragleave","drop"].forEach(evt =>
-    document.addEventListener(evt, e=>{
+    });
+  });
+  ["dragleave","drop"].forEach(evt => {
+    document.addEventListener(evt, e => {
       e.preventDefault();
       dropZone.style.opacity = "0";
-      setTimeout(()=>dropZone.style.display = "none", 300);
-    })
-  );
-  // — déposer les fichiers
-  dropZone.addEventListener("drop", e=>{
-    e.preventDefault();
-    Array.from(e.dataTransfer.files).forEach(f=>pendingFiles.push(f));
-    filePreview.style.display = "block";
-    filePreview.innerHTML = pendingFiles
-      .map((f,i)=>`📎 PJ ${i+1}: ${f.name}`)
-      .join("<br>") + `<br><i>Rédigez la consigne puis ▶</i>`;
+      setTimeout(() => dropZone.style.display = "none", 300);
+    });
   });
 
-  // — historique & fetch
+  // — déposer les fichiers
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    pendingFiles.push(...e.dataTransfer.files);
+    filePreview.style.display = "block";
+    filePreview.innerHTML = pendingFiles
+      .map((f,i) => `📎 PJ ${i+1}: ${f.name}`)
+      .join("<br>") + "<br><i>Rédigez la consigne puis ▶</i>";
+    console.log("📝 pendingFiles après drop :", pendingFiles);
+    dropZone.style.opacity = "0";
+    setTimeout(() => dropZone.style.display = "none", 300);
+  });
+
+  // — fetch & historique
   async function fetchUserMessages() {
     try {
       const r = await fetch("https://myfreightlab.app.n8n.cloud/webhook/fetchmessagehistory", {
@@ -303,7 +321,7 @@ wrapper.innerHTML = `
         body: JSON.stringify({user_id})
       });
       if (!r.ok) throw new Error();
-      return await r.json();
+      return r.json();
     } catch {
       return [];
     }
@@ -311,11 +329,11 @@ wrapper.innerHTML = `
   function getLastSessions(msgs) {
     const m = new Map();
     msgs.forEach(x => {
-      if (!m.has(x.session_id)||x.id>m.get(x.session_id).id) {
-        m.set(x.session_id,x);
+      if (!m.has(x.session_id) || x.id > m.get(x.session_id).id) {
+        m.set(x.session_id, x);
       }
     });
-    return Array.from(m.values()).sort((a,b)=>b.id-a.id);
+    return Array.from(m.values()).sort((a,b) => b.id - a.id);
   }
   async function loadHistory() {
     const all = await fetchUserMessages();
@@ -324,15 +342,15 @@ wrapper.innerHTML = `
       const div = document.createElement("div");
       div.className = "prompt";
       div.textContent = entry.session_id;
-      div.onclick = async()=>{
+      div.onclick = async () => {
         localStorage.setItem("chat_id", entry.session_id);
         chat.innerHTML = "";
-        (await fetchUserMessages())
-          .filter(x=>x.session_id===entry.session_id)
-          .forEach(m=>{
-            const js=typeof m.message==="string"?JSON.parse(m.message):m.message;
-            appendMessage(js.content, js.type==="human"?"user-message":"bot-message");
-          });
+        const sessionMsgs = (await fetchUserMessages())
+          .filter(x => x.session_id === entry.session_id);
+        sessionMsgs.forEach(m => {
+          const js = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+          appendMessage(js.content, js.type === "human" ? "user-message" : "bot-message");
+        });
         historyPanel.classList.remove("open");
       };
       historyList.appendChild(div);
@@ -346,33 +364,33 @@ wrapper.innerHTML = `
     m.innerHTML = html;
     const prev = chat.scrollHeight;
     chat.appendChild(m);
-    chat.scrollTop = prev===0 ? chat.scrollHeight : chat.scrollTop + (chat.scrollHeight-prev);
+    chat.scrollTop = prev === 0 ? chat.scrollHeight : chat.scrollTop + (chat.scrollHeight - prev);
     saveLocal();
   }
-  function saveLocal(){
-    const arr = Array.from(chat.querySelectorAll(".message")).map(d=>({
-      role: d.classList.contains("user-message")?"user":"bot",
+  function saveLocal() {
+    const arr = Array.from(chat.querySelectorAll(".message")).map(d => ({
+      role: d.classList.contains("user-message") ? "user" : "bot",
       content: d.innerHTML
     }));
     localStorage.setItem("chatHistory", JSON.stringify(arr));
   }
 
   // — bouton reset
-  resetBtn.addEventListener("click", ()=>{
+  resetBtn.addEventListener("click", () => {
     localStorage.removeItem("chat_id");
     localStorage.removeItem("chatHistory");
     saveSessionID();
     chat_id = loadSessionID();
     chat.innerHTML = "";
-    appendMessage("Que puis-je faire pour vous aujourd'hui ?","bot-message");
+    appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
     loadHistory();
   });
 
   // — envoi
-  sendBtn.addEventListener("click", async ()=>{
+  sendBtn.addEventListener("click", async () => {
     const text = userInput.value.trim();
-    if (!text && pendingFiles.length===0) return;
-    if (text) appendMessage(text,"user-message");
+    if (!text && pendingFiles.length === 0) return;
+    if (text) appendMessage(text, "user-message");
 
     const loader = document.createElement("div");
     loader.className = "message bot-message";
@@ -381,35 +399,45 @@ wrapper.innerHTML = `
     chat.scrollTop = chat.scrollHeight;
 
     try {
-      let r;
-      if (pendingFiles.length>0) {
+      let res;
+      if (pendingFiles.length > 0) {
         const fd = new FormData();
-        pendingFiles.forEach(f=>fd.append("file",f));
+        pendingFiles.forEach(f => fd.append("file", f));
         fd.append("question", text);
         fd.append("user_id", user_id);
         fd.append("chat_id", chat_id);
-        fd.append("type", text?"filesWithText":"files");
-        r = await fetch(webhookURL, { method:"POST", body:fd });
+        fd.append("type", text ? "filesWithText" : "files");
+
+        // 🔍 debug FormData
+        for (let [k,v] of fd.entries()) console.log("📦", k, v);
+
+        res = await fetch(webhookURL, { method: "POST", body: fd });
+        console.log("⬅️ status", res.status, res.statusText);
+        const raw = await res.text();
+        console.log("⬅️ raw resp", raw);
+        const data = JSON.parse(raw);
+
         pendingFiles = [];
         filePreview.style.display = "none";
         filePreview.innerHTML = "";
+
+        appendMessage(data.output || "Pas de réponse", "bot-message");
       } else {
-        r = await fetch(webhookURL, {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
+        res = await fetch(webhookURL, {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
           body: JSON.stringify({question:text, user_id, chat_id, type:"text"})
         });
+        const data = await res.json();
+        appendMessage(data.output || "Pas de réponse", "bot-message");
       }
-
-      const data = await r.json();
-      loader.remove();
-      appendMessage(data.output||"Pas de réponse","bot-message");
       loadHistory();
     } catch (e) {
       loader.remove();
-      appendMessage("❌ Erreur de connexion","bot-message");
+      appendMessage("❌ Erreur de connexion", "bot-message");
       console.error(e);
     } finally {
+      if (loader.parentNode) loader.remove();
       userInput.value = "";
       userInput.focus();
     }
@@ -417,7 +445,7 @@ wrapper.innerHTML = `
 
   // — Entrée vs Shift+Entrée
   userInput.addEventListener("keydown", e => {
-    if (e.key==="Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendBtn.click();
     }
@@ -426,7 +454,6 @@ wrapper.innerHTML = `
   // — initialisation
   loadHistory();
   JSON.parse(localStorage.getItem("chatHistory")||"[]")
-    .forEach(m=>appendMessage(m.content, m.role==="user"?"user-message":"bot-message"));
+    .forEach(m => appendMessage(m.content, m.role==="user"?"user-message":"bot-message"));
   chat.scrollTop = 0;
-
 });
