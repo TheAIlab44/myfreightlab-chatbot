@@ -208,7 +208,6 @@ wrapper.innerHTML = `
   </div>
 `;
 // → récupérer la zone de chat pour y injecter les messages
-// → récupérer la zone de chat pour y injecter les messages
 const chat = wrapper.querySelector("#chat");
 
 // → monter le wrapper dans la page
@@ -235,8 +234,35 @@ dropZone.style.cssText = `
 dropZone.innerText = "📂 Déposez votre fichier ici";
 document.body.appendChild(dropZone);
 
-// → préparer la PJ en attente et son aperçu (UNE SEULE FOIS)
-let pendingFile = null;
+// → récupérer la zone de chat pour y injecter les messages
+const chat = wrapper.querySelector("#chat");
+
+// → monter le wrapper dans la page
+const container = document.getElementById("chat-container");
+if (!container) return;
+container.appendChild(wrapper);
+
+// → créer la dropZone
+const dropZone = document.createElement("div");
+dropZone.id = "drop-zone";
+dropZone.style.cssText = `
+  border: 2px dashed #ccc;
+  padding: 40px;
+  text-align: center;
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 18px;
+  z-index: 10000;
+  transition: opacity 0.3s ease;
+  pointer-events: all;
+`;
+dropZone.innerText = "📂 Déposez vos fichiers ici";
+document.body.appendChild(dropZone);
+
+// → préparer la liste de PJ en attente et son aperçu
+let pendingFiles = [];           // ← tableau de pièces jointes
 const userInput = wrapper.querySelector("#userInput");
 
 const filePreview = document.createElement("div");
@@ -251,20 +277,19 @@ Object.assign(filePreview.style, {
   marginBottom: "8px",
   fontSize: "14px",
 });
-
 // insérer l’aperçu juste au-dessus du textarea
 userInput.before(filePreview);
 
 // → récupérer tous les autres éléments une seule fois
-const sendBtn = wrapper.querySelector("#sendBtn");
-const resetBtn = wrapper.querySelector("#resetBtn");
-const togglePromptBtn = wrapper.querySelector("#togglePrompt");
-const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
-const promptPanel = wrapper.querySelector("#promptPanel");
-const historyPanel = wrapper.querySelector("#historyPanel");
-const historyList = wrapper.querySelector("#historyList");
-const sidebar = promptPanel;
-const prompts = wrapper.querySelectorAll(".prompt");
+const sendBtn        = wrapper.querySelector("#sendBtn");
+const resetBtn       = wrapper.querySelector("#resetBtn");
+const togglePromptBtn= wrapper.querySelector("#togglePrompt");
+const toggleHistoryBtn=wrapper.querySelector("#toggleHistory");
+const promptPanel    = wrapper.querySelector("#promptPanel");
+const historyPanel   = wrapper.querySelector("#historyPanel");
+const historyList    = wrapper.querySelector("#historyList");
+const sidebar        = promptPanel;
+const prompts        = wrapper.querySelectorAll(".prompt");
 
 // → listeners des toggles et des prompts
 togglePromptBtn.addEventListener("click", () => promptPanel.classList.toggle("open"));
@@ -275,29 +300,53 @@ prompts.forEach(p => p.addEventListener("click", () => {
   sidebar.classList.remove("open");
 }));
 
-// → drag & drop texte (pour copier un prompt dans le textarea)
-userInput.addEventListener("dragover", e => e.preventDefault());
-userInput.addEventListener("drop", e => {
+// → drag & drop pour déposer des fichiers
+["dragenter","dragover"].forEach(evt =>
+  document.addEventListener(evt, e => {
+    e.preventDefault();
+    dropZone.style.display = "block";
+    dropZone.style.opacity = "1";
+  })
+);
+["dragleave"].forEach(evt =>
+  document.addEventListener(evt, e => {
+    e.preventDefault();
+    dropZone.style.opacity = "0";
+    setTimeout(() => dropZone.style.display = "none", 300);
+  })
+);
+
+dropZone.addEventListener("drop", e => {
   e.preventDefault();
-  userInput.value = e.dataTransfer.getData("text");
-  sidebar.classList.remove("open");
+  dropZone.style.opacity = "0";
+  setTimeout(() => dropZone.style.display = "none", 300);
+
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+
+  // 1) on ajoute la PJ au tableau
+  pendingFiles.push(file);
+
+  // 2) on affiche la liste dans filePreview
+  filePreview.style.display = "block";
+  filePreview.innerHTML = pendingFiles
+    .map((f,i) => `📎 PJ ${i+1} : ${f.name}`)
+    .join("<br>") + `<br><i>Rédigez votre consigne puis cliquez sur ▶</i>`;
 });
 
-// … suite de votre code (fetchUserMessages, etc.) …
-
-
-  async function fetchUserMessages(userId) {
-    try {
-      const response = await fetch("https://myfreightlab.app.n8n.cloud/webhook/fetchmessagehistory", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId })
-      });
-      if (!response.ok) throw new Error("Erreur lors de la requête");
-      return await response.json();
-    } catch (error) {
-      console.error("Erreur :", error);
-      return [];
+// → suite de votre code (fetchUserMessages, etc.)
+async function fetchUserMessages(userId) {
+  try {
+    const response = await fetch("https://myfreightlab.app.n8n.cloud/webhook/fetchmessagehistory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId })
+    });
+    if (!response.ok) throw new Error("Erreur lors de la requête");
+    return await response.json();
+  } catch (error) {
+    console.error("Erreur :", error);
+    return [];
     }
   }
 
@@ -540,7 +589,7 @@ sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
 
   // 1) Si ni texte ni fichier, on ne fait rien
-  if (!text && !pendingFile) return;
+  if (!text && pendingFiles.length === 0) return;
 
   // 2) Afficher le message utilisateur (texte uniquement)
   if (text) {
@@ -556,25 +605,26 @@ sendBtn.addEventListener("click", async () => {
 
   try {
     let res;
-    if (pendingFile) {
-      // --- Envoi du fichier + texte ---
+    if (pendingFiles.length > 0) {
+      // --- Envoi des fichiers + texte ---
       const formData = new FormData();
-      formData.append("file", pendingFile);
+      pendingFiles.forEach((file, i) => {
+        formData.append(`file${i}`, file);
+      });
       formData.append("question", text);
       formData.append("user_id", user_id);
       formData.append("chat_id", chat_id);
-      formData.append("type", text ? "fileWithText" : "file");
+      formData.append("type", text ? "filesWithText" : "files");
 
       res = await fetch(webhookURL, {
         method: "POST",
         body: formData
       });
 
-      // Réinitialiser l’état du fichier
-      pendingFile = null;
-      filePreview.textContent = "";
+      // Réinitialiser l’état des fichiers
+      pendingFiles = [];
       filePreview.style.display = "none";
-
+      filePreview.innerHTML = "";
     } else {
       // --- Envoi du texte seul ---
       res = await fetch(webhookURL, {
@@ -599,6 +649,7 @@ sendBtn.addEventListener("click", async () => {
     userInput.focus();
   }
 });
+
 
 
 // Permet Shift+Entrée pour aller à la ligne, et Entrée seul pour envoyer
