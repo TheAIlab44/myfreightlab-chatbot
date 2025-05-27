@@ -362,6 +362,15 @@ async function loadChatHistory() {
     const data = await fetchUserMessages(user_id);
     const previews = getLastMessages(data);
     const titles = getSessionTitles();
+    // Pour chaque session non encore renommée, on stocke la preview initiale
+previews.forEach(({ session_id, preview }) => {
+  if (!Object.prototype.hasOwnProperty.call(titles, session_id)) {
+    titles[session_id] = preview;
+  }
+});
+// On persiste ce mapping mis à jour
+saveSessionTitles(titles);
+
     historyList.innerHTML = "";
 
     previews.forEach(({ session_id, preview }) => {
