@@ -431,12 +431,21 @@ document.body.appendChild(dropZone);
   }
 
   resetBtn.addEventListener("click", () => {
-    localStorage.removeItem("chatHistory");
-    savesessionIDtolocalStorage();
-    chat_id = loadsessionIDfromlocalstorage();
-    chat.innerHTML = "";
-    appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
-  });
+  // 1) On supprime l’ancienne session pour en générer une nouvelle
+  localStorage.removeItem("chat_id");
+  localStorage.removeItem("chatHistory");
+
+  // 2) Création d’une nouvelle session
+  savesessionIDtolocalStorage();
+  chat_id = loadsessionIDfromlocalstorage();
+
+  // 3) On vide l’affichage et on remet le message de démarrage
+  chat.innerHTML = "";
+  appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
+
+  // 4) On recharge la sidebar pour inclure cette nouvelle session
+  loadChatHistory();
+});
 
   function appendMessage(message, className) {
     const msg = document.createElement("div");
