@@ -190,14 +190,19 @@ document.addEventListener("DOMContentLoaded", () => {
       top: 40%;
     }
 
-    /* aperçu des pièces jointes */
+/* Container des vignettes */
 .file-preview {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   padding: 8px;
+  background: #f9fbfc;
+  border-radius: 6px;
+  margin-bottom: 8px;
 }
-.file-preview .file-item {
+
+/* Chaque vignette */
+#file-preview .file-item {
   display: flex;
   align-items: center;
   background: #fff;
@@ -206,13 +211,31 @@ document.addEventListener("DOMContentLoaded", () => {
   padding: 4px 6px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-.file-preview .file-item img {
+
+
+/* Image réelle ou icône de type de fichier */
+#file-preview { … }
+#file-preview .file-item { … }
   width: 32px;
   height: 32px;
-  object-fit: cover;
   border-radius: 4px;
+  object-fit: cover;
   margin-right: 6px;
+  flex-shrink: 0;
 }
+
+/* Pour les fichiers non-image on affiche un carré avec l’extension */
+.file-preview .file-item .file-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f0f0f0;
+  color: #666;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Le nom de fichier */
 .file-preview .file-item .file-name {
   font-size: 13px;
   color: #333;
@@ -221,10 +244,12 @@ document.addEventListener("DOMContentLoaded", () => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* La croix de suppression */
 .file-preview .file-item .remove-file {
   margin-left: 6px;
   cursor: pointer;
-  font-weight: bold;
+  font-size: 14px;
   color: #888;
 }
 .file-preview .file-item .remove-file:hover {
@@ -274,7 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
   Object.assign(filePreview.style, {
     display:    "none",
     padding:    "8px",
-    background: "#f0f0f0",
     borderRadius:"6px",
     marginBottom:"8px",
     maxWidth:   "80%",
@@ -322,18 +346,67 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // — Handle file drop
-  dropZone.addEventListener("drop", e => {
-    e.preventDefault();
-    pendingFiles.push(...e.dataTransfer.files);
-    filePreview.style.display = "block";
-    filePreview.innerHTML = pendingFiles
-      .map((f,i) => `📎 PJ ${i+1}: ${f.name}`)
-      .join("<br>") + "<br><i>Rédigez la consigne puis ▶</i>";
-    dropZone.style.opacity = "0";
-    setTimeout(() => dropZone.style.display = "none", 300);
+  // — Handle file drop with miniatures & suppression
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  pendingFiles.push(...e.dataTransfer.files);
+
+  // On affiche la zone de preview
+  filePreview.style.display = "flex";
+  filePreview.innerHTML = "";
+
+  pendingFiles.forEach((file, idx) => {
+    const fileItem = document.createElement("div");
+    fileItem.className = "file-item";
+
+    // miniature pour les images, icône (extension) pour les autres
+    if (file.type.startsWith("image/")) {
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      fileItem.appendChild(img);
+    } else {
+      const icon = document.createElement("div");
+      icon.className = "file-icon";
+      icon.textContent = file.name.split(".").pop().toUpperCase();
+      fileItem.appendChild(icon);
+    }
+
+    // nom du fichier
+    const name = document.createElement("span");
+    name.className = "file-name";
+    name.textContent = file.name;
+    fileItem.appendChild(name);
+
+    // bouton supprimer
+    const rm = document.createElement("span");
+    rm.className = "remove-file";
+    rm.textContent = "×";
+    rm.onclick = () => {
+      pendingFiles = pendingFiles.filter(f => f !== file);
+      fileItem.remove();
+      if (pendingFiles.length === 0) {
+        filePreview.style.display = "none";
+      }
+    };
+    fileItem.appendChild(rm);
+
+    filePreview.appendChild(fileItem);
+  });
+
+  // indice pour l’utilisateur
+  const hint = document.createElement("div");
+  hint.style.flexBasis = "100%";
+  hint.style.fontStyle = "italic";
+  hint.textContent = "Rédigez la consigne puis ▶";
+  filePreview.appendChild(hint);
+
+  // on cache dropZone
+  dropZone.style.opacity = "0";
+  setTimeout(() => dropZone.style.display = "none", 300);
+
     console.log("📝 pendingFiles:", pendingFiles);
   });
+
 
   // — Fetch history from webhook
   async function fetchUserMessages() {
