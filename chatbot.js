@@ -455,16 +455,30 @@ saveSessionTitles(titles);
         menu.style.display = "none";
       });
 
-      // Click sur le titre pour recharger la session
-      title.addEventListener("click", () => {
-        localStorage.setItem("chat_id", session_id);
-        chat.innerHTML = "";
-        sessionMessages.forEach(m => {
-          const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
-          appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
-        });
-        historyPanel.classList.remove("open");
-      });
+     title.addEventListener("click", () => {
+  // 1) On change de session
+  localStorage.setItem("chat_id", session_id);
+
+  // 2) On vide complètement l’affichage du chat
+  chat.innerHTML = "";
+
+  // 3) On reconstruit chaque message SANS appendMessage()
+  sessionMessages.forEach(m => {
+    const parsed = typeof m.message === "string"
+      ? JSON.parse(m.message)
+      : m.message;
+    const msg = document.createElement("div");
+    msg.className = `message ${parsed.type === "human" ? "user-message" : "bot-message"}`;
+    msg.innerHTML = parsed.content;
+    chat.appendChild(msg);
+  });
+
+  // 4) On force le scroll tout en haut
+  chat.scrollTop = 0;
+
+  // 5) On ferme la sidebar
+  historyPanel.classList.remove("open");
+});
 
       // Assemblage final
       container.appendChild(title);
