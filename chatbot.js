@@ -580,8 +580,13 @@ try {
 }
 });
 
-userInput.addEventListener("keypress", function (e) {
-  if (e.key === "Enter") sendBtn.click();
+// Permet Shift+Entrée pour aller à la ligne, et Entrée seul pour envoyer
+userInput.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();      // empêche l’ajout d’une nouvelle ligne
+    sendBtn.click();         // déclenche l’envoi
+  }
+  // sinon (Shift+Enter), on laisse textarea ajouter le saut de ligne
 });
 
 // 🎯 Drag & Drop pour la zone de fichier
