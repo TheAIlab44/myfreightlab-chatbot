@@ -151,8 +151,8 @@ wrapper.innerHTML = `
   }
   /* chaque icône agrandie */
   #file-preview .file-item {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     background: #fff;
     border: 1px solid #d3dce6;
     border-radius: 8px;
@@ -271,36 +271,72 @@ wrapper.innerHTML = `
     })
   );
 
-  // — Handle file drop with miniatures
-  dropZone.addEventListener("drop", e => {
-    e.preventDefault();
-    pendingFiles.push(...e.dataTransfer.files);
+// — Handle file drop with miniatures + bouton “fermer”
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  // On ajoute les nouveaux fichiers
+  pendingFiles.push(...e.dataTransfer.files);
 
-    // affiche la preview *mini* et uniquement icônes/images
-    filePreview.innerHTML = "";
-    filePreview.style.display = "flex";
+  // On vide et ré-affiche le preview
+  filePreview.innerHTML = "";
+  filePreview.style.display = "flex";
 
-    pendingFiles.forEach(file => {
-      const item = document.createElement("div");
-      item.className = "file-item";
-      if (file.type.startsWith("image/")) {
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        item.appendChild(img);
-      } else {
-        const ico = document.createElement("div");
-        ico.className = "file-icon";
-        ico.textContent = file.name.split(".").pop().toUpperCase();
-        item.appendChild(ico);
-      }
-      filePreview.appendChild(item);
-    });
+  // Création de chaque miniature
+  pendingFiles.forEach(file => {
+    const item = document.createElement("div");
+    item.className = "file-item";
 
-    dropZone.style.opacity = "0";
-    setTimeout(() => dropZone.style.display = "none", 300);
+   if (file.type.startsWith("image/")) {
+  // 1) Création de l’élément <img>
+  const img = document.createElement("img");
+  // 2) Génération de l’URL blob
+  const objectUrl = URL.createObjectURL(file);
+file._objectUrl = objectUrl;
+img.src = objectUrl;
 
-    console.log("📝 pendingFiles:", pendingFiles);
+  // 3) Révocation de l’URL blob une fois l’image chargée
+  img.addEventListener("load", () => {
+    URL.revokeObjectURL(objectUrl);
+  }, { once: true });
+  item.appendChild(img);
+} else {
+  const ico = document.createElement("div");
+  ico.className = "file-icon";
+  ico.textContent = file.name.split(".").pop().toUpperCase();
+  item.appendChild(ico);
+}
+
+
+    filePreview.appendChild(item);
   });
+
+// — Bouton global “×” pour tout supprimer
+const clearBtn = document.createElement("div");
+clearBtn.className = "file-clear";
+clearBtn.textContent = "×";
+clearBtn.title = "Tout supprimer";
+clearBtn.onclick = () => {
+  // 1) Révoquer les object URLs de chaque fichier (si stockées)
+  pendingFiles.forEach(f => {
+    if (f._objectUrl) {
+      URL.revokeObjectURL(f._objectUrl);
+      delete f._objectUrl;
+    }
+  });
+  // 2) Vider le tableau et l’aperçu
+  pendingFiles = [];
+  filePreview.innerHTML = "";
+  filePreview.style.display = "none";
+};
+filePreview.appendChild(clearBtn);
+
+
+  // Cache le dropZone
+  dropZone.style.opacity = "0";
+  setTimeout(() => dropZone.style.display = "none", 300);
+
+  console.log("📝 pendingFiles:", pendingFiles);
+});
 
 
   // — Fetch history from webhook
