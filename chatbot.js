@@ -21,19 +21,19 @@ wrapper.innerHTML = `
       overflow: hidden;
     }
 
-    #chat-wrapper {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      height: 90vh;
-      width: 80vw;
-      margin: 5vh auto;
-      background: #f9fbfc;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #d3dce6;
-      position: relative;
-    }
+   #chat-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* ← passe de flex-end à flex-start */
+  height: 90vh;
+  width: 80vw;
+  margin: 5vh auto;
+  background: #f9fbfc;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #d3dce6;
+  position: relative;
+}
 
     #chat {
   flex: 1;
@@ -347,88 +347,127 @@ document.body.appendChild(dropZone);
       });
   }
 
-  async function loadChatHistory() {
-    try {
-      const data = await fetchUserMessages(user_id);
-      const previews = getLastMessages(data);
-      historyList.innerHTML = "";
+  // --- Gestion des titres persistants dans localStorage ---
+function getSessionTitles() {
+  return JSON.parse(localStorage.getItem("sessionTitles") || "{}");
+}
 
-      previews.forEach(({ session_id, preview }) => {
-  const sessionMessages = data.filter(m => m.session_id === session_id);
+function saveSessionTitles(titles) {
+  localStorage.setItem("sessionTitles", JSON.stringify(titles));
+}
 
-        const container = document.createElement("div");
-        container.className = "prompt";
-        container.style.display = "flex";
-        container.style.justifyContent = "space-between";
-        container.style.alignItems = "center";
-        container.style.position = "relative";
+// --- Chargement de l’historique avec titres persistants et menu complet ---
+async function loadChatHistory() {
+  try {
+    const data = await fetchUserMessages(user_id);
+    const previews = getLastMessages(data);
+    const titles = getSessionTitles();
+    historyList.innerHTML = "";
 
-        const title = document.createElement("span");
-        title.textContent = preview;
-        title.style.flex = "1";
-        title.style.cursor = "pointer";
+    previews.forEach(({ session_id, preview }) => {
+      const sessionMessages = data.filter(m => m.session_id === session_id);
 
-        const menuBtn = document.createElement("span");
-        menuBtn.textContent = "⋮";
-        menuBtn.style.cursor = "pointer";
-        menuBtn.style.padding = "0 8px";
-        menuBtn.style.userSelect = "none";
-
-        const menu = document.createElement("div");
-        menu.style.position = "absolute";
-        menu.style.top = "100%";
-        menu.style.right = "0";
-        menu.style.background = "white";
-        menu.style.border = "1px solid #ccc";
-        menu.style.borderRadius = "6px";
-        menu.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
-        menu.style.display = "none";
-        menu.style.zIndex = "999";
-
-        const renameOption = document.createElement("div");
-        renameOption.textContent = "Renommer";
-        renameOption.style.padding = "8px";
-        renameOption.style.cursor = "pointer";
-        renameOption.addEventListener("click", () => {
-          const newName = prompt("Nouveau nom pour cette session :", preview);
-          if (newName) title.textContent = newName;
-          menu.style.display = "none";
-        });
-
-        const deleteOption = document.createElement("div");
-        deleteOption.textContent = "Supprimer";
-        deleteOption.style.padding = "8px";
-        deleteOption.style.cursor = "pointer";
-        deleteOption.addEventListener("click", () => container.remove());
-
-        menu.appendChild(renameOption);
-        menu.appendChild(deleteOption);
-        menuBtn.addEventListener("click", e => {
-          e.stopPropagation();
-          menu.style.display = menu.style.display === "block" ? "none" : "block";
-        });
-        document.addEventListener("click", () => menu.style.display = "none");
-
-        title.addEventListener("click", () => {
-  localStorage.setItem("chat_id", session_id);
-  chat.innerHTML = "";
-  sessionMessages.forEach(m => {
-    const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
-    appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
-  });
-  historyPanel.classList.remove("open");
-});
-
-
-        container.appendChild(title);
-        container.appendChild(menuBtn);
-        container.appendChild(menu);
-        historyList.appendChild(container);
+      // Conteneur de chaque session
+      const container = document.createElement("div");
+      container.className = "prompt";
+      Object.assign(container.style, {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        position: "relative",
       });
-    } catch (err) {
-      console.error("Erreur chargement historique", err);
-    }
+
+      // Titre persistant ou fallback
+      const title = document.createElement("span");
+      const titleText = titles[session_id] || preview;
+      title.textContent = titleText;
+      Object.assign(title.style, {
+        flex: "1",
+        cursor: "pointer",
+      });
+
+      // Bouton menu
+      const menuBtn = document.createElement("span");
+      menuBtn.textContent = "⋮";
+      Object.assign(menuBtn.style, {
+        cursor: "pointer",
+        padding: "0 8px",
+        userSelect: "none",
+      });
+
+      // Menu déroulant
+      const menu = document.createElement("div");
+      Object.assign(menu.style, {
+        position: "absolute",
+        top: "100%",
+        right: "0",
+        background: "white",
+        border: "1px solid #ccc",
+        borderRadius: "6px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+        display: "none",
+        zIndex: "999",
+      });
+
+      // Option Renommer
+      const renameOption = document.createElement("div");
+      renameOption.textContent = "Renommer";
+      Object.assign(renameOption.style, {
+        padding: "8px",
+        cursor: "pointer",
+      });
+      renameOption.addEventListener("click", () => {
+        const newName = prompt("Nouveau nom pour cette session :", title.textContent);
+        if (newName) {
+          title.textContent = newName;
+          titles[session_id] = newName;
+          saveSessionTitles(titles);
+        }
+        menu.style.display = "none";
+      });
+
+      // Option Supprimer
+      const deleteOption = document.createElement("div");
+      deleteOption.textContent = "Supprimer";
+      Object.assign(deleteOption.style, {
+        padding: "8px",
+        cursor: "pointer",
+      });
+      deleteOption.addEventListener("click", () => container.remove());
+
+      // Montage du menu
+      menu.appendChild(renameOption);
+      menu.appendChild(deleteOption);
+      menuBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === "block" ? "none" : "block";
+      });
+      document.addEventListener("click", () => {
+        menu.style.display = "none";
+      });
+
+      // Click sur le titre pour recharger la session
+      title.addEventListener("click", () => {
+        localStorage.setItem("chat_id", session_id);
+        chat.innerHTML = "";
+        sessionMessages.forEach(m => {
+          const parsed = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+          appendMessage(parsed.content, parsed.type === "human" ? "user-message" : "bot-message");
+        });
+        historyPanel.classList.remove("open");
+      });
+
+      // Assemblage final
+      container.appendChild(title);
+      container.appendChild(menuBtn);
+      container.appendChild(menu);
+      historyList.appendChild(container);
+    });
+
+  } catch (err) {
+    console.error("Erreur chargement historique", err);
   }
+}
 
   resetBtn.addEventListener("click", () => {
   // 1) On supprime l’ancienne session pour en générer une nouvelle
