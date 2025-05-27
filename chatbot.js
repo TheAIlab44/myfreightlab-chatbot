@@ -419,44 +419,72 @@ wrapper.innerHTML = `
     loadChatHistory();
   });
 
-  // — envoi Messages+PJ
-  sendBtn.addEventListener("click",async()=>{
-    const text=userInput.value.trim();
-    if(!text&&pendingFiles.length===0) return;
-    if(text) appendMessage(text,"user-message");
-    const loader=document.createElement("div");
-    loader.className="message bot-message"; loader.innerHTML="Je réfléchis…";
-    chat.appendChild(loader); chat.scrollTop=chat.scrollHeight;
-    try{
-      let res;
-      if(pendingFiles.length){
-        const fd=new FormData();
-        pendingFiles.forEach((f,i)=>fd.append(`file${i}`,f));
-        fd.append("question", text);
-        fd.append("user_id", user_id);
-        fd.append("chat_id", chat_id);
-        fd.append("type", text?"filesWithText":"files");
-        res=await fetch(webhookURL,{method:"POST",body:fd});
-        pendingFiles=[]; filePreview.style.display="none"; filePreview.innerHTML="";
-      } else {
-        res=await fetch(webhookURL,{
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({question:text,user_id,chat_id,type:"text"})
-        });
-      }
-      const data=await res.json();
-      loader.remove();
-      appendMessage(data.output||"Pas de réponse","bot-message");
-      loadChatHistory();
-    } catch(err){
-      loader.remove();
-      appendMessage("❌ Erreur de connexion","bot-message");
-      console.error(err);
-    } finally {
-      userInput.value=""; userInput.focus();
+sendBtn.addEventListener("click", async () => {
+  const text = userInput.value.trim();
+
+  // 1) Si ni texte ni PJ, on ne fait rien
+  if (!text && pendingFiles.length === 0) return;
+
+  // 2) Afficher le message utilisateur
+  if (text) appendMessage(text, "user-message");
+
+  // 3) Afficher le loader
+  const loader = document.createElement("div");
+  loader.className = "message bot-message";
+  loader.innerHTML = "Je réfléchis…";
+  chat.appendChild(loader);
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    let res;
+    // — envoi Messages + PJ
+    if (pendingFiles.length > 0) {
+      const fd = new FormData();
+      pendingFiles.forEach(file => fd.append("file", file));
+      fd.append("question", text);
+      fd.append("user_id", user_id);
+      fd.append("chat_id", chat_id);
+      fd.append("type", text ? "filesWithText" : "files");
+
+      res = await fetch(webhookURL, { method: "POST", body: fd });
+
+      // Réinitialiser la liste de fichiers
+      pendingFiles = [];
+      filePreview.style.display = "none";
+      filePreview.innerHTML = "";
+
+    } else {
+      // — envoi texte seul
+      res = await fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: text,
+          user_id,
+          chat_id,
+          type: "text"
+        })
+      });
     }
-  });
+
+    // 4) Récupérer la réponse et l’afficher
+    const data = await res.json();
+    loader.remove();
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+    loadChatHistory();
+
+  } catch (err) {
+    // 5) En cas d’erreur
+    loader.remove();
+    appendMessage("❌ Erreur de connexion", "bot-message");
+    console.error(err);
+
+  } finally {
+    // 6) Toujours réinitialiser l’input
+    userInput.value = "";
+    userInput.focus();
+  }
+});
 
   // — Shift+↵ newline, ↵ send
   userInput.addEventListener("keydown",e=>{
