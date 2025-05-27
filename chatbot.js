@@ -178,9 +178,9 @@ wrapper.innerHTML = `
   <button id="resetBtn">✨ Nouveau chat</button>
   <div id="chat"></div>
   <div id="input-area">
-    <input type="text" id="userInput" placeholder="Pose ta question ici..." />
-    <button id="sendBtn">▶</button>
-  </div>
+  <textarea id="userInput" placeholder="Pose ta question ici…" rows="2" style="resize: none; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; flex: 1; overflow-y: auto;"></textarea>
+  <button id="sendBtn">▶</button>
+</div>
 
   <div class="floating-toggle" id="toggleHistory">🕓</div>
   <div class="dynamic-sidebar" id="historyPanel">
