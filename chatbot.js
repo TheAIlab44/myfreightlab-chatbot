@@ -630,15 +630,17 @@ dropZone.addEventListener("drop", async (e) => {
 });
 
 
-  const currentChatId = localStorage.getItem("chat_id");
-  if (currentChatId) {
+const currentChatId = localStorage.getItem("chat_id");
+if (currentChatId) {
   fetchUserMessages(user_id).then(data => {
+    // 1) On récupère tous les messages de la session actuelle
     const full = data.filter(m => m.session_id === currentChatId);
-    // ① on mémorise la hauteur avant affichage
-    const previousHeight = chat.scrollHeight;
+
+    // 2) On vide entièrement l’affichage du chat
     chat.innerHTML = "";
+
+    // 3) On recrée manuellement chaque <div.message> sans trigger de scroll
     full.forEach(m => {
-      // on insère sans appeler appendMessage()
       const parsed = typeof m.message === "string"
         ? JSON.parse(m.message)
         : m.message;
@@ -647,9 +649,11 @@ dropZone.addEventListener("drop", async (e) => {
       msg.innerHTML = parsed.content;
       chat.appendChild(msg);
     });
-    // ② on calcule la nouvelle hauteur et on ajuste le scroll
-    const newHeight = chat.scrollHeight;
+
+    // 4) On force l’affichage sur le tout premier message
     chat.scrollTop = 0;
+
+    // 5) On recharge la sidebar après affichage
     loadChatHistory();
   });
 }
