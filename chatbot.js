@@ -21,31 +21,30 @@ wrapper.innerHTML = `
       overflow: hidden;
     }
 
-   #chat-wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start; /* ← passe de flex-end à flex-start */
-  height: 90vh;
-  width: 80vw;
-  margin: 5vh auto;
-  background: #f9fbfc;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #d3dce6;
-  position: relative;
-}
+    #chat-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start; /* ← passe de flex-end à flex-start */
+      height: 90vh;
+      width: 80vw;
+      margin: 5vh auto;
+      background: #f9fbfc;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #d3dce6;
+      position: relative;
+    }
 
     #chat {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: center;
-  height: calc(90vh - 100px); /* ← limite la hauteur pour que seul le chat scroll */
-}
-
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      height: calc(90vh - 100px); /* ← limite la hauteur pour que seul le chat scroll */
+    }
 
     .message {
       padding: 14px 18px;
@@ -173,14 +172,26 @@ wrapper.innerHTML = `
     #toggleHistory {
       top: 40%;
     }
+
+    /* aperçu des pièces jointes */
+    #file-preview {
+      display: none;
+      align-self: flex-start;
+      max-width: 80%;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
   </style>
 
   <button id="resetBtn">✨ Nouveau chat</button>
   <div id="chat"></div>
   <div id="input-area">
-  <textarea id="userInput" placeholder="Pose ta question ici…" rows="2" style="resize: none; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; flex: 1; overflow-y: auto;"></textarea>
-  <button id="sendBtn">▶</button>
-</div>
+    <textarea id="userInput" placeholder="Pose ta question ici…" rows="2" style="resize: none; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; flex: 1; overflow-y: auto;"></textarea>
+    <button id="sendBtn">▶</button>
+  </div>
 
   <div class="floating-toggle" id="toggleHistory">🕓</div>
   <div class="dynamic-sidebar" id="historyPanel">
@@ -192,73 +203,20 @@ wrapper.innerHTML = `
   <div class="dynamic-sidebar" id="promptPanel">
     <div class="sidebar-header">💡 Idées de prompts</div>
     <div class="sidebar-content">
-      <!-- Ajoute ici tes <details> comme dans ton code -->
-      <!-- Tu peux copier/coller tes prompts ici -->
-  <details>
-  <summary>▶ Opérations logistiques</summary>
-  <div class="prompt">Tu peux m’optimiser un itinéraire express entre Shanghai et Anvers ?</div>
-  <div class="prompt">Quel est le plus rapide entre bateau, train ou avion pour l’Asie–Europe ?</div>
-  <div class="prompt">Un hub à Rotterdam, c’est une bonne idée pour livrer l’Allemagne ?</div>
-  <div class="prompt">Comment je peux gagner du temps sur mes transits intercontinentaux ?</div>
-  <div class="prompt">Quels sont les pièges à éviter avec une chaîne logistique multi-clients ?</div>
-</details>
+      <!-- … vos <details> de prompts … -->
+    </div>
+  </div>
+`;
+// → récupérer la zone de chat pour y injecter les messages
+// → récupérer la zone de chat pour y injecter les messages
+const chat = wrapper.querySelector("#chat");
 
-<details>
-  <summary>▶ Commerce international</summary>
-  <div class="prompt">Quels sont les incoterms les plus souvent utilisés en 2024 ?</div>
-  <div class="prompt">Est-ce qu’il y a des accords de libre-échange avec l’Inde ?</div>
-  <div class="prompt">Y a-t-il des sanctions qui pourraient bloquer certaines destinations ?</div>
-  <div class="prompt">Comment prévoir les droits de douane pour exporter en Afrique ?</div>
-  <div class="prompt">Comment profiter des accords UE–Canada ?</div>
-</details>
+// → monter le wrapper dans la page
+const container = document.getElementById("chat-container");
+if (!container) return;
+container.appendChild(wrapper);
 
-<details>
-  <summary>▶ Veille & analyses</summary>
-  <div class="prompt">Quels sont les flux logistiques qui augmentent en ce moment ?</div>
-  <div class="prompt">Y a-t-il des risques géopolitiques à suivre de près ?</div>
-  <div class="prompt">Tu peux me sortir un résumé des dernières tendances logistiques ?</div>
-  <div class="prompt">Quels indicateurs économiques impacteront le fret maritime ?</div>
-  <div class="prompt">Donne-moi une analyse sur le marché Asie–Europe aujourd’hui</div>
-</details>
-
-<details>
-  <summary>▶ Marché & tendances</summary>
-  <div class="prompt">Quelles routes gagnent en popularité en 2024 ?</div>
-  <div class="prompt">Quels ports sont en train de monter en puissance ?</div>
-  <div class="prompt">Tu vois des ruptures ou innovations dans le transport cette année ?</div>
-  <div class="prompt">Y a-t-il une tendance vers le rail ou le fluvial ?</div>
-  <div class="prompt">Comment évoluent les attentes clients en matière de logistique ?</div>
-</details>
-
-<details>
-  <summary>▶ Stratégie & gestion</summary>
-  <div class="prompt">Tu peux m’aider à faire un benchmark de transporteurs ?</div>
-  <div class="prompt">Quelle est la meilleure stratégie pour mon service logistique ?</div>
-  <div class="prompt">Comment optimiser ma gestion des stocks entre 2 continents ?</div>
-  <div class="prompt">Faut-il mieux un entrepôt central ou plusieurs hubs ?</div>
-  <div class="prompt">Comment améliorer le service client dans la chaîne logistique ?</div>
-</details>
-
-<details>
-  <summary>▶ Cas pratiques & simulations</summary>
-  <div class="prompt">Je t’envoie un doc, tu peux me résumer les infos clés ?</div>
-  <div class="prompt">Peux-tu m’écrire une synthèse à partir de ces trois fichiers ?</div>
-  <div class="prompt">Tu peux créer une instruction transport depuis ce modèle ?</div>
-  <div class="prompt">Lis ce PDF et dis-moi s’il manque des infos critiques</div>
-  <div class="prompt">Peux-tu vérifier la cohérence de cette liasse documentaire ?</div>
-</details>
-
- </div>
-</div>
-</div>
-</div>
-
-  `;
-
-  const container = document.getElementById("chat-container");
-  if (!container) return;
-  container.appendChild(wrapper);
-
+// → créer la dropZone
 const dropZone = document.createElement("div");
 dropZone.id = "drop-zone";
 dropZone.style.cssText = `
@@ -273,51 +231,60 @@ dropZone.style.cssText = `
   z-index: 10000;
   transition: opacity 0.3s ease;
   pointer-events: all;
-
 `;
 dropZone.innerText = "📂 Déposez votre fichier ici";
 document.body.appendChild(dropZone);
 
-  const userInput = wrapper.querySelector("#userInput");
-  const sendBtn = wrapper.querySelector("#sendBtn");
-  const resetBtn = wrapper.querySelector("#resetBtn");
-  const togglePromptBtn = wrapper.querySelector("#togglePrompt");
-  const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
-  const promptPanel = wrapper.querySelector("#promptPanel");
-  const historyPanel = wrapper.querySelector("#historyPanel");
-  const historyList = wrapper.querySelector("#historyList");
-  const sidebar = promptPanel;
-  const prompts = wrapper.querySelectorAll(".prompt");
-  let pendingFile = null;           // contiendra le fichier déposé
+// → préparer la PJ en attente et son aperçu (UNE SEULE FOIS)
+let pendingFile = null;
+const userInput = wrapper.querySelector("#userInput");
+
 const filePreview = document.createElement("div");
 filePreview.id = "file-preview";
 Object.assign(filePreview.style, {
+  display: "none",
+  alignSelf: "flex-start",
+  maxWidth: "80%",
   padding: "8px",
   background: "#f0f0f0",
   borderRadius: "6px",
   marginBottom: "8px",
   fontSize: "14px",
 });
-userInput.before(filePreview);   // on affiche la preview juste au-dessus du textarea
 
+// insérer l’aperçu juste au-dessus du textarea
+userInput.before(filePreview);
 
-  togglePromptBtn.addEventListener("click", () => promptPanel.classList.toggle("open"));
-  toggleHistoryBtn.addEventListener("click", () => historyPanel.classList.toggle("open"));
+// → récupérer tous les autres éléments une seule fois
+const sendBtn = wrapper.querySelector("#sendBtn");
+const resetBtn = wrapper.querySelector("#resetBtn");
+const togglePromptBtn = wrapper.querySelector("#togglePrompt");
+const toggleHistoryBtn = wrapper.querySelector("#toggleHistory");
+const promptPanel = wrapper.querySelector("#promptPanel");
+const historyPanel = wrapper.querySelector("#historyPanel");
+const historyList = wrapper.querySelector("#historyList");
+const sidebar = promptPanel;
+const prompts = wrapper.querySelectorAll(".prompt");
 
-  prompts.forEach(prompt => {
-  prompt.addEventListener("click", () => {
-    userInput.value = prompt.textContent;
-    userInput.focus();
-    sidebar.classList.remove("open");
-  });
+// → listeners des toggles et des prompts
+togglePromptBtn.addEventListener("click", () => promptPanel.classList.toggle("open"));
+toggleHistoryBtn.addEventListener("click", () => historyPanel.classList.toggle("open"));
+prompts.forEach(p => p.addEventListener("click", () => {
+  userInput.value = p.textContent;
+  userInput.focus();
+  sidebar.classList.remove("open");
+}));
+
+// → drag & drop texte (pour copier un prompt dans le textarea)
+userInput.addEventListener("dragover", e => e.preventDefault());
+userInput.addEventListener("drop", e => {
+  e.preventDefault();
+  userInput.value = e.dataTransfer.getData("text");
+  sidebar.classList.remove("open");
 });
 
-  userInput.addEventListener("dragover", e => e.preventDefault());
-  userInput.addEventListener("drop", e => {
-    e.preventDefault();
-    userInput.value = e.dataTransfer.getData("text");
-    sidebar.classList.remove("open");
-  });
+// … suite de votre code (fetchUserMessages, etc.) …
+
 
   async function fetchUserMessages(userId) {
     try {
@@ -548,30 +515,39 @@ saveSessionTitles(titles);
     history.forEach(msg => appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message"));
   }
 
-function loadsessionIDfromlocalstorage() {
-  let sessionID = localStorage.getItem("chat_id");
-  if (!sessionID) sessionID = generateSessionID();
-  return sessionID;
-}
-
-function savesessionIDtolocalStorage() {
-  if (!localStorage.getItem("chat_id")) {
-    localStorage.setItem("chat_id", generateSessionID());
+  function loadsessionIDfromlocalstorage() {
+    let sessionID = localStorage.getItem("chat_id");
+    if (!sessionID) sessionID = generateSessionID();
+    return sessionID;
   }
-}
+
+  function savesessionIDtolocalStorage() {
+    if (!localStorage.getItem("chat_id")) {
+      localStorage.setItem("chat_id", generateSessionID());
+    }
+  }
+  
+  userInput.addEventListener("input", () => {
+  if (pendingFile && userInput.value.trim() === "") {
+    // si l’utilisateur efface tout, on réinitialise la PJ
+    pendingFile = null;
+    filePreview.style.display = "none";
+  }
+});
+
 
 sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
 
-  // Si ni texte ni fichier, on ne fait rien
+  // 1) Si ni texte ni fichier, on ne fait rien
   if (!text && !pendingFile) return;
 
-  // Affiche le message utilisateur
+  // 2) Afficher le message utilisateur (texte uniquement)
   if (text) {
     appendMessage(text, "user-message");
   }
 
-  // Affiche un loader
+  // 3) Afficher le loader
   const loader = document.createElement("div");
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis...";
@@ -581,20 +557,26 @@ sendBtn.addEventListener("click", async () => {
   try {
     let res;
     if (pendingFile) {
-      // Envoie du fichier + texte
+      // --- Envoi du fichier + texte ---
       const formData = new FormData();
       formData.append("file", pendingFile);
       formData.append("question", text);
       formData.append("user_id", user_id);
       formData.append("chat_id", chat_id);
       formData.append("type", text ? "fileWithText" : "file");
-      res = await fetch(webhookURL, { method: "POST", body: formData });
 
-      // Réinitialise le fichier en attente
+      res = await fetch(webhookURL, {
+        method: "POST",
+        body: formData
+      });
+
+      // Réinitialiser l’état du fichier
       pendingFile = null;
       filePreview.textContent = "";
+      filePreview.style.display = "none";
+
     } else {
-      // Envoie du texte seul
+      // --- Envoi du texte seul ---
       res = await fetch(webhookURL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -612,11 +594,12 @@ sendBtn.addEventListener("click", async () => {
     appendMessage("❌ Erreur de connexion", "bot-message");
     console.error(err);
   } finally {
-    // Vide le champ de saisie et remet le focus
+    // 4) Vider et remettre le focus sur le textarea
     userInput.value = "";
     userInput.focus();
   }
 });
+
 
 // Permet Shift+Entrée pour aller à la ligne, et Entrée seul pour envoyer
 userInput.addEventListener("keydown", function(e) {
@@ -629,23 +612,6 @@ userInput.addEventListener("keydown", function(e) {
 
 // 🎯 Drag & Drop pour la zone de fichier
 let dragCounter = 0;
-
-// On scope sur dropZone au lieu de document
-["dragenter", "dragover"].forEach(eventType => {
-  dropZone.addEventListener(eventType, e => {
-    e.preventDefault();
-    dragCounter++;
-    dropZone.style.display = "block";
-    dropZone.style.opacity = "1";
-    dropZone.style.pointerEvents = "all";
-  });
-});
-
-["dragleave"].forEach(eventType => {
-  dropZone.addEventListener(eventType, e => {
-    e.preventDefault();
-    dragCounter--;
-    if (dragCounter <= 0) {
 
 ["dragenter", "dragover"].forEach(eventType => {
   document.addEventListener(eventType, e => {
@@ -669,6 +635,7 @@ let dragCounter = 0;
   });
 });
 
+// reset du drag global
 document.addEventListener("drop", e => {
   e.preventDefault();
   dragCounter = 0; // reset
@@ -687,13 +654,15 @@ dropZone.addEventListener("drop", e => {
   const file = e.dataTransfer.files[0];
   if (!file) return;
 
-  // stocke le fichier en attente
+  // 1) on stocke le fichier dans pendingFile
   pendingFile = file;
-  // affiche son nom dans la preview
-  filePreview.textContent = `📎 Fichier prêt : ${file.name} (Envoyer pour l’uploader)`;
+
+  // 2) on affiche et configure la zone de prévisualisation existante
+  filePreview.style.display = "block";
+  filePreview.textContent = `📎 PJ prête : ${file.name} (rédigez votre consigne puis cliquez sur ▶)`;
 });
 
-
+// … reste du code pour recharger l’historique …
 const currentChatId = localStorage.getItem("chat_id");
 if (currentChatId) {
   fetchUserMessages(user_id).then(data => {
