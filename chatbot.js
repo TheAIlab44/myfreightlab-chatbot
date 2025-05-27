@@ -501,3 +501,4 @@ wrapper.innerHTML = `
   JSON.parse(localStorage.getItem("chatHistory") || "[]")
     .forEach(m => appendMessage(m.content, m.role === "user" ? "user-message" : "bot-message"));
   chat.scrollTop = 0;
+  });
