@@ -649,7 +649,7 @@ dropZone.addEventListener("drop", async (e) => {
     });
     // ② on calcule la nouvelle hauteur et on ajuste le scroll
     const newHeight = chat.scrollHeight;
-    chat.scrollTop = newHeight - previousHeight;
+    chat.scrollTop = 0;
     loadChatHistory();
   });
 }
