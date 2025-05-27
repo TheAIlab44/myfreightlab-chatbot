@@ -288,6 +288,18 @@ document.body.appendChild(dropZone);
   const historyList = wrapper.querySelector("#historyList");
   const sidebar = promptPanel;
   const prompts = wrapper.querySelectorAll(".prompt");
+  let pendingFile = null;           // contiendra le fichier déposé
+const filePreview = document.createElement("div");
+filePreview.id = "file-preview";
+Object.assign(filePreview.style, {
+  padding: "8px",
+  background: "#f0f0f0",
+  borderRadius: "6px",
+  marginBottom: "8px",
+  fontSize: "14px",
+});
+userInput.before(filePreview);   // on affiche la preview juste au-dessus du textarea
+
 
   togglePromptBtn.addEventListener("click", () => promptPanel.classList.toggle("open"));
   toggleHistoryBtn.addEventListener("click", () => historyPanel.classList.toggle("open"));
@@ -536,48 +548,74 @@ saveSessionTitles(titles);
     history.forEach(msg => appendMessage(msg.content, msg.role === "user" ? "user-message" : "bot-message"));
   }
 
-  function loadsessionIDfromlocalstorage() {
-    let sessionID = localStorage.getItem("chat_id");
-    if (!sessionID) sessionID = generateSessionID();
-    return sessionID;
-  }
+function loadsessionIDfromlocalstorage() {
+  let sessionID = localStorage.getItem("chat_id");
+  if (!sessionID) sessionID = generateSessionID();
+  return sessionID;
+}
 
-  function savesessionIDtolocalStorage() {
-    if (!localStorage.getItem("chat_id")) {
-      localStorage.setItem("chat_id", generateSessionID());
-    }
+function savesessionIDtolocalStorage() {
+  if (!localStorage.getItem("chat_id")) {
+    localStorage.setItem("chat_id", generateSessionID());
   }
+}
 
-  sendBtn.addEventListener("click", async () => {
+sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
-  if (!text) return;
-  appendMessage(text, "user-message");
-  userInput.value = "";
 
+  // Si ni texte ni fichier, on ne fait rien
+  if (!text && !pendingFile) return;
 
+  // Affiche le message utilisateur
+  if (text) {
+    appendMessage(text, "user-message");
+  }
+
+  // Affiche un loader
   const loader = document.createElement("div");
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis...";
   chat.appendChild(loader);
-    chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+  chat.scrollTop = chat.scrollHeight;
 
+  try {
+    let res;
+    if (pendingFile) {
+      // Envoie du fichier + texte
+      const formData = new FormData();
+      formData.append("file", pendingFile);
+      formData.append("question", text);
+      formData.append("user_id", user_id);
+      formData.append("chat_id", chat_id);
+      formData.append("type", text ? "fileWithText" : "file");
+      res = await fetch(webhookURL, { method: "POST", body: formData });
 
-try {
-  const res = await fetch(webhookURL, {
-    method: "POST",
-    body: JSON.stringify({ question: text, user_id, chat_id, type:"text" }),
-    headers: { "Content-Type": "application/json" },
-  });
+      // Réinitialise le fichier en attente
+      pendingFile = null;
+      filePreview.textContent = "";
+    } else {
+      // Envoie du texte seul
+      res = await fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
+      });
+    }
 
-  const data = await res.json(); // ✅ cette ligne est indispensable AVANT d'utiliser 'data'
+    const data = await res.json();
+    loader.remove();
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+    loadChatHistory();
 
-  loader.remove();
-  appendMessage(data.output || "Pas de réponse", "bot-message");
-  loadChatHistory(); // ✅ ici c'est bon, 'data' est bien défini
-} catch (err) {
-  loader.remove();
-  appendMessage("Erreur de connexion", "bot-message");
-}
+  } catch (err) {
+    loader.remove();
+    appendMessage("❌ Erreur de connexion", "bot-message");
+    console.error(err);
+  } finally {
+    // Vide le champ de saisie et remet le focus
+    userInput.value = "";
+    userInput.focus();
+  }
 });
 
 // Permet Shift+Entrée pour aller à la ligne, et Entrée seul pour envoyer
@@ -591,6 +629,23 @@ userInput.addEventListener("keydown", function(e) {
 
 // 🎯 Drag & Drop pour la zone de fichier
 let dragCounter = 0;
+
+// On scope sur dropZone au lieu de document
+["dragenter", "dragover"].forEach(eventType => {
+  dropZone.addEventListener(eventType, e => {
+    e.preventDefault();
+    dragCounter++;
+    dropZone.style.display = "block";
+    dropZone.style.opacity = "1";
+    dropZone.style.pointerEvents = "all";
+  });
+});
+
+["dragleave"].forEach(eventType => {
+  dropZone.addEventListener(eventType, e => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
 
 ["dragenter", "dragover"].forEach(eventType => {
   document.addEventListener(eventType, e => {
@@ -622,30 +677,20 @@ document.addEventListener("drop", e => {
   dropZone.style.display = "none";
 });
 
-dropZone.addEventListener("drop", async (e) => {
+dropZone.addEventListener("drop", e => {
   e.preventDefault();
+  dragCounter = 0;
+  dropZone.style.opacity = "0";
+  dropZone.style.pointerEvents = "none";
+  dropZone.style.display = "none";
+
   const file = e.dataTransfer.files[0];
   if (!file) return;
 
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("user_id", user_id);
-  formData.append("chat_id", chat_id);
-  formData.append("type","file");
-
-  appendMessage(`📎 Fichier reçu : ${file.name}`, "user-message");
-
-  try {
-    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68", {
-      method: "POST",
-      body: formData
-    });
-    const result = await res.json();
-    appendMessage(result.output || "✅ Fichier traité avec succès !", "bot-message");
-  } catch (err) {
-    console.error(err);
-    appendMessage("❌ Erreur lors de l’envoi du fichier", "bot-message");
-  }
+  // stocke le fichier en attente
+  pendingFile = file;
+  // affiche son nom dans la preview
+  filePreview.textContent = `📎 Fichier prêt : ${file.name} (Envoyer pour l’uploader)`;
 });
 
 
