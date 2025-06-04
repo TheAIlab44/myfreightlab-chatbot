@@ -1,6 +1,6 @@
 // 1) Initialisation du client Supabase (le CDN expose un global “supabase”)
 const SUPABASE_URL     = "https://asjqmzgcajcizutrldqw.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.…";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc";
 // On utilise “sb” au lieu de “supabase” pour éviter le conflit de noms
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
