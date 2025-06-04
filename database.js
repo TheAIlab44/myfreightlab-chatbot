@@ -1,4 +1,3 @@
-// 1) Chargement de la lib Supabase et création du client
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
@@ -14,7 +13,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const user_id = urlParams.get("user_id");
   let folders = [];
   let files = [];
-  let folderCount = 1;
 
   // ————— Helpers localStorage —————
   function saveFolders() {
@@ -27,7 +25,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       catch { folders = []; }
     }
   }
-
   function saveFiles() {
     localStorage.setItem("myFiles", JSON.stringify(files));
   }
@@ -103,11 +100,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ————— Rendu unifié —————
   function clearAndRender() {
-    // Dossiers
     folderContainer.innerHTML = "";
     folderContainer.appendChild(createBtn);
     folders.forEach(f => renderFolderItem(f));
-    // Fichiers racine
+
     uploadedContainer.innerHTML = "";
     files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
   }
@@ -126,6 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       clearAndRender();
     });
     wrapper.prepend(back);
+
     uploadedContainer.innerHTML = "";
     files
       .filter(f => f.folderId === folderId)
@@ -140,17 +137,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.draggable = true;
     el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
 
+    // clic pour ouvrir
     el.addEventListener("click", e => {
       if (!e.target.classList.contains("menu-button")) {
         openFolder(folder.id);
       }
     });
 
+    // bouton contexte
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.appendChild(btn);
 
+    // drop → déplacer un fichier dans ce dossier
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
     el.addEventListener("drop", e => {
@@ -165,6 +165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       clearAndRender();
     });
 
+    // reorder dossiers
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend", () => {
       el.classList.remove("dragging");
@@ -174,11 +175,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       saveFolders();
     });
 
+    // menu contextuel dossier
     btn.addEventListener("click", e => {
       e.stopPropagation();
       closeMenus();
-      const menu = document.createElement("div"); menu.className = "context-menu";
-      const ren = document.createElement("div"); ren.textContent = "Renommer";
+      const menu = document.createElement("div");
+      menu.className = "context-menu";
+      const ren = document.createElement("div");
+      ren.textContent = "Renommer";
       ren.onclick = () => {
         const nm = prompt("Nom du dossier", folder.name);
         if (nm) {
@@ -187,7 +191,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           clearAndRender();
         }
       };
-      const del = document.createElement("div"); del.textContent = "Supprimer";
+      const del = document.createElement("div");
+      del.textContent = "Supprimer";
       del.onclick = () => {
         folders = folders.filter(x => x.id !== folder.id);
         files.forEach(f => { if (f.folderId === folder.id) f.folderId = null; });
@@ -210,18 +215,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.draggable = true;
     el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
 
-    // clic pour ouvrir l’URL
+    // clic principal → ouverture du document (nouvel onglet)
     el.addEventListener("click", e => {
       if (!e.target.classList.contains("menu-button") && file.url) {
         window.open(file.url, "_blank");
       }
     });
 
-    // drag & drop
+    // drag handlers
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend",   () => el.classList.remove("dragging"));
 
-    // menu contextuel fichier
+    // menu contextuel Renommer / Supprimer
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
@@ -268,7 +273,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     clearAndRender();
   });
 
-  // ————— Init + Chargement depuis Supabase + Drop —————
+  // ————— Init + Chargement depuis Supabase + gestion du drop —————
   loadFolders();
   loadFiles();
   clearAndRender();
@@ -302,19 +307,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUserFiles();
 
   // 2) Drop & upload direct sur Supabase Storage + insert en files_metadata
-  dropZone.addEventListener("dragover", e => { 
-    e.preventDefault(); 
-    dropZone.classList.add("dragover"); 
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
   });
-  dropZone.addEventListener("dragleave", () => 
-    dropZone.classList.remove("dragover")
-  );
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
   dropZone.addEventListener("drop", async e => {
     e.preventDefault();
     dropZone.classList.remove("dragover");
 
     for (const f of e.dataTransfer.files) {
-      // Générer un chemin unique pour le bucket
+      // Générer un chemin unique dans le bucket
       const ts = Date.now();
       const safeName = f.name.replace(/\s+/g, "_");
       const path = `uploads/${ts}-${safeName}`;
@@ -332,7 +337,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const storageKey = up.key || up.Key || path;
 
-      // 2.2) Insérer les métadonnées en base
+      // 2.2) Insérer les métadonnées dans files_metadata
       const { error: errIns } = await supabase
         .from("files_metadata")
         .insert({
@@ -347,7 +352,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         continue;
       }
 
-      // 2.3) Ajouter au tableau local et rafraîchir l’UI
+      // 2.3) Ajouter localement dans l’UI
       files.push({
         id:       storageKey,
         name:     f.name,
