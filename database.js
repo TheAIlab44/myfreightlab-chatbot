@@ -1,6 +1,7 @@
 <!-- 1) Chargement de la lib Supabase et création du client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
+  // Remplacez par vos vraies valeurs Supabase
   const SUPABASE_URL     = "https://asjqmzgcajcizutrldqw.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc";
   const supabase = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -10,9 +11,9 @@
 document.addEventListener("DOMContentLoaded", async () => {
   // ————— Paramètres & états —————
   const urlParams = new URLSearchParams(window.location.search);
-  const user_id = urlParams.get("user_id");
+  const user_id   = urlParams.get("user_id"); 
   let folders = [];
-  let files = [];
+  let files   = [];
 
   // ————— Helpers localStorage —————
   function saveFolders() {
@@ -100,9 +101,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ————— Rendu unifié —————
   function clearAndRender() {
+    // Dossiers
     folderContainer.innerHTML = "";
     folderContainer.appendChild(createBtn);
     folders.forEach(f => renderFolderItem(f));
+
+    // Fichiers racine
     uploadedContainer.innerHTML = "";
     files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
   }
@@ -121,6 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       clearAndRender();
     });
     wrapper.prepend(back);
+
     uploadedContainer.innerHTML = "";
     files
       .filter(f => f.folderId === folderId)
@@ -134,16 +139,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.dataset.id = folder.id;
     el.draggable = true;
     el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
+
+    // clic pour ouvrir
     el.addEventListener("click", e => {
       if (!e.target.classList.contains("menu-button")) {
         openFolder(folder.id);
       }
     });
+
+    // bouton contextuel
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.appendChild(btn);
 
+    // drop → déplacer un fichier dans ce dossier
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
     el.addEventListener("drop", e => {
@@ -157,6 +167,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       saveFiles();
       clearAndRender();
     });
+
+    // reorder dossiers
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend", () => {
       el.classList.remove("dragging");
@@ -166,6 +178,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       saveFolders();
     });
 
+    // menu contextuel dossier
     btn.addEventListener("click", e => {
       e.stopPropagation();
       closeMenus();
@@ -215,6 +228,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend",   () => el.classList.remove("dragging"));
 
+    // menu contextuel fichier
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
@@ -261,7 +275,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     clearAndRender();
   });
 
-  // ————— Init + Chargement depuis Supabase + Drop —————
+  // ————— Init + Chargement depuis Supabase + gestion du Drop —————
   loadFolders();
   loadFiles();
   clearAndRender();
@@ -294,7 +308,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadUserFiles();
 
-  // 2) Drop & upload direct sur Supabase Storage + insert en files_metadata
+  // 2) Drop & upload direct vers Supabase Storage + insertion en files_metadata
   dropZone.addEventListener("dragover", e => {
     e.preventDefault();
     dropZone.classList.add("dragover");
