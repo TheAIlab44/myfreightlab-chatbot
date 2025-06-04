@@ -195,47 +195,63 @@ document.addEventListener("DOMContentLoaded", async () => {
     folderContainer.appendChild(el);
   }
 
-  // ————— Rendu d’un fichier —————
-  function renderFileItem(file) {
-    const el = document.createElement("div");
-    el.className = "file-item";
-    el.dataset.id = file.id;
-    el.draggable = true;
-    el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
+// ————— Rendu d’un fichier —————
+function renderFileItem(file) {
+  const el = document.createElement("div");
+  el.className = "file-item";
+  el.dataset.id = file.id;
+  el.draggable = true;
+  el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
 
-    el.addEventListener("dragstart", () => el.classList.add("dragging"));
-    el.addEventListener("dragend", () => el.classList.remove("dragging"));
+  // --- Ajoutez cette partie pour ouvrir le document au clic ---
+  el.addEventListener("click", e => {
+    // Si on clique en dehors du menu contextuel, et que file.url existe
+    if (!e.target.classList.contains("menu-button") && file.url) {
+      window.open(file.url, "_blank");
+    }
+  });
 
-    const btn = document.createElement("div");
-    btn.className = "menu-button";
-    btn.textContent = "⋮";
-    btn.addEventListener("click", e => {
-      e.stopPropagation();
-      closeMenus();
-      const menu = document.createElement("div");
-      menu.className = "context-menu";
-      const ren = document.createElement("div"); ren.textContent = "Renommer";
-      ren.onclick = () => {
-        const nm = prompt("Nom du fichier", file.name);
-        if (nm) {
-          file.name = nm;
-          saveFiles();
-          clearAndRender();
-        }
-      };
-      const del = document.createElement("div"); del.textContent = "Supprimer";
-      del.onclick = () => {
-        files = files.filter(x => x.id !== file.id);
+  // handlers de drag & drop (inchangés)
+  el.addEventListener("dragstart", () => el.classList.add("dragging"));
+  el.addEventListener("dragend", () => el.classList.remove("dragging"));
+
+  // menu contextuel « Renommer / Supprimer » (inchangé)
+  const btn = document.createElement("div");
+  btn.className = "menu-button";
+  btn.textContent = "⋮";
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    closeMenus();
+    const menu = document.createElement("div");
+    menu.className = "context-menu";
+
+    const ren = document.createElement("div");
+    ren.textContent = "Renommer";
+    ren.onclick = () => {
+      const nm = prompt("Nom du fichier", file.name);
+      if (nm) {
+        file.name = nm;
         saveFiles();
         clearAndRender();
-      };
-      menu.append(ren, del);
-      el.appendChild(menu);
-    });
-    el.appendChild(btn);
+      }
+    };
 
-    uploadedContainer.appendChild(el);
-  }
+    const del = document.createElement("div");
+    del.textContent = "Supprimer";
+    del.onclick = () => {
+      files = files.filter(x => x.id !== file.id);
+      saveFiles();
+      clearAndRender();
+    };
+
+    menu.append(ren, del);
+    el.appendChild(menu);
+  });
+  el.appendChild(btn);
+
+  uploadedContainer.appendChild(el);
+}
+
 
   // ————— Création de dossier —————
   createBtn.addEventListener("click", () => {
