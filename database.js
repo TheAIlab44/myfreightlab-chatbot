@@ -1,15 +1,16 @@
-// Initialisation du client Supabase (supabaseLib est défini par le CDN)
+// 1) Initialisation du client Supabase (le CDN expose un global “supabase”)
 const SUPABASE_URL     = "https://asjqmzgcajcizutrldqw.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.…";
+// On utilise “sb” au lieu de “supabase” pour éviter le conflit de noms
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", async () => {
   // ————— Paramètres & états —————
-  const urlParams = new URLSearchParams(window.location.search);
-  const user_id = urlParams.get("user_id");
-  const filesWebhookUrl = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
+  const urlParams      = new URLSearchParams(window.location.search);
+  const user_id        = urlParams.get("user_id");
+  const filesWebhookUrl= "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
   let folders = [];
-  let files = [];
+  let files   = [];
   let folderCount = 1;
 
   // ————— Helpers localStorage —————
