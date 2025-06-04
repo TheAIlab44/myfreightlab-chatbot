@@ -255,62 +255,73 @@ function renderFileItem(file) {
     clearAndRender();
   });
 
-// ————— Init + Webhook + Drop —————
-loadFolders();
-loadFiles();
-clearAndRender();
+// ————— Init + affichage initial —————
+  loadFolders();
+  loadFiles();
+  clearAndRender();
 
-async function loadUserFiles() {
-  try {
-    const fd = new FormData();
-    fd.append("user_id", user_id);
-    const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
-    if (!res.ok) throw new Error(res.statusText);
-    const data = await res.json();
-    // Merge with existing folder assignments
-    files = data.map(item => {
-      const existing = files.find(f => f.id === item.file_id);
-      return {
-        id: item.file_id,
-        // On récupère toujours item.file_name (le nom d’origine),
-        // même si on a déjà renommé localement.
-        name: existing && existing.name !== item.file_name
-                ? existing.name
-                : (item.file_name || item.file_id),
-        folderId: existing ? existing.folderId : null,
-        // Si vous avez un champ URL dans la réponse, vous pouvez l’ajouter ici :
-        // url: item.file_url
-      };
-    });
-    saveFiles();
-    clearAndRender();
-  } catch (err) {
-    console.error("❌ Impossible de charger les fichiers webhook :", err);
-    clearAndRender();
-  }
-}
-await loadUserFiles();
-
-// Wrapper drop pour nouveaux uploads
-dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
-dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-dropZone.addEventListener("drop", async e => {
-  e.preventDefault(); dropZone.classList.remove("dragover");
-  for (const f of e.dataTransfer.files) {
-    const fd = new FormData();
-    fd.append("file", f);
-    fd.append("user_id", user_id);
+  // 1) Charger les fichiers de l’utilisateur depuis Supabase
+  async function loadUserFiles() {
     try {
-      await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
-        method: "POST", body: fd
+      const fd = new FormData();
+      fd.append("user_id", user_id);
+      const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
+      if (!res.ok) throw new Error(res.statusText);
+      const data = await res.json();
+
+      files = data.map(item => {
+        const existing = files.find(f => f.id === item.file_id);
+        return {
+          id: item.file_id,
+          name: existing && existing.name !== item.file_name
+                  ? existing.name
+                  : (item.file_name || item.file_id),
+          folderId: existing ? existing.folderId : null,
+          url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}`
+        };
       });
-      const id = crypto.randomUUID();
-      files.push({ id, name: f.name, folderId: null });
-    } catch {
-      alert("Erreur upload fichier");
+
+      saveFiles();
+      clearAndRender();
+    } catch (err) {
+      console.error("❌ Impossible de charger les fichiers webhook :", err);
+      clearAndRender();
     }
   }
-  saveFiles();
-  clearAndRender();
+
+  await loadUserFiles();
+
+  // 2) Drop & upload direct vers Supabase Storage + insertion en files_metadata
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
+  dropZone.addEventListener("drop", async e => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+
+    for (const f of e.dataTransfer.files) {
+      const fd = new FormData();
+      fd.append("file", f);
+      fd.append("user_id", user_id);
+
+      try {
+        await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
+          method: "POST",
+          body: fd
+        });
+        const id = crypto.randomUUID();
+        files.push({ id, name: f.name, folderId: null });
+      } catch {
+        alert("Erreur upload fichier");
+      }
+    }
+
+    saveFiles();
+    clearAndRender();
+  });
 });
 
