@@ -1,4 +1,4 @@
-
+<!-- 1) Chargement de la lib Supabase et création du client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
   const SUPABASE_URL     = "https://asjqmzgcajcizutrldqw.supabase.co";
@@ -103,7 +103,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     folderContainer.innerHTML = "";
     folderContainer.appendChild(createBtn);
     folders.forEach(f => renderFolderItem(f));
-
     uploadedContainer.innerHTML = "";
     files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
   }
@@ -122,7 +121,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       clearAndRender();
     });
     wrapper.prepend(back);
-
     uploadedContainer.innerHTML = "";
     files
       .filter(f => f.folderId === folderId)
@@ -136,21 +134,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.dataset.id = folder.id;
     el.draggable = true;
     el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
-
-    // clic pour ouvrir
     el.addEventListener("click", e => {
       if (!e.target.classList.contains("menu-button")) {
         openFolder(folder.id);
       }
     });
-
-    // bouton contexte
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.appendChild(btn);
 
-    // drop → déplacer un fichier dans ce dossier
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
     el.addEventListener("drop", e => {
@@ -164,8 +157,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       saveFiles();
       clearAndRender();
     });
-
-    // reorder dossiers
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend", () => {
       el.classList.remove("dragging");
@@ -175,7 +166,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       saveFolders();
     });
 
-    // menu contextuel dossier
     btn.addEventListener("click", e => {
       e.stopPropagation();
       closeMenus();
@@ -215,18 +205,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.draggable = true;
     el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
 
-    // clic principal → ouverture du document (nouvel onglet)
+    // clic → ouvrir l’URL du fichier
     el.addEventListener("click", e => {
       if (!e.target.classList.contains("menu-button") && file.url) {
         window.open(file.url, "_blank");
       }
     });
 
-    // drag handlers
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend",   () => el.classList.remove("dragging"));
 
-    // menu contextuel Renommer / Supprimer
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
@@ -273,7 +261,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     clearAndRender();
   });
 
-  // ————— Init + Chargement depuis Supabase + gestion du drop —————
+  // ————— Init + Chargement depuis Supabase + Drop —————
   loadFolders();
   loadFiles();
   clearAndRender();
