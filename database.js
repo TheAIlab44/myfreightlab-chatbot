@@ -271,7 +271,7 @@ async function loadUserFiles() {
       const existing = files.find(f => f.id === item.file_id);
       return {
         id: item.file_id,
-        name: existing && existing.name !== item.file_name ? existing.name : (item.file_name || item.file_id),
+        name: existing && existing.name !== item.original_name ? existing.name : (item.original_name || item.file_id),
         folderId: existing ? existing.folderId : null
       };
     });
