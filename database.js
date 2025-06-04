@@ -1,4 +1,5 @@
-<!-- 1) Chargement de la lib Supabase et création du client -->
+// 1) Chargement de la lib Supabase et création du client
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
   const SUPABASE_URL     = "https://asjqmzgcajcizutrldqw.supabase.co";
