@@ -4,7 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ma base de documents</title>
-  <script type="module" src="/database.js"></script>
+
+  <!-- 1) Chargement de la lib Supabase (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <!-- 2) Ensuite, on charge votre code JS principal -->
+  <script src="/database.js"></script>
+
   <style>
     body {
       margin: 0;
@@ -15,5 +21,6 @@
   </style>
 </head>
 <body>
+  <!-- Le <div> wrapper sera créé dynamiquement par database.js -->
 </body>
 </html>
