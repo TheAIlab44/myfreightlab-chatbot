@@ -342,4 +342,4 @@ dropZone.addEventListener("drop", async e => {
   saveFiles();
   clearAndRender();
 });
-
+});
