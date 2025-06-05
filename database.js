@@ -269,35 +269,38 @@ function renderFileItem(file) {
   clearAndRender();
 
   // 1) Charger les fichiers de l’utilisateur depuis Supabase
-  async function loadUserFiles() {
-    try {
-      const { data: rows, error } = await sb
-        .from("files_metadata")
-        .select("id as file_id, original_name as file_name, storage_key")
-        .eq("user_id", user_id)
-        .order("uploaded_at", { ascending: false });
+async function loadUserFiles() {
+  try {
+    const { data: rows, error } = await sb
+      .from("files_metadata")
+      .select("id as file_id, original_name as file_name, storage_key")
+      .eq("user_id", user_id)
+      .order("uploaded_at", { ascending: false });
 
-      if (error) throw error;
+    if (error) throw error;
 
-      files = rows.map(item => {
-        const existing = files.find(f => f.id === item.file_id);
-        return {
-          id: item.file_id,
-          name: existing && existing.name !== item.file_name
-                ? existing.name
-                : (item.file_name || item.file_id),
-          folderId: existing ? existing.folderId : null,
-          url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}`
-        };
-      });
+    files = rows.map(item => {
+      const existing = files.find(f => f.id === item.file_id);
+      return {
+        id: item.file_id,
+        name:
+          // on ne conserve existing.name que si c’est vraiment une renommée manuelle
+          existing && existing.name !== existing.id
+            ? existing.name
+            : (item.file_name || item.file_id),
+        folderId: existing ? existing.folderId : null,
+        url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}`
+      };
+    });
 
-      saveFiles();
-      clearAndRender();
-    } catch (err) {
-      console.error("❌ Impossible de charger les fichiers Supabase :", err);
-      clearAndRender();
-    }
-  } // ← Fin de loadUserFiles
+    saveFiles();
+    clearAndRender();
+  } catch (err) {
+    console.error("❌ Impossible de charger les fichiers Supabase :", err);
+    clearAndRender();
+  }
+}
+
 
   await loadUserFiles();
 
