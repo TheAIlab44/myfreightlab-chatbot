@@ -277,28 +277,35 @@ loadFiles();
 clearAndRender();
 async function loadUserFiles() {
   try {
-    const fd = new FormData();
-    fd.append("user_id", user_id);
-    const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
-    if (!res.ok) throw new Error(res.statusText);
-    const data = await res.json();
-    // Merge with existing folder assignments
-    files = data.map(item => {
+    const { data: rows, error } = await sb
+      .from("files_metadata")
+      .select("id as file_id, original_name as file_name, storage_key")
+      .eq("user_id", user_id)
+      .order("uploaded_at", { ascending: false });
+
+    if (error) throw error;
+
+    files = rows.map(item => {
+      // Si le fichier existait déjà localement et avait été renommé manuellement,
+      // on garde ce nom, sinon on prend original_name ou l’ID.
       const existing = files.find(f => f.id === item.file_id);
       return {
         id: item.file_id,
-        name: existing && existing.name !== item.file_name ? existing.name : (item.file_name || item.file_id),
-        folderId: existing ? existing.folderId : null
+        name: existing && existing.name !== item.file_id
+              ? existing.name
+              : (item.file_name || item.file_id),
+        folderId: existing ? existing.folderId : null,
+        url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}`
       };
     });
+
     saveFiles();
     clearAndRender();
   } catch (err) {
-    console.error("❌ Impossible de charger les fichiers webhook :", err);
+    console.error("❌ Impossible de charger les fichiers Supabase :", err);
     clearAndRender();
   }
 }
-await loadUserFiles();
 
   // Wrapper drop pour nouveaux uploads
   dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
