@@ -8,6 +8,9 @@
   <!-- 1) Chargement de la lib Supabase (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
+  <!-- 2) Ensuite, on charge votre code JS principal -->
+  <script src="/database.js"></script>
+
   <style>
     body {
       margin: 0;
@@ -15,21 +18,9 @@
       background: #f9fbfc;
       font-family: 'Inter', sans-serif;
     }
-    /* styles optionnels pour la grille de miniatures */
-    #file-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-top: 20px;
-      padding: 0 20px;
-    }
   </style>
 </head>
 <body>
-  <!-- Votre conteneur pour les miniatures/cliquables -->
-  <div id="file-list"></div>
-
-  <!-- 2) Charger votre code JS _juste avant_ la fin du body -->
-  <script src="/database.js"></script>
+  <!-- Le <div> wrapper sera créé dynamiquement par database.js -->
 </body>
 </html>
