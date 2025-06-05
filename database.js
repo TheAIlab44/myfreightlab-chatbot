@@ -93,15 +93,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener("click", closeMenus);
 
   // ————— Rendu unifié —————
-  function clearAndRender() {
-    // Dossiers
-    folderContainer.innerHTML = "";
-    folderContainer.appendChild(createBtn);
-    folders.forEach(f => renderFolderItem(f));
-    // Fichiers racine
-    uploadedContainer.innerHTML = "";
-    files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
-  }
+function clearAndRender() {
+  // 1) Rafraîchit la liste des dossiers
+  folderContainer.innerHTML = "";
+  folderContainer.appendChild(createBtn);
+  folders.forEach(f => renderFolderItem(f));
+
+  // 2) Affiche tous les fichiers à la racine (folderId === null)
+  uploadedContainer.innerHTML = "";
+  files
+    .filter(f => f.folderId === null)
+    .forEach(f => renderFileItem(f));
+}
+
   // ————— Ouvrir un dossier —————
 function openFolder(folderId) {
   // masque la vue dossiers
