@@ -18,9 +18,20 @@
       background: #f9fbfc;
       font-family: 'Inter', sans-serif;
     }
+    /* Optionnel : quelques styles de base pour la grille */
+    #file-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 20px;
+      padding: 0 20px;
+    }
   </style>
 </head>
 <body>
   <!-- Le <div> wrapper sera créé dynamiquement par database.js -->
+
+  <!-- Ajoutez ce conteneur sous le “wrapper” généré en JS -->
+  <div id="file-list"></div>
 </body>
 </html>
