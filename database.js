@@ -284,8 +284,8 @@ async function loadUserFiles() {
       return {
         id: item.file_id,
         name:
-          // on ne conserve existing.name que si c’est vraiment une renommée manuelle
-          existing && existing.name !== existing.id
+          // on conserve existing.name seulement s’il a été renommé (différent de l’ID)
+          existing && existing.name !== item.file_id
             ? existing.name
             : (item.file_name || item.file_id),
         folderId: existing ? existing.folderId : null,
@@ -301,8 +301,7 @@ async function loadUserFiles() {
   }
 }
 
-
-  await loadUserFiles();
+await loadUserFiles();
 
   // 2) Drop & upload direct vers Supabase Storage + insertion en files_metadata
   dropZone.addEventListener("dragover", e => {
