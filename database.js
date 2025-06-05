@@ -86,62 +86,63 @@ document.addEventListener("DOMContentLoaded", async () => {
   const createBtn         = wrapper.querySelector("#create-folder");
   const dropZone          = wrapper.querySelector("#drop-zone");
 
-  // ————— External drag highlighting —————
-  let externalDragCounter = 0;
-  document.addEventListener("dragenter", e => {
-    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
-      externalDragCounter++;
-      dropZone.style.display = "block";
-      dropZone.style.opacity = "1";
-    }
-  });
-  document.addEventListener("dragleave", e => {
-    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
-      externalDragCounter--;
-      if (externalDragCounter === 0) {
-        dropZone.style.opacity = "0";
-        setTimeout(() => { dropZone.style.display = "none"; }, 300);
-      }
-    }
-  });
-  document.addEventListener("drop", e => {
-    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
-      externalDragCounter = 0;
-      dropZone.style.opacity = "0";
-      setTimeout(() => { dropZone.style.display = "none"; }, 300);
-    }
-  });
+// ————— External drag highlighting —————
+let externalDragCounter = 0;
+document.addEventListener("dragenter", e => {
+  // Ne déclenche que si on drague un (ou plusieurs) fichier(s) venant de l’extérieur
+  if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+    externalDragCounter++;
+    dropZone.classList.add("dragover"); // applique la classe CSS .explorer.dragover
+  }
+});
 
-  // ————— Drag & Drop pour l’upload —————
-  dropZone.addEventListener("dragover", e => {
-    e.preventDefault();
-    dropZone.classList.add("dragover");
-  });
-  dropZone.addEventListener("dragleave", () => {
-    dropZone.classList.remove("dragover");
-  });
-  dropZone.addEventListener("drop", async e => {
-    e.preventDefault();
-    dropZone.classList.remove("dragover");
-
-    for (const f of e.dataTransfer.files) {
-      const fd = new FormData();
-      fd.append("file", f);
-      fd.append("user_id", user_id);
-      try {
-        await fetch(
-          "https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",
-          { method: "POST", body: fd }
-        );
-        const id = crypto.randomUUID();
-        files.push({ id, name: f.name, folderId: null });
-      } catch {
-        alert("Erreur upload fichier");
-      }
+document.addEventListener("dragleave", e => {
+  if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+    externalDragCounter--;
+    if (externalDragCounter === 0) {
+      dropZone.classList.remove("dragover");
     }
-    saveFiles();
-    clearAndRender();
-  });
+  }
+});
+
+document.addEventListener("drop", e => {
+  // Lorsque l’on lâche un fichier externe, retire immédiatement la surbrillance
+  if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+    externalDragCounter = 0;
+    dropZone.classList.remove("dragover");
+  }
+});
+
+// ————— Drag & Drop pour l’upload —————
+dropZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+dropZone.addEventListener("dragleave", () => {
+  dropZone.classList.remove("dragover");
+});
+dropZone.addEventListener("drop", async e => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+
+  for (const f of e.dataTransfer.files) {
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("user_id", user_id);
+    try {
+      await fetch(
+        "https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",
+        { method: "POST", body: fd }
+      );
+      const id = crypto.randomUUID();
+      files.push({ id, name: f.name, folderId: null });
+    } catch {
+      alert("Erreur upload fichier");
+    }
+  }
+  saveFiles();
+  clearAndRender();
+});
 
   // ————— Context menu helper —————
   function closeMenus() {
