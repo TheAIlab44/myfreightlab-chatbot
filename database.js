@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ————— Création du wrapper + CSS —————
   const wrapper = document.createElement("div");
-  wrapper.innerHTML = 
+  wrapper.innerHTML = `
     <style>
       body { margin:0; font-family:"Segoe UI",sans-serif; background:#f4f6fa; }
       .explorer { padding:20px; min-height:100vh; box-sizing:border-box; }
@@ -70,41 +70,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         width:20px; height:20px; font-size:10px; text-align:center;
         line-height:20px; border:1px solid #ccc; border-radius:3px;
       }
-      .explorer {
-  padding: 20px;
-  font-family: "Segoe UI", sans-serif;
-  min-height: calc(100vh - 100px);
-  height: 100%;
-  flex: 1;
-  border: 2px dashed transparent;
-  transition: background 0.3s, border-color 0.3s;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-
-.explorer.dragover {
-  border-color: #00aa00;
-  background: linear-gradient(90deg, #f0fff0 0%, #eaffea 100%);
-}
     </style>
-<div class="explorer" id="drop-zone">
-  <div class="explorer-grid" id="folder-container">
-    <div class="add-folder" id="create-folder">➕</div>
-  </div>
-  <div class="uploaded-files" id="uploaded-files-container"></div>
-</div>
-  ;
+    <div class="explorer" id="drop-zone">
+      <div class="explorer-grid" id="folder-container">
+        <div class="add-folder" id="create-folder">＋</div>
+      </div>
+      <div class="explorer-grid" id="uploaded-files-container"></div>
+    </div>
+  `;
   document.body.appendChild(wrapper);
-
-  // ————— Refs DOM + compteur drag externe —————
-const folderContainer   = wrapper.querySelector("#folder-container");
-const uploadedContainer = wrapper.querySelector("#uploaded-files-container");
-const createBtn         = wrapper.querySelector("#create-folder");
-const dropZone          = wrapper.querySelector("#drop-zone");
-
-// Pour compter les dragenter / dragleave externes
-let externalDragCounter = 0;
 
   // ————— Refs DOM (une seule fois) —————
   const folderContainer   = wrapper.querySelector("#folder-container");
@@ -112,65 +86,62 @@ let externalDragCounter = 0;
   const createBtn         = wrapper.querySelector("#create-folder");
   const dropZone          = wrapper.querySelector("#drop-zone");
 
-// ————— External drag highlighting —————
-document.addEventListener("dragenter", e => {
-  // Ne déclenche que si on drague un (ou plusieurs) fichier(s) venant de l’extérieur
-  if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
-    externalDragCounter++;
-    dropZone.classList.add("dragover"); // applique .explorer.dragover
-  }
-});
-
-document.addEventListener("dragleave", e => {
-  if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
-    externalDragCounter--;
-    if (externalDragCounter === 0) {
-      dropZone.classList.remove("dragover");
+  // ————— External drag highlighting —————
+  let externalDragCounter = 0;
+  document.addEventListener("dragenter", e => {
+    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+      externalDragCounter++;
+      dropZone.style.display = "block";
+      dropZone.style.opacity = "1";
     }
-  }
-});
+  });
+  document.addEventListener("dragleave", e => {
+    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+      externalDragCounter--;
+      if (externalDragCounter === 0) {
+        dropZone.style.opacity = "0";
+        setTimeout(() => { dropZone.style.display = "none"; }, 300);
+      }
+    }
+  });
+  document.addEventListener("drop", e => {
+    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+      externalDragCounter = 0;
+      dropZone.style.opacity = "0";
+      setTimeout(() => { dropZone.style.display = "none"; }, 300);
+    }
+  });
 
-document.addEventListener("drop", e => {
-  // Quand on lâche un fichier externe, on retire immédiatement la surbrillance
-  if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
-    externalDragCounter = 0;
+  // ————— Drag & Drop pour l’upload —————
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+  dropZone.addEventListener("dragleave", () => {
     dropZone.classList.remove("dragover");
-  }
-});
+  });
+  dropZone.addEventListener("drop", async e => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
 
-// ————— Drag & Drop pour l’upload (intérieur de la même dropZone) —————
-dropZone.addEventListener("dragover", e => {
-  e.preventDefault();
-  // Ici, on peut ajouter un style interne (facultatif)
-});
-dropZone.addEventListener("dragleave", () => {
-  // Effacer style interne si besoin (facultatif)
-});
-dropZone.addEventListener("drop", async e => {
-  e.preventDefault();
-  dropZone.classList.remove("dragover");
-
-  for (const f of e.dataTransfer.files) {
-    const fd = new FormData();
-    fd.append("file", f);
-    fd.append("user_id", user_id);
-
-    try {
-      await fetch(
-        "https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",
-        { method: "POST", body: fd }
-      );
-      const id = crypto.randomUUID();
-      files.push({ id, name: f.name, folderId: null });
-    } catch {
-      alert("Erreur upload fichier");
+    for (const f of e.dataTransfer.files) {
+      const fd = new FormData();
+      fd.append("file", f);
+      fd.append("user_id", user_id);
+      try {
+        await fetch(
+          "https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",
+          { method: "POST", body: fd }
+        );
+        const id = crypto.randomUUID();
+        files.push({ id, name: f.name, folderId: null });
+      } catch {
+        alert("Erreur upload fichier");
+      }
     }
-  }
-
-  saveFiles();
-  clearAndRender();
-});
-
+    saveFiles();
+    clearAndRender();
+  });
 
   // ————— Context menu helper —————
   function closeMenus() {
@@ -213,10 +184,10 @@ dropZone.addEventListener("drop", async e => {
     el.className = "folder-item";
     el.dataset.id  = folder.id;
     el.draggable    = true;
-    el.innerHTML    = 
+    el.innerHTML    = `
       <div class="emoji">📁</div>
       <div class="name">${folder.name}</div>
-    ;
+    `;
     el.addEventListener("click", e => {
       if (!e.target.classList.contains("menu-button")) {
         openFolder(folder.id);
@@ -291,10 +262,10 @@ dropZone.addEventListener("drop", async e => {
     el.className  = "file-item";
     el.dataset.id = file.id;
     el.draggable   = true;
-    el.innerHTML   = 
+    el.innerHTML   = `
       <div class="emoji">📄</div>
       <div class="name">${file.name}</div>
-    ;
+    `;
 
     // 1) Clic → ouvrir l’URL du fichier si elle existe
     el.addEventListener("click", e => {
@@ -346,7 +317,7 @@ dropZone.addEventListener("drop", async e => {
 
   // ————— Création de dossier —————
   createBtn.addEventListener("click", () => {
-    const nm = prompt("Nom du dossier", Dossier ${folders.length + 1});
+    const nm = prompt("Nom du dossier", `Dossier ${folders.length + 1}`);
     if (!nm) return;
     const id = crypto.randomUUID();
     folders.push({ id, name: nm });
@@ -378,7 +349,7 @@ dropZone.addEventListener("drop", async e => {
                 ? existing.name
                 : (item.file_name || item.file_id),
           folderId: existing ? existing.folderId : null,
-          url: ${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}
+          url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}`
         };
       });
 
