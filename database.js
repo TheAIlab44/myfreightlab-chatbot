@@ -351,13 +351,18 @@ function renderFileItem(file) {
 
   // 1) Clic → ouvrir l’URL du fichier si elle existe
   el.addEventListener("click", e => {
-    // on vérifie qu’on n’a pas cliqué sur le bouton du menu (⋮)
-    if (!e.target.classList.contains("menu-button") && file.url) {
+    // si on clique sur le bouton du menu, on ne fait rien
+    if (e.target.classList.contains("menu-button")) return;
+
+    console.log("DEBUG ➔ file.url =", file.url);
+    if (file.url) {
       window.open(file.url, "_blank");
+    } else {
+      alert("Pas d’URL valide pour ce fichier (file.url est undefined)");
     }
   });
 
-  // 2) Drag handlers pour l’effet visuel (semblable à avant)
+  // 2) Drag handlers pour l’effet visuel
   el.addEventListener("dragstart", () => el.classList.add("dragging"));
   el.addEventListener("dragend",   () => el.classList.remove("dragging"));
 
@@ -399,6 +404,7 @@ function renderFileItem(file) {
 
   uploadedContainer.appendChild(el);
 }
+
 
 
   // ————— Création de dossier —————
