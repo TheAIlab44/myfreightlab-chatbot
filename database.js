@@ -338,64 +338,68 @@ dropZone.addEventListener("drop", async e => {
     folderContainer.appendChild(el);
   }
 
-  // ————— Rendu d’un fichier —————
-  function renderFileItem(file) {
-    const el = document.createElement("div");
-    el.className  = "file-item";
-    el.dataset.id = file.id;
-    el.draggable   = true;
-    el.innerHTML   = `
-      <div class="emoji">📄</div>
-      <div class="name">${file.name}</div>
-    `;
+// ————— Rendu d’un fichier —————
+function renderFileItem(file) {
+  const el = document.createElement("div");
+  el.className  = "file-item";
+  el.dataset.id = file.id;
+  el.draggable   = true;
+  el.innerHTML   = `
+    <div class="emoji">📄</div>
+    <div class="name">${file.name}</div>
+  `;
 
-    // 1) Clic → ouvrir l’URL du fichier si elle existe
-    el.addEventListener("click", e => {
-      if (!e.target.classList.contains("menu-button") && file.url) {
-        window.open(file.url, "_blank");
-      }
-    });
+  // 1) Clic → ouvrir l’URL du fichier si elle existe
+  el.addEventListener("click", e => {
+    // on vérifie qu’on n’a pas cliqué sur le bouton du menu (⋮)
+    if (!e.target.classList.contains("menu-button") && file.url) {
+      window.open(file.url, "_blank");
+    }
+  });
 
-    // 2) Drag handlers pour l’effet visuel
-    el.addEventListener("dragstart", () => el.classList.add("dragging"));
-    el.addEventListener("dragend", () => el.classList.remove("dragging"));
+  // 2) Drag handlers pour l’effet visuel (semblable à avant)
+  el.addEventListener("dragstart", () => el.classList.add("dragging"));
+  el.addEventListener("dragend",   () => el.classList.remove("dragging"));
 
-    // 3) Menu contextuel « Renommer / Supprimer »
-    const btn2 = document.createElement("div");
-    btn2.className = "menu-button";
-    btn2.textContent = "⋮";
-    btn2.addEventListener("click", e => {
-      e.stopPropagation();
-      closeMenus();
-      const menu = document.createElement("div");
-      menu.className = "context-menu";
+  // 3) Menu contextuel « Renommer / Supprimer »
+  const btn = document.createElement("div");
+  btn.className = "menu-button";
+  btn.textContent = "⋮";
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    closeMenus();
+    const menu = document.createElement("div");
+    menu.className = "context-menu";
 
-      const ren = document.createElement("div");
-      ren.textContent = "Renommer";
-      ren.onclick = () => {
-        const nm = prompt("Nom du fichier", file.name);
-        if (nm) {
-          file.name = nm;
-          saveFiles();
-          clearAndRender();
-        }
-      };
-
-      const del2 = document.createElement("div");
-      del2.textContent = "Supprimer";
-      del2.onclick = () => {
-        files = files.filter(x => x.id !== file.id);
+    // Renommer
+    const ren = document.createElement("div");
+    ren.textContent = "Renommer";
+    ren.onclick = () => {
+      const nm = prompt("Nom du fichier", file.name);
+      if (nm) {
+        file.name = nm;
         saveFiles();
         clearAndRender();
-      };
+      }
+    };
 
-      menu.append(ren, del2);
-      el.appendChild(menu);
-    });
-    el.appendChild(btn2);
+    // Supprimer
+    const del = document.createElement("div");
+    del.textContent = "Supprimer";
+    del.onclick = () => {
+      files = files.filter(x => x.id !== file.id);
+      saveFiles();
+      clearAndRender();
+    };
 
-    uploadedContainer.appendChild(el);
-  }
+    menu.append(ren, del);
+    el.appendChild(menu);
+  });
+  el.appendChild(btn);
+
+  uploadedContainer.appendChild(el);
+}
+
 
   // ————— Création de dossier —————
   createBtn.addEventListener("click", () => {
