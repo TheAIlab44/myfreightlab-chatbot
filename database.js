@@ -1,16 +1,16 @@
-// Initialisation du client Supabase (supabaseLib est défini par le CDN)
+// 1) Initialisation du client Supabase (le CDN expose un global “supabase”)
 const SUPABASE_URL     = "https://asjqmzgcajcizutrldqw.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzanFtemdjYWpjaXp1dHJsZHF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY1MjAsImV4cCI6MjA1NjU5MjUyMH0.8AGX4EI6F88TYrs1aunsFuwLWJfj3Zf_SJW1Y1tiTZc";
-const supabase = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// On utilise “sb” au lieu de “supabase” pour éviter le conflit de noms
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", async () => {
   // ————— Paramètres & états —————
-  const urlParams = new URLSearchParams(window.location.search);
-  const user_id = urlParams.get("user_id");
+  const urlParams       = new URLSearchParams(window.location.search);
+  const user_id         = urlParams.get("user_id");
   const filesWebhookUrl = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
   let folders = [];
-  let files = [];
-  let folderCount = 1;
+  let files   = [];
 
   // ————— Helpers localStorage —————
   function saveFolders() {
@@ -86,10 +86,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.body.appendChild(wrapper);
 
   // ————— Refs DOM —————
-  const folderContainer = wrapper.querySelector("#folder-container");
-  const uploadedContainer = wrapper.querySelector("#uploaded-files-container");
-  const createBtn = wrapper.querySelector("#create-folder");
-  const dropZone = wrapper.querySelector("#drop-zone");
+  const folderContainer    = wrapper.querySelector("#folder-container");
+  const uploadedContainer  = wrapper.querySelector("#uploaded-files-container");
+  const createBtn          = wrapper.querySelector("#create-folder");
+  const dropZone           = wrapper.querySelector("#drop-zone");
 
   // ————— Context menu helper —————
   function closeMenus() {
@@ -99,57 +99,51 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ————— Rendu unifié —————
   function clearAndRender() {
-    // Dossiers
     folderContainer.innerHTML = "";
     folderContainer.appendChild(createBtn);
     folders.forEach(f => renderFolderItem(f));
-    // Fichiers racine
     uploadedContainer.innerHTML = "";
     files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
   }
+
   // ————— Ouvrir un dossier —————
-function openFolder(folderId) {
-  // masque la vue dossiers
-  folderContainer.style.display = "none";
-  createBtn.style.display = "none";
-  // bouton Retour
-  const back = document.createElement("button");
-  back.textContent = "← Retour";
-  back.style.margin = "10px";
-  back.addEventListener("click", () => {
-    back.remove();
-    folderContainer.style.display = "flex";
-    createBtn.style.display = "flex";
-    clearAndRender();
-  });
-  wrapper.prepend(back);
-  // affiche uniquement les fichiers du dossier
-  uploadedContainer.innerHTML = "";
-  files
-    .filter(f => f.folderId === folderId)
-    .forEach(f => renderFileItem(f));
-}
+  function openFolder(folderId) {
+    folderContainer.style.display = "none";
+    createBtn.style.display = "none";
+    const back = document.createElement("button");
+    back.textContent = "← Retour";
+    back.style.margin = "10px";
+    back.addEventListener("click", () => {
+      back.remove();
+      folderContainer.style.display = "flex";
+      createBtn.style.display = "flex";
+      clearAndRender();
+    });
+    wrapper.prepend(back);
+    uploadedContainer.innerHTML = "";
+    files
+      .filter(f => f.folderId === folderId)
+      .forEach(f => renderFileItem(f));
+  }
 
   // ————— Rendu d’un dossier —————
   function renderFolderItem(folder) {
-  const el = document.createElement("div");
-  el.className = "folder-item";
-  el.dataset.id = folder.id;
-  el.draggable = true;
-  el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
+    const el = document.createElement("div");
+    el.className = "folder-item";
+    el.dataset.id = folder.id;
+    el.draggable = true;
+    el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
 
-  // ❶ ouverture au clic (hitbox totale, sauf menu-button)
-  el.addEventListener("click", e => {
-    if (!e.target.classList.contains("menu-button")) {
-      openFolder(folder.id);
-    }
-  });
-    // bouton contexte
+    el.addEventListener("click", e => {
+      if (!e.target.classList.contains("menu-button")) {
+        openFolder(folder.id);
+      }
+    });
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.appendChild(btn);
-    // drop
+
     el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
     el.addEventListener("drop", e => {
@@ -163,7 +157,6 @@ function openFolder(folderId) {
       saveFiles();
       clearAndRender();
     });
-    // reorder dossiers
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend", () => {
       el.classList.remove("dragging");
@@ -172,10 +165,12 @@ function openFolder(folderId) {
       folders.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
       saveFolders();
     });
-    // menu contextuel dossier
+
     btn.addEventListener("click", e => {
-      e.stopPropagation(); closeMenus();
-      const menu = document.createElement("div"); menu.className = "context-menu";
+      e.stopPropagation();
+      closeMenus();
+      const menu = document.createElement("div");
+      menu.className = "context-menu";
       const ren = document.createElement("div"); ren.textContent = "Renommer";
       ren.onclick = () => {
         const nm = prompt("Nom du dossier", folder.name);
@@ -188,7 +183,6 @@ function openFolder(folderId) {
       const del = document.createElement("div"); del.textContent = "Supprimer";
       del.onclick = () => {
         folders = folders.filter(x => x.id !== folder.id);
-        // retirer fichiers du dossier
         files.forEach(f => { if (f.folderId === folder.id) f.folderId = null; });
         saveFolders();
         saveFiles();
@@ -208,10 +202,20 @@ function renderFileItem(file) {
   el.dataset.id = file.id;
   el.draggable = true;
   el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
-  // drag
+
+  // --- Ajoutez cette partie pour ouvrir le document au clic ---
+  el.addEventListener("click", e => {
+    // Si on clique en dehors du menu contextuel, et que file.url existe
+    if (!e.target.classList.contains("menu-button") && file.url) {
+      window.open(file.url, "_blank");
+    }
+  });
+
+  // handlers de drag & drop (inchangés)
   el.addEventListener("dragstart", () => el.classList.add("dragging"));
   el.addEventListener("dragend", () => el.classList.remove("dragging"));
-  // menu contextuel fichier
+
+  // menu contextuel « Renommer / Supprimer » (inchangé)
   const btn = document.createElement("div");
   btn.className = "menu-button";
   btn.textContent = "⋮";
@@ -220,7 +224,9 @@ function renderFileItem(file) {
     closeMenus();
     const menu = document.createElement("div");
     menu.className = "context-menu";
-    const ren = document.createElement("div"); ren.textContent = "Renommer";
+
+    const ren = document.createElement("div");
+    ren.textContent = "Renommer";
     ren.onclick = () => {
       const nm = prompt("Nom du fichier", file.name);
       if (nm) {
@@ -229,12 +235,15 @@ function renderFileItem(file) {
         clearAndRender();
       }
     };
-    const del = document.createElement("div"); del.textContent = "Supprimer";
+
+    const del = document.createElement("div");
+    del.textContent = "Supprimer";
     del.onclick = () => {
       files = files.filter(x => x.id !== file.id);
       saveFiles();
       clearAndRender();
     };
+
     menu.append(ren, del);
     el.appendChild(menu);
   });
@@ -254,47 +263,65 @@ function renderFileItem(file) {
     clearAndRender();
   });
 
-  // ————— Init + Webhook + Drop —————
-loadFolders();
-loadFiles();
-clearAndRender();
-async function loadUserFiles() {
-  try {
-    const fd = new FormData();
-    fd.append("user_id", user_id);
-    const res = await fetch(filesWebhookUrl, { method: "POST", body: fd });
-    if (!res.ok) throw new Error(res.statusText);
-    const data = await res.json();
-    // Merge with existing folder assignments
-    files = data.map(item => {
-      const existing = files.find(f => f.id === item.file_id);
-      return {
-        id: item.file_id,
-        name: existing && existing.name !== item.file_name ? existing.name : (item.file_name || item.file_id),
-        folderId: existing ? existing.folderId : null
-      };
-    });
-    saveFiles();
-    clearAndRender();
-  } catch (err) {
-    console.error("❌ Impossible de charger les fichiers webhook :", err);
-    clearAndRender();
-  }
-}
-await loadUserFiles();
+  // ————— Restore local + affichage initial —————
+  loadFolders();
+  loadFiles();
+  clearAndRender();
 
-  // Wrapper drop pour nouveaux uploads
-  dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
-  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+  // 1) Charger les fichiers de l’utilisateur depuis Supabase
+  async function loadUserFiles() {
+    try {
+      const { data: rows, error } = await sb
+        .from("files_metadata")
+        .select("id as file_id, original_name as file_name, storage_key")
+        .eq("user_id", user_id)
+        .order("uploaded_at", { ascending: false });
+
+      if (error) throw error;
+
+      files = rows.map(item => {
+        const existing = files.find(f => f.id === item.file_id);
+        return {
+          id: item.file_id,
+          name: existing && existing.name !== item.file_name
+                ? existing.name
+                : (item.file_name || item.file_id),
+          folderId: existing ? existing.folderId : null,
+          url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}`
+        };
+      });
+
+      saveFiles();
+      clearAndRender();
+    } catch (err) {
+      console.error("❌ Impossible de charger les fichiers Supabase :", err);
+      clearAndRender();
+    }
+  } // ← Fin de loadUserFiles
+
+  await loadUserFiles();
+
+  // 2) Drop & upload direct vers Supabase Storage + insertion en files_metadata
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
   dropZone.addEventListener("drop", async e => {
-    e.preventDefault(); dropZone.classList.remove("dragover");
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+
     for (const f of e.dataTransfer.files) {
       const fd = new FormData();
       fd.append("file", f);
       fd.append("user_id", user_id);
+
       try {
         await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
-          method: "POST", body: fd
+          method: "POST",
+          body: fd
         });
         const id = crypto.randomUUID();
         files.push({ id, name: f.name, folderId: null });
@@ -302,6 +329,7 @@ await loadUserFiles();
         alert("Erreur upload fichier");
       }
     }
+
     saveFiles();
     clearAndRender();
   });
