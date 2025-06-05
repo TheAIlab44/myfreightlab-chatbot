@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded", async () => {
   // ————— Paramètres & états —————
-  const urlParams = new URLSearchParams(window.location.search);
-  const user_id = urlParams.get("user_id");
-  const filesWebhookUrl = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
+  const urlParams        = new URLSearchParams(window.location.search);
+  const user_id          = urlParams.get("user_id");
+  const filesWebhookUrl  = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
   let folders = [];
-  let files = [];
+  let files   = [];
   let folderCount = 1;
 
   // ————— Helpers localStorage —————
@@ -81,10 +81,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.body.appendChild(wrapper);
 
   // ————— Refs DOM —————
-  const folderContainer = wrapper.querySelector("#folder-container");
+  const folderContainer   = wrapper.querySelector("#folder-container");
   const uploadedContainer = wrapper.querySelector("#uploaded-files-container");
-  const createBtn = wrapper.querySelector("#create-folder");
-  const dropZone = wrapper.querySelector("#drop-zone");
+  const createBtn         = wrapper.querySelector("#create-folder");
+  const dropZone          = wrapper.querySelector("#drop-zone");
 
   // ————— Context menu helper —————
   function closeMenus() {
@@ -93,63 +93,58 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener("click", closeMenus);
 
   // ————— Rendu unifié —————
-function clearAndRender() {
-  // 1) Rafraîchit la liste des dossiers
-  folderContainer.innerHTML = "";
-  folderContainer.appendChild(createBtn);
-  folders.forEach(f => renderFolderItem(f));
-
-  // 2) Affiche tous les fichiers à la racine (folderId === null)
-  uploadedContainer.innerHTML = "";
-  files
-    .filter(f => f.folderId === null)
-    .forEach(f => renderFileItem(f));
-}
+  function clearAndRender() {
+    folderContainer.innerHTML = "";
+    folderContainer.appendChild(createBtn);
+    folders.forEach(f => renderFolderItem(f));
+    uploadedContainer.innerHTML = "";
+    files.filter(f => f.folderId === null).forEach(f => renderFileItem(f));
+  }
 
   // ————— Ouvrir un dossier —————
-function openFolder(folderId) {
-  // masque la vue dossiers
-  folderContainer.style.display = "none";
-  createBtn.style.display = "none";
-  // bouton Retour
-  const back = document.createElement("button");
-  back.textContent = "← Retour";
-  back.style.margin = "10px";
-  back.addEventListener("click", () => {
-    back.remove();
-    folderContainer.style.display = "flex";
-    createBtn.style.display = "flex";
-    clearAndRender();
-  });
-  wrapper.prepend(back);
-  // affiche uniquement les fichiers du dossier
-  uploadedContainer.innerHTML = "";
-  files
-    .filter(f => f.folderId === folderId)
-    .forEach(f => renderFileItem(f));
-}
+  function openFolder(folderId) {
+    folderContainer.style.display = "none";
+    createBtn.style.display    = "none";
+    const back = document.createElement("button");
+    back.textContent = "← Retour";
+    back.style.margin = "10px";
+    back.addEventListener("click", () => {
+      back.remove();
+      folderContainer.style.display = "flex";
+      createBtn.style.display       = "flex";
+      clearAndRender();
+    });
+    wrapper.prepend(back);
+    uploadedContainer.innerHTML = "";
+    files
+      .filter(f => f.folderId === folderId)
+      .forEach(f => renderFileItem(f));
+  }
 
   // ————— Rendu d’un dossier —————
   function renderFolderItem(folder) {
-  const el = document.createElement("div");
-  el.className = "folder-item";
-  el.dataset.id = folder.id;
-  el.draggable = true;
-  el.innerHTML = `<div class="emoji">📁</div><div class="name">${folder.name}</div>`;
-
-  // ❶ ouverture au clic (hitbox totale, sauf menu-button)
-  el.addEventListener("click", e => {
-    if (!e.target.classList.contains("menu-button")) {
-      openFolder(folder.id);
-    }
-  });
-    // bouton contexte
+    const el = document.createElement("div");
+    el.className = "folder-item";
+    el.dataset.id = folder.id;
+    el.draggable = true;
+    el.innerHTML = `
+      <div class="emoji">📁</div>
+      <div class="name">${folder.name}</div>
+    `;
+    el.addEventListener("click", e => {
+      if (!e.target.classList.contains("menu-button")) {
+        openFolder(folder.id);
+      }
+    });
     const btn = document.createElement("div");
     btn.className = "menu-button";
     btn.textContent = "⋮";
     el.appendChild(btn);
-    // drop
-    el.addEventListener("dragover", e => { e.preventDefault(); el.classList.add("dragover"); });
+
+    el.addEventListener("dragover", e => {
+      e.preventDefault();
+      el.classList.add("dragover");
+    });
     el.addEventListener("dragleave", () => el.classList.remove("dragover"));
     el.addEventListener("drop", e => {
       e.preventDefault();
@@ -162,7 +157,6 @@ function openFolder(folderId) {
       saveFiles();
       clearAndRender();
     });
-    // reorder dossiers
     el.addEventListener("dragstart", () => el.classList.add("dragging"));
     el.addEventListener("dragend", () => {
       el.classList.remove("dragging");
@@ -171,11 +165,14 @@ function openFolder(folderId) {
       folders.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
       saveFolders();
     });
-    // menu contextuel dossier
+
     btn.addEventListener("click", e => {
-      e.stopPropagation(); closeMenus();
-      const menu = document.createElement("div"); menu.className = "context-menu";
-      const ren = document.createElement("div"); ren.textContent = "Renommer";
+      e.stopPropagation();
+      closeMenus();
+      const menu = document.createElement("div");
+      menu.className = "context-menu";
+      const ren = document.createElement("div");
+      ren.textContent = "Renommer";
       ren.onclick = () => {
         const nm = prompt("Nom du dossier", folder.name);
         if (nm) {
@@ -184,11 +181,13 @@ function openFolder(folderId) {
           clearAndRender();
         }
       };
-      const del = document.createElement("div"); del.textContent = "Supprimer";
+      const del = document.createElement("div");
+      del.textContent = "Supprimer";
       del.onclick = () => {
         folders = folders.filter(x => x.id !== folder.id);
-        // retirer fichiers du dossier
-        files.forEach(f => { if (f.folderId === folder.id) f.folderId = null; });
+        files.forEach(f => {
+          if (f.folderId === folder.id) f.folderId = null;
+        });
         saveFolders();
         saveFiles();
         clearAndRender();
@@ -200,66 +199,64 @@ function openFolder(folderId) {
     folderContainer.appendChild(el);
   }
 
-function renderFileItem(file) {
-  const el = document.createElement("div");
-  el.className = "file-item";
-  el.dataset.id = file.id;
-  el.draggable = true;
-  el.innerHTML = `
-    <div class="emoji">📄</div>
-    <div class="name">${file.name}</div>
-  `;
+  // ————— Rendu d’un fichier —————
+  function renderFileItem(file) {
+    const el = document.createElement("div");
+    el.className = "file-item";
+    el.dataset.id = file.id;
+    el.draggable = true;
+    el.innerHTML = `
+      <div class="emoji">📄</div>
+      <div class="name">${file.name}</div>
+    `;
 
-  // 1) Clic → ouvrir l’URL si définie
-  el.addEventListener("click", e => {
-    if (!e.target.classList.contains("menu-button") && file.url) {
-      window.open(file.url, "_blank");
-    }
-  });
+    // 1) Clic → ouvrir l’URL du fichier si elle existe
+    el.addEventListener("click", e => {
+      if (!e.target.classList.contains("menu-button") && file.url) {
+        window.open(file.url, "_blank");
+      }
+    });
 
-  // 2) Drag handlers pour l’effet visuel
-  el.addEventListener("dragstart", () => el.classList.add("dragging"));
-  el.addEventListener("dragend", () => el.classList.remove("dragging"));
+    // 2) Drag handlers pour l’effet visuel
+    el.addEventListener("dragstart", () => el.classList.add("dragging"));
+    el.addEventListener("dragend", () => el.classList.remove("dragging"));
 
-  // 3) Menu contextuel « Renommer / Supprimer »
-  const btn = document.createElement("div");
-  btn.className = "menu-button";
-  btn.textContent = "⋮";
-  btn.addEventListener("click", e => {
-    e.stopPropagation();
-    closeMenus();
-    const menu = document.createElement("div");
-    menu.className = "context-menu";
+    // 3) Menu contextuel « Renommer / Supprimer »
+    const btn = document.createElement("div");
+    btn.className = "menu-button";
+    btn.textContent = "⋮";
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      closeMenus();
+      const menu = document.createElement("div");
+      menu.className = "context-menu";
 
-    // Renommer
-    const ren = document.createElement("div");
-    ren.textContent = "Renommer";
-    ren.onclick = () => {
-      const nm = prompt("Nom du fichier", file.name);
-      if (nm) {
-        file.name = nm;
+      const ren = document.createElement("div");
+      ren.textContent = "Renommer";
+      ren.onclick = () => {
+        const nm = prompt("Nom du fichier", file.name);
+        if (nm) {
+          file.name = nm;
+          saveFiles();
+          clearAndRender();
+        }
+      };
+
+      const del = document.createElement("div");
+      del.textContent = "Supprimer";
+      del.onclick = () => {
+        files = files.filter(x => x.id !== file.id);
         saveFiles();
         clearAndRender();
-      }
-    };
+      };
 
-    // Supprimer
-    const del = document.createElement("div");
-    del.textContent = "Supprimer";
-    del.onclick = () => {
-      files = files.filter(x => x.id !== file.id);
-      saveFiles();
-      clearAndRender();
-    };
+      menu.append(ren, del);
+      el.appendChild(menu);
+    });
+    el.appendChild(btn);
 
-    menu.append(ren, del);
-    el.appendChild(menu);
-  });
-  el.appendChild(btn);
-
-  uploadedContainer.appendChild(el);
-}
-
+    uploadedContainer.appendChild(el);
+  }
 
   // ————— Création de dossier —————
   createBtn.addEventListener("click", () => {
@@ -271,75 +268,75 @@ function renderFileItem(file) {
     clearAndRender();
   });
 
-  // ————— Init + Webhook + Drop —————
-loadFolders();
-loadFiles();
-clearAndRender();
-async function loadUserFiles() {
-  try {
-    const { data: rows, error } = await sb
-      .from("files_metadata")
-      .select("id as file_id, original_name as file_name, storage_key")
-      .eq("user_id", user_id)
-      .order("uploaded_at", { ascending: false });
+  // ————— Restore local + affichage initial —————
+  loadFolders();
+  loadFiles();
+  clearAndRender();
 
-    if (error) throw error;
+  // 1) Charger les fichiers de l’utilisateur depuis Supabase
+  async function loadUserFiles() {
+    try {
+      const { data: rows, error } = await sb
+        .from("files_metadata")
+        .select("id as file_id, original_name as file_name, storage_key")
+        .eq("user_id", user_id)
+        .order("uploaded_at", { ascending: false });
 
-    files = rows.map(item => {
-      // Si le fichier existait déjà localement et avait été renommé manuellement,
-      // on garde ce nom, sinon on prend original_name ou l’ID.
-      const existing = files.find(f => f.id === item.file_id);
-      return {
-        id: item.file_id,
-        name: existing && existing.name !== item.file_id
-              ? existing.name
-              : (item.file_name || item.file_id),
-        folderId: existing ? existing.folderId : null,
-        url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}`
-      };
-    });
+      if (error) throw error;
+
+      files = rows.map(item => {
+        const existing = files.find(f => f.id === item.file_id);
+        return {
+          id: item.file_id,
+          name: existing && existing.name !== item.file_id
+                ? existing.name
+                : (item.file_name || item.file_id),
+          folderId: existing ? existing.folderId : null,
+          url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}`
+        };
+      });
+
+      saveFiles();
+      clearAndRender();
+    } catch (err) {
+      console.error("❌ Impossible de charger les fichiers Supab ase :", err);
+      clearAndRender();
+    }
+  } // ← Fin de loadUserFiles
+
+  // → c’est ici que l’on appelle loadUserFiles, et non à l’intérieur d’une autre fonction :
+  await loadUserFiles();
+
+  // 2) Drag & Drop pour l’upload
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
+  dropZone.addEventListener("drop", async e => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+
+    for (const f of e.dataTransfer.files) {
+      const fd = new FormData();
+      fd.append("file", f);
+      fd.append("user_id", user_id);
+
+      try {
+        await fetch(
+          "https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",
+          { method: "POST", body: fd }
+        );
+        const id = crypto.randomUUID();
+        files.push({ id, name: f.name, folderId: null });
+      } catch {
+        alert("Erreur upload fichier");
+      }
+    }
 
     saveFiles();
     clearAndRender();
-  } catch (err) {
-    console.error("❌ Impossible de charger les fichiers Supabase :", err);
-    clearAndRender();
-  }
-}
-
- // 4.1) Quand on survole la zone → changement CSS
-dropZone.addEventListener("dragover", e => {
-  e.preventDefault();
-  dropZone.classList.add("dragover");
-});
-dropZone.addEventListener("dragleave", () => {
-  dropZone.classList.remove("dragover");
-});
-
-// 4.2) Sur le drop, on envoie chaque fichier au webhook
-dropZone.addEventListener("drop", async e => {
-  e.preventDefault();
-  dropZone.classList.remove("dragover");
-
-  for (const f of e.dataTransfer.files) {
-    const fd = new FormData();
-    fd.append("file", f);
-    fd.append("user_id", user_id);
-
-    try {
-      await fetch(
-        "https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",
-        { method: "POST", body: fd }
-      );
-      // Dès que l’upload réussit, on ajoute localement
-      const id = crypto.randomUUID();
-      files.push({ id, name: f.name, folderId: null });
-    } catch {
-      alert("Erreur upload fichier");
-    }
-  }
-
-  saveFiles();
-  clearAndRender();
-});
+  });
 });
