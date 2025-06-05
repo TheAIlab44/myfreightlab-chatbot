@@ -213,7 +213,7 @@ function renderFileItem(file) {
     }
   });
 
-  // 2) Drag handlers pour déplacer l’élément
+  // 2) Drag handlers
   el.addEventListener("dragstart", () => el.classList.add("dragging"));
   el.addEventListener("dragend", () => el.classList.remove("dragging"));
 
@@ -340,4 +340,3 @@ loadFolders();
 loadFiles();
 clearAndRender();
 await loadUserFiles();
-
