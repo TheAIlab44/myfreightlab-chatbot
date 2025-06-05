@@ -201,21 +201,23 @@ function renderFileItem(file) {
   el.className = "file-item";
   el.dataset.id = file.id;
   el.draggable = true;
-  el.innerHTML = `<div class="emoji">📄</div><div class="name">${file.name}</div>`;
+  el.innerHTML = `
+    <div class="emoji">📄</div>
+    <div class="name">${file.name}</div>
+  `;
 
-  // --- Ajoutez cette partie pour ouvrir le document au clic ---
+  // 1) Au clic, ouvrir l’URL si elle existe
   el.addEventListener("click", e => {
-    // Si on clique en dehors du menu contextuel, et que file.url existe
     if (!e.target.classList.contains("menu-button") && file.url) {
       window.open(file.url, "_blank");
     }
   });
 
-  // handlers de drag & drop (inchangés)
+  // 2) Drag handlers pour déplacer l’élément
   el.addEventListener("dragstart", () => el.classList.add("dragging"));
   el.addEventListener("dragend", () => el.classList.remove("dragging"));
 
-  // menu contextuel « Renommer / Supprimer » (inchangé)
+  // 3) Menu contextuel “Renommer / Supprimer”
   const btn = document.createElement("div");
   btn.className = "menu-button";
   btn.textContent = "⋮";
@@ -225,6 +227,7 @@ function renderFileItem(file) {
     const menu = document.createElement("div");
     menu.className = "context-menu";
 
+    // Renommer
     const ren = document.createElement("div");
     ren.textContent = "Renommer";
     ren.onclick = () => {
@@ -236,6 +239,7 @@ function renderFileItem(file) {
       }
     };
 
+    // Supprimer
     const del = document.createElement("div");
     del.textContent = "Supprimer";
     del.onclick = () => {
@@ -252,23 +256,21 @@ function renderFileItem(file) {
   uploadedContainer.appendChild(el);
 }
 
+// ————— Rendu unifié (folders + fichiers racine) —————
+function clearAndRender() {
+  // 1) Réaffiche d’abord les dossiers
+  folderContainer.innerHTML = "";
+  folderContainer.appendChild(createBtn);
+  folders.forEach(f => renderFolderItem(f));
 
-  // ————— Création de dossier —————
-  createBtn.addEventListener("click", () => {
-    const nm = prompt("Nom du dossier", `Dossier ${folders.length + 1}`);
-    if (!nm) return;
-    const id = crypto.randomUUID();
-    folders.push({ id, name: nm });
-    saveFolders();
-    clearAndRender();
-  });
+  // 2) Puis, les fichiers dont folderId === null
+  uploadedContainer.innerHTML = "";
+  files
+    .filter(f => f.folderId === null)
+    .forEach(f => renderFileItem(f));
+}
 
-  // ————— Restore local + affichage initial —————
-  loadFolders();
-  loadFiles();
-  clearAndRender();
-
-  // 1) Charger les fichiers de l’utilisateur depuis Supabase
+// ————— Charger depuis Supabase (affichage initial) —————
 async function loadUserFiles() {
   try {
     const { data: rows, error } = await sb
@@ -284,7 +286,6 @@ async function loadUserFiles() {
       return {
         id: item.file_id,
         name:
-          // on conserve existing.name seulement s’il a été renommé (différent de l’ID)
           existing && existing.name !== item.file_id
             ? existing.name
             : (item.file_name || item.file_id),
@@ -301,38 +302,42 @@ async function loadUserFiles() {
   }
 }
 
+// ————— Drag & Drop pour upload —————
+dropZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+dropZone.addEventListener("dragleave", () => {
+  dropZone.classList.remove("dragover");
+});
+dropZone.addEventListener("drop", async e => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+
+  for (const f of e.dataTransfer.files) {
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("user_id", user_id);
+
+    try {
+      await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
+        method: "POST",
+        body: fd
+      });
+      const id = crypto.randomUUID();
+      files.push({ id, name: f.name, folderId: null });
+    } catch {
+      alert("Erreur upload fichier");
+    }
+  }
+
+  saveFiles();
+  clearAndRender();
+});
+
+// ————— Appel initial (dans votre DOMContentLoaded) —————
+loadFolders();
+loadFiles();
+clearAndRender();
 await loadUserFiles();
 
-  // 2) Drop & upload direct vers Supabase Storage + insertion en files_metadata
-  dropZone.addEventListener("dragover", e => {
-    e.preventDefault();
-    dropZone.classList.add("dragover");
-  });
-  dropZone.addEventListener("dragleave", () => {
-    dropZone.classList.remove("dragover");
-  });
-  dropZone.addEventListener("drop", async e => {
-    e.preventDefault();
-    dropZone.classList.remove("dragover");
-
-    for (const f of e.dataTransfer.files) {
-      const fd = new FormData();
-      fd.append("file", f);
-      fd.append("user_id", user_id);
-
-      try {
-        await fetch("https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182", {
-          method: "POST",
-          body: fd
-        });
-        const id = crypto.randomUUID();
-        files.push({ id, name: f.name, folderId: null });
-      } catch {
-        alert("Erreur upload fichier");
-      }
-    }
-
-    saveFiles();
-    clearAndRender();
-  });
-});
