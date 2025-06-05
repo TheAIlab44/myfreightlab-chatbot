@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", async () => {
   // ————— Paramètres & états —————
-  const urlParams        = new URLSearchParams(window.location.search);
-  const user_id          = urlParams.get("user_id");
-  const filesWebhookUrl  = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
+  const urlParams       = new URLSearchParams(window.location.search);
+  const user_id         = urlParams.get("user_id");
+  const filesWebhookUrl = "https://myfreightlab.app.n8n.cloud/webhook/52758b10-2216-481a-a29f-5ecdb9670937";
   let folders = [];
   let files   = [];
   let folderCount = 1;
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   `;
   document.body.appendChild(wrapper);
 
-  // ————— Refs DOM —————
+  // ————— Refs DOM (une seule fois) —————
   const folderContainer   = wrapper.querySelector("#folder-container");
   const uploadedContainer = wrapper.querySelector("#uploaded-files-container");
   const createBtn         = wrapper.querySelector("#create-folder");
@@ -88,7 +88,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ————— External drag highlighting —————
   let externalDragCounter = 0;
-
   document.addEventListener("dragenter", e => {
     if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
       externalDragCounter++;
@@ -96,7 +95,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       dropZone.style.opacity = "1";
     }
   });
-
   document.addEventListener("dragleave", e => {
     if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
       externalDragCounter--;
@@ -106,7 +104,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
   });
-
   document.addEventListener("drop", e => {
     if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
       externalDragCounter = 0;
@@ -115,13 +112,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // ————— Drag & Drop pour l’upload (inchangé) —————
+  // ————— Drag & Drop pour l’upload —————
   dropZone.addEventListener("dragover", e => {
     e.preventDefault();
     dropZone.classList.add("dragover");
   });
-  …
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
+  dropZone.addEventListener("drop", async e => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
 
+    for (const f of e.dataTransfer.files) {
+      const fd = new FormData();
+      fd.append("file", f);
+      fd.append("user_id", user_id);
+      try {
+        await fetch(
+          "https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",
+          { method: "POST", body: fd }
+        );
+        const id = crypto.randomUUID();
+        files.push({ id, name: f.name, folderId: null });
+      } catch {
+        alert("Erreur upload fichier");
+      }
+    }
+    saveFiles();
+    clearAndRender();
+  });
 
   // ————— Context menu helper —————
   function closeMenus() {
@@ -162,9 +182,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderFolderItem(folder) {
     const el = document.createElement("div");
     el.className = "folder-item";
-    el.dataset.id = folder.id;
-    el.draggable = true;
-    el.innerHTML = `
+    el.dataset.id  = folder.id;
+    el.draggable    = true;
+    el.innerHTML    = `
       <div class="emoji">📁</div>
       <div class="name">${folder.name}</div>
     `;
@@ -188,7 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       el.classList.remove("dragover");
       const dragging = document.querySelector(".file-item.dragging");
       if (!dragging) return;
-      const fid = dragging.dataset.id;
+      const fid  = dragging.dataset.id;
       const fobj = files.find(x => x.id === fid);
       fobj.folderId = folder.id;
       saveFiles();
@@ -239,10 +259,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ————— Rendu d’un fichier —————
   function renderFileItem(file) {
     const el = document.createElement("div");
-    el.className = "file-item";
+    el.className  = "file-item";
     el.dataset.id = file.id;
-    el.draggable = true;
-    el.innerHTML = `
+    el.draggable   = true;
+    el.innerHTML   = `
       <div class="emoji">📄</div>
       <div class="name">${file.name}</div>
     `;
@@ -259,10 +279,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     el.addEventListener("dragend", () => el.classList.remove("dragging"));
 
     // 3) Menu contextuel « Renommer / Supprimer »
-    const btn = document.createElement("div");
-    btn.className = "menu-button";
-    btn.textContent = "⋮";
-    btn.addEventListener("click", e => {
+    const btn2 = document.createElement("div");
+    btn2.className = "menu-button";
+    btn2.textContent = "⋮";
+    btn2.addEventListener("click", e => {
       e.stopPropagation();
       closeMenus();
       const menu = document.createElement("div");
@@ -279,18 +299,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       };
 
-      const del = document.createElement("div");
-      del.textContent = "Supprimer";
-      del.onclick = () => {
+      const del2 = document.createElement("div");
+      del2.textContent = "Supprimer";
+      del2.onclick = () => {
         files = files.filter(x => x.id !== file.id);
         saveFiles();
         clearAndRender();
       };
 
-      menu.append(ren, del);
+      menu.append(ren, del2);
       el.appendChild(menu);
     });
-    el.appendChild(btn);
+    el.appendChild(btn2);
 
     uploadedContainer.appendChild(el);
   }
