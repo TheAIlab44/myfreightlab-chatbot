@@ -86,6 +86,43 @@ document.addEventListener("DOMContentLoaded", async () => {
   const createBtn         = wrapper.querySelector("#create-folder");
   const dropZone          = wrapper.querySelector("#drop-zone");
 
+  // ————— External drag highlighting —————
+  let externalDragCounter = 0;
+
+  document.addEventListener("dragenter", e => {
+    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+      externalDragCounter++;
+      dropZone.style.display = "block";
+      dropZone.style.opacity = "1";
+    }
+  });
+
+  document.addEventListener("dragleave", e => {
+    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+      externalDragCounter--;
+      if (externalDragCounter === 0) {
+        dropZone.style.opacity = "0";
+        setTimeout(() => { dropZone.style.display = "none"; }, 300);
+      }
+    }
+  });
+
+  document.addEventListener("drop", e => {
+    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+      externalDragCounter = 0;
+      dropZone.style.opacity = "0";
+      setTimeout(() => { dropZone.style.display = "none"; }, 300);
+    }
+  });
+
+  // ————— Drag & Drop pour l’upload (inchangé) —————
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+  …
+
+
   // ————— Context menu helper —————
   function closeMenus() {
     document.querySelectorAll(".context-menu").forEach(m => m.remove());
