@@ -155,13 +155,13 @@ wrapper.innerHTML = `
       transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
     }
     #stopBtn.enabled {
-      background: #e53935;          /* rouge vif */
+      background: #FF953D;          
       color: white;
       cursor: pointer;
       opacity: 1;
     }
     #stopBtn.enabled:hover {
-      background: #c62828;          /* rouge plus foncé */
+      background: #CC7731;          /* rouge plus foncé */
     }
     #stopBtn.enabled:active {
       transform: scale(0.95);
@@ -319,7 +319,7 @@ wrapper.innerHTML = `
     <textarea id="userInput" placeholder="Pose ta question ici…" rows="1"></textarea>
 
     <!-- Bouton “Stop” -->
-    <button id="stopBtn" disabled>✕</button>
+    <button id="stopBtn" disabled>■</button>
 
     <!-- Bouton “Envoyer” -->
     <button id="sendBtn"></button>
