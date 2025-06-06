@@ -24,10 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let chat_id = loadSessionID();
 
   // — Build UI
-  const wrapper = document.createElement("div");
-  wrapper.id = "chat-wrapper";
-  wrapper.innerHTML = `
- <style>
+const wrapper = document.createElement("div");
+wrapper.id = "chat-wrapper";
+wrapper.innerHTML = `
+<style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
   * { font-family: 'Inter', sans-serif; }
 
@@ -257,6 +257,34 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   #toggleHistory { top: 40%; }
 </style>
+
+<button id="resetBtn">✨ Nouveau chat</button>
+<div id="chat"></div>
+<div id="input-area">
+
+  <!-- Bouton “+” pour ouvrir la boîte de sélection de fichiers -->
+  <button id="attachBtn" title="Ajouter des pièces jointes">＋</button>
+
+  <!-- Champ file input masqué -->
+  <input type="file" id="fileInput" multiple style="display: none;" />
+
+  <textarea id="userInput" placeholder="Pose ta question ici…" rows="1"></textarea>
+  <button id="sendBtn"></button>
+  <div id="file-preview"></div>
+</div>
+<div id="drop-zone">📂 Déposez vos fichiers…</div>
+
+<div class="floating-toggle" id="toggleHistory">🕓</div>
+<div class="dynamic-sidebar" id="historyPanel">
+  <div class="sidebar-header">🕓 Historique des conversations</div>
+  <div class="sidebar-content" id="historyList"></div>
+</div>
+<div class="floating-toggle" id="togglePrompt">💡</div>
+<div class="dynamic-sidebar" id="promptPanel">
+  <div class="sidebar-header">💡 Idées de prompts</div>
+  <div class="sidebar-content"><!-- vos <details> ici --></div>
+</div>
+`;
 
 
     document.getElementById("chat-container").appendChild(wrapper);
