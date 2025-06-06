@@ -100,10 +100,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     font-size:36px;
     margin-bottom:6px;
   }
-  .name {
+.name {
     font-size:12px;
     text-align:center;
-    word-break:break-all;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    /* **AJOUT : 2 lignes + ellipsis** */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .menu-button {
     position:absolute;
@@ -266,112 +273,125 @@ dropZone.addEventListener("drop", async e => {
   }
 
   // ————— Rendu d’un dossier —————
-  function renderFolderItem(folder) {
-    const el = document.createElement("div");
-    el.className = "folder-item";
-    el.dataset.id  = folder.id;
-    el.draggable    = true;
-    el.innerHTML    = `
-      <div class="emoji">📁</div>
-      <div class="name">${folder.name}</div>
-    `;
-    el.addEventListener("click", e => {
-      if (!e.target.classList.contains("menu-button")) {
-        openFolder(folder.id);
-      }
-    });
-    const btn = document.createElement("div");
-    btn.className = "menu-button";
-    btn.textContent = "⋮";
-    el.appendChild(btn);
+ function renderFolderItem(folder) {
+  const el = document.createElement("div");
+  el.className = "folder-item";
+  el.dataset.id = folder.id;
+  el.draggable = true;
 
-    el.addEventListener("dragover", e => {
-      e.preventDefault();
-      el.classList.add("dragover");
-    });
-    el.addEventListener("dragleave", () => el.classList.remove("dragover"));
-    el.addEventListener("drop", e => {
-      e.preventDefault();
-      el.classList.remove("dragover");
-      const dragging = document.querySelector(".file-item.dragging");
-      if (!dragging) return;
-      const fid  = dragging.dataset.id;
-      const fobj = files.find(x => x.id === fid);
-      fobj.folderId = folder.id;
+  // On garde l’emoji + .name, mais on s’assure qu’il y a <div class="name">…</div>
+  el.innerHTML = `
+    <div class="emoji">📁</div>
+    <div class="name">${folder.name}</div>
+  `;
+
+  // Clic pour ouvrir (sauf si on clique sur le menu ⋮)
+  el.addEventListener("click", e => {
+    if (!e.target.classList.contains("menu-button")) {
+      openFolder(folder.id);
+    }
+  });
+
+  // Bouton “⋮” pour le context menu
+  const btn = document.createElement("div");
+  btn.className = "menu-button";
+  btn.textContent = "⋮";
+  el.appendChild(btn);
+
+  // Drag & Drop pour déposer un fichier dans ce dossier
+  el.addEventListener("dragover", e => {
+    e.preventDefault();
+    el.classList.add("dragover");
+  });
+  el.addEventListener("dragleave", () => el.classList.remove("dragover"));
+  el.addEventListener("drop", e => {
+    e.preventDefault();
+    el.classList.remove("dragover");
+    const dragging = document.querySelector(".file-item.dragging");
+    if (!dragging) return;
+    const fid  = dragging.dataset.id;
+    const fobj = files.find(x => x.id === fid);
+    fobj.folderId = folder.id;
+    saveFiles();
+    clearAndRender();
+  });
+
+  // Pour l’effet visuel lors du dragstart / dragend
+  el.addEventListener("dragstart", () => el.classList.add("dragging"));
+  el.addEventListener("dragend", () => {
+    el.classList.remove("dragging");
+    // Réordonner le tableau "folders" suivant l’ordre visuel
+    const order = Array.from(folderContainer.querySelectorAll(".folder-item"))
+      .map(n => n.dataset.id);
+    folders.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+    saveFolders();
+  });
+
+  // Context-menu du dossier (Renommer / Supprimer)
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    closeMenus();
+    const menu = document.createElement("div");
+    menu.className = "context-menu";
+
+    const ren = document.createElement("div");
+    ren.textContent = "Renommer";
+    ren.onclick = () => {
+      const nm = prompt("Nom du dossier", folder.name);
+      if (nm) {
+        folder.name = nm;
+        saveFolders();
+        clearAndRender();
+      }
+    };
+
+    const del = document.createElement("div");
+    del.textContent = "Supprimer";
+    del.onclick = () => {
+      folders = folders.filter(x => x.id !== folder.id);
+      files.forEach(f => {
+        if (f.folderId === folder.id) f.folderId = null;
+      });
+      saveFolders();
       saveFiles();
       clearAndRender();
-    });
-    el.addEventListener("dragstart", () => el.classList.add("dragging"));
-    el.addEventListener("dragend", () => {
-      el.classList.remove("dragging");
-      const order = Array.from(folderContainer.querySelectorAll(".folder-item"))
-        .map(n => n.dataset.id);
-      folders.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-      saveFolders();
-    });
+    };
 
-    btn.addEventListener("click", e => {
-      e.stopPropagation();
-      closeMenus();
-      const menu = document.createElement("div");
-      menu.className = "context-menu";
-      const ren = document.createElement("div");
-      ren.textContent = "Renommer";
-      ren.onclick = () => {
-        const nm = prompt("Nom du dossier", folder.name);
-        if (nm) {
-          folder.name = nm;
-          saveFolders();
-          clearAndRender();
-        }
-      };
-      const del = document.createElement("div");
-      del.textContent = "Supprimer";
-      del.onclick = () => {
-        folders = folders.filter(x => x.id !== folder.id);
-        files.forEach(f => {
-          if (f.folderId === folder.id) f.folderId = null;
-        });
-        saveFolders();
-        saveFiles();
-        clearAndRender();
-      };
-      menu.append(ren, del);
-      el.appendChild(menu);
-    });
+    menu.append(ren, del);
+    el.appendChild(menu);
+  });
 
-    folderContainer.appendChild(el);
-  }
+  folderContainer.appendChild(el);
+}
 
 // ————— Rendu d’un fichier —————
 function renderFileItem(file) {
   const el = document.createElement("div");
-  el.className  = "file-item";
+  el.className = "file-item";
   el.dataset.id = file.id;
-  el.draggable   = true;
-  el.innerHTML   = `
+  el.draggable = true;
+
+  el.innerHTML = `
     <div class="emoji">📄</div>
     <div class="name">${file.name}</div>
   `;
 
-  // 1) Clic → ouvrir l’URL du fichier si elle existe
+  // 1) Clic → ouvrir l’URL si elle existe
   el.addEventListener("click", e => {
-    // si on clique sur le bouton du menu, on ne fait rien
     if (e.target.classList.contains("menu-button")) return;
 
-    console.log("DEBUG ➔ file.url =", file.url);
     if (file.url) {
       window.open(file.url, "_blank");
     } else {
-      alert("Pas d’URL valide pour ce fichier (file.url est undefined)");
+      alert("Pas d’URL valide pour ce fichier");
     }
   });
 
-  // 2) Drag handlers pour l’effet visuel
+  // 2) Effet visuel drag & drop
   el.addEventListener("dragstart", () => el.classList.add("dragging"));
   el.addEventListener("dragend",   () => el.classList.remove("dragging"));
 
-  // 3) Menu contextuel « Renommer / Supprimer »
+  // 3) Bouton “⋮” + menu contextuel Renommer / Supprimer
   const btn = document.createElement("div");
   btn.className = "menu-button";
   btn.textContent = "⋮";
@@ -409,8 +429,6 @@ function renderFileItem(file) {
 
   uploadedContainer.appendChild(el);
 }
-
-
 
   // ————— Création de dossier —————
   createBtn.addEventListener("click", () => {
