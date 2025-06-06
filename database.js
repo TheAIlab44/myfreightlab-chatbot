@@ -285,12 +285,17 @@ dropZone.addEventListener("drop", async e => {
     <div class="name">${folder.name}</div>
   `;
 
-  // Clic pour ouvrir (sauf si on clique sur le menu ⋮)
-  el.addEventListener("click", e => {
-    if (!e.target.classList.contains("menu-button")) {
-      openFolder(folder.id);
-    }
-  });
+
+// - on vérifie que la cible du clic n'est ni le bouton ⋮, ni un élément du menu contextuel.
+el.addEventListener("click", e => {
+  if (
+    !e.target.closest(".menu-button") &&
+    !e.target.closest(".context-menu")
+  ) {
+    openFolder(folder.id);
+  }
+});
+;
 
   // Bouton “⋮” pour le context menu
   const btn = document.createElement("div");
