@@ -27,234 +27,237 @@ document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.createElement("div");
   wrapper.id = "chat-wrapper";
   wrapper.innerHTML = `
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-    * { font-family: 'Inter', sans-serif; }
+ <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+  * { font-family: 'Inter', sans-serif; }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-    #chat-wrapper {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      height: 90vh;
-      width: 80vw;
-      margin: 5vh auto;
-      background: #f9fbfc;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #d3dce6;
-      position: relative;
-    }
+  #chat-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 90vh;
+    width: 80vw;
+    margin: 5vh auto;
+    background: #f9fbfc;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #d3dce6;
+    position: relative;
+  }
 
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      align-items: center;
-      height: calc(90vh - 100px);
-    }
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+    height: calc(90vh - 100px);
+  }
 
-    .message {
-      padding: 14px 18px;
-      border-radius: 18px;
-      max-width: 80%;
-      font-size: 15px;
-      line-height: 1.6;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      animation: fadeInUp 0.4s ease-out;
-    }
+  .message {
+    padding: 14px 18px;
+    border-radius: 18px;
+    max-width: 80%;
+    font-size: 15px;
+    line-height: 1.6;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    animation: fadeInUp 0.4s ease-out;
+  }
 
-    .user-message {
-      align-self: flex-start;
-      background: #e6f0ff;
-      color: #003366;
-      border-bottom-right-radius: 0;
-    }
+  .user-message {
+    align-self: flex-start;
+    background: #e6f0ff;
+    color: #003366;
+    border-bottom-right-radius: 0;
+  }
 
-    .bot-message {
-      align-self: flex-end;
-      background: #fff;
-      color: #222;
-      border-bottom-left-radius: 0;
-    }
+  .bot-message {
+    align-self: flex-end;
+    background: #fff;
+    color: #222;
+    border-bottom-left-radius: 0;
+  }
 
-    /* on rend input-area relatif pour le file-preview absolu */
-    #input-area {
-      position: relative;
-      display: flex;
-      padding: 12px 16px;
-      border-top: 1px solid #ccc;
-      gap: 10px;
-      background: white;
-    }
+  /* on rend input-area relatif pour le file-preview absolu */
+  #input-area {
+    position: relative;
+    display: flex;
+    padding: 12px 16px;
+    border-top: 1px solid #ccc;
+    gap: 10px;
+    background: white;
+  }
 
-    #userInput {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      outline: none;
-      font-size: 15px;
-      overflow-y: hidden;
-      resize: none;
-    }
+  #userInput {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    font-size: 15px;
+    overflow-y: hidden;
+    resize: none;
+  }
 
-    #sendBtn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
-      background: #0077c8;
-      color: white;
-      cursor: pointer;
-    }
+  /* === Bouton “Envoyer” personnalisé === */
+  #sendBtn {
+    background: linear-gradient(135deg, #005a9c 0%, #0077c8 100%);
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  #sendBtn::before {
+    content: "▶";
+    color: white;
+    font-size: 18px;
+    transform: translateX(2px);
+  }
+  #sendBtn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+  #sendBtn:active {
+    transform: scale(0.98);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  }
 
-    #attachBtn {
-      width: 36px;
-      height: 36px;
-      border: none;
-      border-radius: 6px;
-      background: #eee;
-      font-size: 20px;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 8px; /* espacement avant le textarea */
-    }
-    #attachBtn:hover {
-      background: #ddd;
-    }
+  /* === Bouton “＋” (ajout de fichier) personnalisé === */
+  #attachBtn {
+    background: #f0f0f0;
+    border: 2px solid #0077c8;
+    color: #0077c8;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  #attachBtn:hover {
+    background: #0077c8;
+    color: white;
+  }
+  #attachBtn:active {
+    background: #005a9c;
+    border-color: #005a9c;
+  }
 
-    #resetBtn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: white;
-      border: 1px solid #ccc;
-      padding: 4px 8px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 13px;
-    }
+  /* dropZone */
+  #drop-zone {
+    border: 2px dashed #ccc;
+    padding: 40px;
+    text-align: center;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: none;
+    z-index: 10000;
+  }
 
-    /* dropZone */
-    #drop-zone {
-      border: 2px dashed #ccc;
-      padding: 40px;
-      text-align: center;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.95);
-      display: none;
-      z-index: 10000;
-    }
+  /* preview mini icônes (au-dessus de l’input-area) */
+  #file-preview {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 16px;
+    display: flex;
+    gap: 8px;
+    z-index: 20;
+  }
+  /* chaque icône agrandie */
+  #file-preview .file-item {
+    width: 56px;
+    height: 56px;
+    background: #fff;
+    border: 1px solid #d3dce6;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: transform 0.1s ease;
+  }
+  #file-preview .file-item:hover {
+    transform: scale(1.03);
+  }
+  /* image */
+  #file-preview .file-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* icône d’extension */
+  #file-preview .file-item .file-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #666;
+    background: #f0f0f0;
+  }
+  /* bouton “×” pour supprimer */
+  #file-preview .file-clear {
+    margin-left: 8px;
+    font-weight: bold;
+    font-size: 18px;
+    color: #c00;
+    cursor: pointer;
+  }
+  #file-preview .file-clear:hover {
+    color: #800;
+  }
 
-    /* preview mini icônes (au-dessus de l’input-area) */
-    #file-preview {
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 16px;
-      display: flex;
-      gap: 8px;
-      z-index: 20;
-    }
-    /* chaque icône agrandie */
-    #file-preview .file-item {
-      width: 56px;
-      height: 56px;
-      background: #fff;
-      border: 1px solid #d3dce6;
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    /* image */
-    #file-preview .file-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    /* icône d’extension */
-    #file-preview .file-item .file-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      color: #666;
-      background: #f0f0f0;
-    }
+  /* sidebars et prompts */
+  .dynamic-sidebar {
+    position: fixed; top: 0; right: -320px;
+    width: 320px; height: 100vh;
+    background: #fff; border-left: 1px solid #ddd;
+    box-shadow: -2px 0 6px rgba(0,0,0,0.05);
+    transition: right 0.3s ease-in-out; z-index: 9999;
+    overflow-y: auto;
+  }
+  .dynamic-sidebar.open { right: 0; }
+  .sidebar-header {
+    padding: 16px; background: #0077c8; color: white;
+    font-weight: bold; font-size: 16px;
+  }
+  .sidebar-content { padding: 10px; }
+  .prompt {
+    padding: 10px; background: #f0f0f0;
+    border-radius: 6px; margin-bottom: 8px;
+    cursor: grab; font-size: 14px;
+  }
+  details summary { font-weight: 600; cursor: pointer; }
+  .floating-toggle {
+    position: fixed; top: 50%; right: 0;
+    transform: translateY(-50%);
+    background-color: #0077c8; color: white;
+    padding: 10px; border-radius: 8px 0 0 8px;
+    cursor: pointer; font-size: 20px; z-index: 99999;
+  }
+  #toggleHistory { top: 40%; }
+</style>
 
-    /* sidebars et prompts */
-    .dynamic-sidebar {
-      position: fixed; top: 0; right: -320px;
-      width: 320px; height: 100vh;
-      background: #fff; border-left: 1px solid #ddd;
-      box-shadow: -2px 0 6px rgba(0,0,0,0.05);
-      transition: right 0.3s ease-in-out; z-index: 9999;
-      overflow-y: auto;
-    }
-    .dynamic-sidebar.open { right: 0; }
-    .sidebar-header {
-      padding: 16px; background: #0077c8; color: white;
-      font-weight: bold; font-size: 16px;
-    }
-    .sidebar-content { padding: 10px; }
-    .prompt {
-      padding: 10px; background: #f0f0f0;
-      border-radius: 6px; margin-bottom: 8px;
-      cursor: grab; font-size: 14px;
-    }
-    details summary { font-weight: 600; cursor: pointer; }
-    .floating-toggle {
-      position: fixed; top: 50%; right: 0;
-      transform: translateY(-50%);
-      background-color: #0077c8; color: white;
-      padding: 10px; border-radius: 8px 0 0 8px;
-      cursor: pointer; font-size: 20px; z-index: 99999;
-    }
-    #toggleHistory { top: 40%; }
-  </style>
-
-  <button id="resetBtn">✨ Nouveau chat</button>
-  <div id="chat"></div>
-  <div id="input-area">
-
-    <!-- Bouton “+” pour ouvrir la boîte de sélection de fichiers -->
-    <button id="attachBtn" title="Ajouter des pièces jointes">＋</button>
-
-    <!-- Champ file input masqué -->
-    <input type="file" id="fileInput" multiple style="display: none;" />
-
-    <textarea id="userInput" placeholder="Pose ta question ici…" rows="1"></textarea>
-    <button id="sendBtn">▶</button>
-    <div id="file-preview"></div>
-  </div>
-  <div id="drop-zone">📂 Déposez vos fichiers…</div>
-
-  <div class="floating-toggle" id="toggleHistory">🕓</div>
-  <div class="dynamic-sidebar" id="historyPanel">
-    <div class="sidebar-header">🕓 Historique des conversations</div>
-    <div class="sidebar-content" id="historyList"></div>
-  </div>
-  <div class="floating-toggle" id="togglePrompt">💡</div>
-  <div class="dynamic-sidebar" id="promptPanel">
-    <div class="sidebar-header">💡 Idées de prompts</div>
-    <div class="sidebar-content"><!-- vos <details> ici --></div>
-  </div>
-  `;
 
     document.getElementById("chat-container").appendChild(wrapper);
 
