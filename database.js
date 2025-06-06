@@ -382,15 +382,21 @@ function renderFileItem(file) {
   `;
 
   // 1) Clic → ouvrir l’URL si elle existe
-  el.addEventListener("click", e => {
-    if (e.target.classList.contains("menu-button")) return;
+el.addEventListener("click", e => {
+  if (
+    e.target.closest(".menu-button") ||
+    e.target.closest(".context-menu")
+  ) {
+    return;
+  }
 
-    if (file.url) {
-      window.open(file.url, "_blank");
-    } else {
-      alert("Pas d’URL valide pour ce fichier");
-    }
-  });
+  if (file.url) {
+    window.open(file.url, "_blank");
+  } else {
+    alert("Pas d’URL valide pour ce fichier (file.url est undefined)");
+  }
+});
+
 
   // 2) Effet visuel drag & drop
   el.addEventListener("dragstart", () => el.classList.add("dragging"));
