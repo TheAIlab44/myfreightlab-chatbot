@@ -27,419 +27,463 @@ document.addEventListener("DOMContentLoaded", () => {
 const wrapper = document.createElement("div");
 wrapper.id = "chat-wrapper";
 wrapper.innerHTML = `
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-  * { font-family: 'Inter', sans-serif; }
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    * { font-family: 'Inter', sans-serif; }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    overflow: hidden;
-  }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-  #chat-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    height: 90vh;
-    width: 80vw;
-    margin: 5vh auto;
-    background: #f9fbfc;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #d3dce6;
-    position: relative;
-  }
+    #chat-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      height: 90vh;
+      width: 80vw;
+      margin: 5vh auto;
+      background: #f9fbfc;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #d3dce6;
+      position: relative;
+    }
 
-  #chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    align-items: center;
-    height: calc(90vh - 100px);
-  }
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      height: calc(90vh - 100px);
+    }
 
-  .message {
-    padding: 14px 18px;
-    border-radius: 18px;
-    max-width: 80%;
-    font-size: 15px;
-    line-height: 1.6;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    animation: fadeInUp 0.4s ease-out;
-  }
+    .message {
+      padding: 14px 18px;
+      border-radius: 18px;
+      max-width: 80%;
+      font-size: 15px;
+      line-height: 1.6;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      animation: fadeInUp 0.4s ease-out;
+    }
 
-  .user-message {
-    align-self: flex-start;
-    background: #e6f0ff;
-    color: #003366;
-    border-bottom-right-radius: 0;
-  }
+    .user-message {
+      align-self: flex-start;
+      background: #e6f0ff;
+      color: #003366;
+      border-bottom-right-radius: 0;
+    }
 
-  .bot-message {
-    align-self: flex-end;
-    background: #fff;
-    color: #222;
-    border-bottom-left-radius: 0;
-  }
+    .bot-message {
+      align-self: flex-end;
+      background: #fff;
+      color: #222;
+      border-bottom-left-radius: 0;
+    }
 
-  /* on rend input-area relatif pour le file-preview absolu */
-  #input-area {
-    position: relative;
-    display: flex;
-    padding: 12px 16px;
-    border-top: 1px solid #ccc;
-    gap: 10px;
-    background: white;
-  }
+    /* on rend input-area relatif pour le file-preview absolu */
+    #input-area {
+      position: relative;
+      display: flex;
+      padding: 12px 16px;
+      border-top: 1px solid #ccc;
+      gap: 8px; /* espacement réduit pour accueillir 3 boutons */
+      background: white;
+      align-items: center;
+    }
 
-  #userInput {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    outline: none;
-    font-size: 15px;
-    overflow-y: hidden;
-    resize: none;
-  }
+    #userInput {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 15px;
+      overflow-y: hidden;
+      resize: none;
+    }
 
-  /* === Bouton “Envoyer” personnalisé === */
-  #sendBtn {
-    background: linear-gradient(135deg, #005a9c 0%, #0077c8 100%);
-    border: none;
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
-  }
-  #sendBtn::before {
-    content: "▶";
-    color: white;
-    font-size: 18px;
-    transform: translateX(2px);
-  }
-  #sendBtn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  }
-  #sendBtn:active {
-    transform: scale(0.98);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-  }
+    /* === Bouton “Envoyer” personnalisé === */
+    #sendBtn {
+      background: linear-gradient(135deg, #005a9c 0%, #0077c8 100%);
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    #sendBtn::before {
+      content: "▶";
+      color: white;
+      font-size: 18px;
+      transform: translateX(2px);
+    }
+    #sendBtn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+    #sendBtn:active {
+      transform: scale(0.98);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
 
-  /* === Bouton “Nouveau chat” (resetBtn) : style d’origine === */
-  #resetBtn {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: white;
-    border: 1px solid #ccc;
-    padding: 4px 8px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 13px;
-    color: #333;
-    transition: background 0.1s ease, color 0.1s ease, box-shadow 0.1s ease;
-  }
-  #resetBtn:hover {
-    background: #f0f0f0;
-  }
+    /* === Bouton “Stop” (interruption) === */
+    #stopBtn {
+      background: #d3d3d3;           /* gris clair */
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: not-allowed;           /* désactivé par défaut */
+      color: #666;
+      font-size: 18px;
+      opacity: 0.6;
+      transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+    }
+    #stopBtn.enabled {
+      background: #e53935;          /* rouge vif */
+      color: white;
+      cursor: pointer;
+      opacity: 1;
+    }
+    #stopBtn.enabled:hover {
+      background: #c62828;          /* rouge plus foncé */
+    }
+    #stopBtn.enabled:active {
+      transform: scale(0.95);
+    }
 
-  /* === Bouton “＋” (ajout de fichier) personnalisé === */
-  #attachBtn {
-    background: #0077c8;
-    border: none;
-    color: white;
-    border-radius: 8px;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, border 0.15s ease;
-  }
-  #attachBtn:hover {
-    background: white;
-    color: #0077c8;
-    border: 2px solid #0077c8;
-  }
-  #attachBtn:active {
-    transform: scale(0.95);
-  }
+    /* === Bouton “Nouveau chat” (resetBtn) : style d’origine === */
+    #resetBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 4px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #333;
+      transition: background 0.1s ease, color 0.1s ease, box-shadow 0.1s ease;
+    }
+    #resetBtn:hover {
+      background: #f0f0f0;
+    }
 
-  /* dropZone */
-  #drop-zone {
-    border: 2px dashed #ccc;
-    padding: 40px;
-    text-align: center;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.95);
-    display: none;
-    z-index: 10000;
-  }
+    /* === Bouton “＋” (ajout de fichier) personnalisé === */
+    #attachBtn {
+      background: #0077c8;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border 0.15s ease;
+    }
+    #attachBtn:hover {
+      background: white;
+      color: #0077c8;
+      border: 2px solid #0077c8;
+    }
+    #attachBtn:active {
+      transform: scale(0.95);
+    }
 
-  /* preview mini icônes (au-dessus de l’input-area) */
-  #file-preview {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 16px;
-    display: flex;
-    gap: 8px;
-    z-index: 20;
-  }
-  /* chaque icône agrandie */
-  #file-preview .file-item {
-    width: 56px;
-    height: 56px;
-    background: #fff;
-    border: 1px solid #d3dce6;
-    border-radius: 8px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    transition: transform 0.1s ease;
-  }
-  #file-preview .file-item:hover {
-    transform: scale(1.03);
-  }
-  /* image */
-  #file-preview .file-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  /* icône d’extension */
-  #file-preview .file-item .file-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    color: #666;
-    background: #f0f0f0;
-  }
-  /* bouton “×” pour supprimer */
-  #file-preview .file-clear {
-    margin-left: 8px;
-    font-weight: bold;
-    font-size: 18px;
-    color: #c00;
-    cursor: pointer;
-  }
-  #file-preview .file-clear:hover {
-    color: #800;
-  }
+    /* dropZone */
+    #drop-zone {
+      border: 2px dashed #ccc;
+      padding: 40px;
+      text-align: center;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: none;
+      z-index: 10000;
+    }
 
-  /* sidebars et prompts */
-  .dynamic-sidebar {
-    position: fixed; top: 0; right: -320px;
-    width: 320px; height: 100vh;
-    background: #fff; border-left: 1px solid #ddd;
-    box-shadow: -2px 0 6px rgba(0,0,0,0.05);
-    transition: right 0.3s ease-in-out; z-index: 9999;
-    overflow-y: auto;
-  }
-  .dynamic-sidebar.open { right: 0; }
-  .sidebar-header {
-    padding: 16px; background: #0077c8; color: white;
-    font-weight: bold; font-size: 16px;
-  }
-  .sidebar-content { padding: 10px; }
-  .prompt {
-    padding: 10px; background: #f0f0f0;
-    border-radius: 6px; margin-bottom: 8px;
-    cursor: grab; font-size: 14px;
-  }
-  details summary { font-weight: 600; cursor: pointer; }
-  .floating-toggle {
-    position: fixed; top: 50%; right: 0;
-    transform: translateY(-50%);
-    background-color: #0077c8; color: white;
-    padding: 10px; border-radius: 8px 0 0 8px;
-    cursor: pointer; font-size: 20px; z-index: 99999;
-  }
-  #toggleHistory { top: 40%; }
-</style>
+    /* preview mini icônes (au-dessus de l’input-area) */
+    #file-preview {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 16px;
+      display: flex;
+      gap: 8px;
+      z-index: 20;
+    }
+    /* chaque icône agrandie */
+    #file-preview .file-item {
+      width: 56px;
+      height: 56px;
+      background: #fff;
+      border: 1px solid #d3dce6;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      transition: transform 0.1s ease;
+    }
+    #file-preview .file-item:hover {
+      transform: scale(1.03);
+    }
+    /* image */
+    #file-preview .file-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* icône d’extension */
+    #file-preview .file-item .file-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #666;
+      background: #f0f0f0;
+    }
+    /* bouton “×” pour supprimer */
+    #file-preview .file-clear {
+      margin-left: 8px;
+      font-weight: bold;
+      font-size: 18px;
+      color: #c00;
+      cursor: pointer;
+    }
+    #file-preview .file-clear:hover {
+      color: #800;
+    }
 
+    /* sidebars et prompts */
+    .dynamic-sidebar {
+      position: fixed; top: 0; right: -320px;
+      width: 320px; height: 100vh;
+      background: #fff; border-left: 1px solid #ddd;
+      box-shadow: -2px 0 6px rgba(0,0,0,0.05);
+      transition: right 0.3s ease-in-out; z-index: 9999;
+      overflow-y: auto;
+    }
+    .dynamic-sidebar.open { right: 0; }
+    .sidebar-header {
+      padding: 16px; background: #0077c8; color: white;
+      font-weight: bold; font-size: 16px;
+    }
+    .sidebar-content { padding: 10px; }
+    .prompt {
+      padding: 10px; background: #f0f0f0;
+      border-radius: 6px; margin-bottom: 8px;
+      cursor: grab; font-size: 14px;
+    }
+    details summary { font-weight: 600; cursor: pointer; }
+    .floating-toggle {
+      position: fixed; top: 50%; right: 0;
+      transform: translateY(-50%);
+      background-color: #0077c8; color: white;
+      padding: 10px; border-radius: 8px 0 0 8px;
+      cursor: pointer; font-size: 20px; z-index: 99999;
+    }
+    #toggleHistory { top: 40%; }
+  </style>
 
-<button id="resetBtn">✨ Nouveau chat</button>
-<div id="chat"></div>
-<div id="input-area">
+  <button id="resetBtn">✨ Nouveau chat</button>
+  <div id="chat"></div>
+  <div id="input-area">
 
-  <!-- Bouton “+” pour ouvrir la boîte de sélection de fichiers -->
-  <button id="attachBtn" title="Ajouter des pièces jointes">＋</button>
+    <!-- Bouton “+” pour ouvrir la boîte de sélection de fichiers -->
+    <button id="attachBtn" title="Ajouter des pièces jointes">＋</button>
 
-  <!-- Champ file input masqué -->
-  <input type="file" id="fileInput" multiple style="display: none;" />
+    <!-- Champ file input masqué -->
+    <input type="file" id="fileInput" multiple style="display: none;" />
 
-  <textarea id="userInput" placeholder="Pose ta question ici…" rows="1"></textarea>
-  <button id="sendBtn"></button>
-  <div id="file-preview"></div>
-</div>
-<div id="drop-zone">📂 Déposez vos fichiers…</div>
+    <textarea id="userInput" placeholder="Pose ta question ici…" rows="1"></textarea>
 
-<div class="floating-toggle" id="toggleHistory">🕓</div>
-<div class="dynamic-sidebar" id="historyPanel">
-  <div class="sidebar-header">🕓 Historique des conversations</div>
-  <div class="sidebar-content" id="historyList"></div>
-</div>
-<div class="floating-toggle" id="togglePrompt">💡</div>
-<div class="dynamic-sidebar" id="promptPanel">
-  <div class="sidebar-header">💡 Idées de prompts</div>
-  <div class="sidebar-content"><!-- vos <details> ici --></div>
-</div>
+    <!-- Bouton “Stop” -->
+    <button id="stopBtn" disabled>✕</button>
+
+    <!-- Bouton “Envoyer” -->
+    <button id="sendBtn"></button>
+    <div id="file-preview"></div>
+  </div>
+  <div id="drop-zone">📂 Déposez vos fichiers…</div>
+
+  <div class="floating-toggle" id="toggleHistory">🕓</div>
+  <div class="dynamic-sidebar" id="historyPanel">
+    <div class="sidebar-header">🕓 Historique des conversations</div>
+    <div class="sidebar-content" id="historyList"></div>
+  </div>
+  <div class="floating-toggle" id="togglePrompt">💡</div>
+  <div class="dynamic-sidebar" id="promptPanel">
+    <div class="sidebar-header">💡 Idées de prompts</div>
+    <div class="sidebar-content"><!-- vos <details> ici --></div>
+  </div>
 `;
 
+ document.getElementById("chat-container").appendChild(wrapper);
 
-    document.getElementById("chat-container").appendChild(wrapper);
+// — Key elements
+const chat         = wrapper.querySelector("#chat");
+const inputArea    = wrapper.querySelector("#input-area");
+const userInput    = wrapper.querySelector("#userInput");
+const sendBtn      = wrapper.querySelector("#sendBtn");
+const stopBtn      = wrapper.querySelector("#stopBtn");
+let currentController = null;
+const resetBtn     = wrapper.querySelector("#resetBtn");
+const dropZone     = wrapper.querySelector("#drop-zone");
+const toggleHistory= wrapper.querySelector("#toggleHistory");
+const historyPanel = wrapper.querySelector("#historyPanel");
+const historyList  = wrapper.querySelector("#historyList");
+const togglePrompt = wrapper.querySelector("#togglePrompt");
+const promptPanel  = wrapper.querySelector("#promptPanel");
+const prompts      = wrapper.querySelectorAll(".prompt");
 
-  // — Key elements
-  const chat         = wrapper.querySelector("#chat");
-  const inputArea    = wrapper.querySelector("#input-area");
-  const userInput    = wrapper.querySelector("#userInput");
-  const sendBtn      = wrapper.querySelector("#sendBtn");
-  const resetBtn     = wrapper.querySelector("#resetBtn");
-  const dropZone     = wrapper.querySelector("#drop-zone");
-  const toggleHistory= wrapper.querySelector("#toggleHistory");
-  const historyPanel = wrapper.querySelector("#historyPanel");
-  const historyList  = wrapper.querySelector("#historyList");
-  const togglePrompt = wrapper.querySelector("#togglePrompt");
-  const promptPanel  = wrapper.querySelector("#promptPanel");
-  const prompts      = wrapper.querySelectorAll(".prompt");
+// — Fonction pour (dé)bloquer le bouton Stop
+function setStopEnabled(enabled) {
+  if (enabled) {
+    stopBtn.disabled = false;
+    stopBtn.classList.add("enabled");
+    stopBtn.style.cursor = "pointer";
+  } else {
+    stopBtn.disabled = true;
+    stopBtn.classList.remove("enabled");
+    stopBtn.style.cursor = "not-allowed";
+  }
+}
 
-  // --- HISTORIQUE DE CONVERSATION ---
+// — Lorsque l’on clique sur Stop, on annule la requête en cours
+stopBtn.addEventListener("click", () => {
+  if (currentController) {
+    currentController.abort();
+    setStopEnabled(false);
+  }
+});
 
-  // 1) Récupération depuis le backend
-  async function fetchUserMessages(userId) {
-    try {
-      const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/fetchmessagehistory", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId })
-      });
-      if (!res.ok) throw new Error("Erreur fetch messages");
-      return await res.json();
-    } catch (err) {
-      console.error("fetchUserMessages :", err);
-      return [];
+// --- HISTORIQUE DE CONVERSATION ---
+// (reste inchangé)
+async function fetchUserMessages(userId) {
+  try {
+    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/fetchmessagehistory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId })
+    });
+    if (!res.ok) throw new Error("Erreur fetch messages");
+    return await res.json();
+  } catch (err) {
+    console.error("fetchUserMessages :", err);
+    return [];
+  }
+}
+
+function getLastSessions(messages) {
+  const map = new Map();
+  messages.forEach(m => {
+    if (!map.has(m.session_id) || m.id > map.get(m.session_id).id) {
+      map.set(m.session_id, m);
     }
-  }
-
-  // 2) On garde pour chaque session son dernier message
-  function getLastSessions(messages) {
-    const map = new Map();
-    messages.forEach(m => {
-      if (!map.has(m.session_id) || m.id > map.get(m.session_id).id) {
-        map.set(m.session_id, m);
-      }
-    });
-    return Array.from(map.values())
-      .sort((a, b) => b.id - a.id);
-  }
-
-  // 3) Titres persistés en localStorage
-  function getSessionTitles() {
-    return JSON.parse(localStorage.getItem("sessionTitles") || "{}");
-  }
-  function saveSessionTitles(titles) {
-    localStorage.setItem("sessionTitles", JSON.stringify(titles));
-  }
-
-  // 4) Construction de la sidebar
-  async function loadHistory() {
-    const all    = await fetchUserMessages(user_id);
-    const lasts  = getLastSessions(all);
-    const titles = getSessionTitles();
-
-    // initialiser titres non renommés
-    lasts.forEach(({ session_id, message }) => {
-      if (!(session_id in titles)) {
-        const parsed = typeof message === "string" ? JSON.parse(message) : message;
-        const tmp    = document.createElement("div");
-        tmp.innerHTML = parsed.content || "";
-        const txt = (tmp.textContent || "").slice(0, 30);
-        titles[session_id] = txt + (txt.length === 30 ? "…" : "");
-      }
-    });
-    saveSessionTitles(titles);
-
-    // vider la liste
-    historyList.innerHTML = "";
-
-    // recréer chaque entrée
-    lasts.forEach(({ session_id }) => {
-      const entry = document.createElement("div");
-      entry.className = "prompt";
-      entry.textContent = titles[session_id];
-      entry.addEventListener("click", async () => {
-        // switch de session
-        localStorage.setItem("chat_id", session_id);
-        chat.innerHTML = "";
-
-        // recharger tous les messages de cette session
-        (await fetchUserMessages(user_id))
-          .filter(m => m.session_id === session_id)
-          .forEach(m => {
-            const js = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
-            const d  = document.createElement("div");
-            d.className = `message ${js.type === "human" ? "user-message" : "bot-message"}`;
-            d.innerHTML = js.content;
-            chat.appendChild(d);
-          });
-
-        chat.scrollTop = 0;
-        historyPanel.classList.remove("open");
-      });
-      historyList.appendChild(entry);
-    });
-  }
-
-  // 5) Réinitialiser l’historique courant
-  resetBtn.addEventListener("click", () => {
-    localStorage.removeItem("chat_id");
-    localStorage.removeItem("chatHistory");
-    saveSessionID();
-    chat_id = loadSessionID();
-    chat.innerHTML = "";
-    appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
-    loadHistory();
   });
+  return Array.from(map.values())
+    .sort((a, b) => b.id - a.id);
+}
 
-  // — Ajuster la hauteur du textarea en fonction des sauts de ligne
-  function adjustTextareaHeight() {
-    // Nombre de lignes = nombre de retours à la ligne + 1
-    const lines = userInput.value.split("\n").length;
-    userInput.rows = lines < 1 ? 1 : lines;
-  }
-  // Enregistrer l'écouteur UNE SEULE FOIS, en dehors de la fonction
-  userInput.addEventListener("input", adjustTextareaHeight);
+function getSessionTitles() {
+  return JSON.parse(localStorage.getItem("sessionTitles") || "{}");
+}
+function saveSessionTitles(titles) {
+  localStorage.setItem("sessionTitles", JSON.stringify(titles));
+}
 
-  // 6) Lancer au démarrage
+async function loadHistory() {
+  const all    = await fetchUserMessages(user_id);
+  const lasts  = getLastSessions(all);
+  const titles = getSessionTitles();
+
+  lasts.forEach(({ session_id, message }) => {
+    if (!(session_id in titles)) {
+      const parsed = typeof message === "string" ? JSON.parse(message) : message;
+      const tmp    = document.createElement("div");
+      tmp.innerHTML = parsed.content || "";
+      const txt = (tmp.textContent || "").slice(0, 30);
+      titles[session_id] = txt + (txt.length === 30 ? "…" : "");
+    }
+  });
+  saveSessionTitles(titles);
+
+  historyList.innerHTML = "";
+
+  lasts.forEach(({ session_id }) => {
+    const entry = document.createElement("div");
+    entry.className = "prompt";
+    entry.textContent = titles[session_id];
+    entry.addEventListener("click", async () => {
+      localStorage.setItem("chat_id", session_id);
+      chat.innerHTML = "";
+
+      (await fetchUserMessages(user_id))
+        .filter(m => m.session_id === session_id)
+        .forEach(m => {
+          const js = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+          const d  = document.createElement("div");
+          d.className = `message ${js.type === "human" ? "user-message" : "bot-message"}`;
+          d.innerHTML = js.content;
+          chat.appendChild(d);
+        });
+
+      chat.scrollTop = 0;
+      historyPanel.classList.remove("open");
+    });
+    historyList.appendChild(entry);
+  });
+}
+
+resetBtn.addEventListener("click", () => {
+  localStorage.removeItem("chat_id");
+  localStorage.removeItem("chatHistory");
+  saveSessionID();
+  chat_id = loadSessionID();
+  chat.innerHTML = "";
+  appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
   loadHistory();
+});
 
-    // — File preview container INSIDE input-area
-  let pendingFiles = [];
-  const filePreview = document.createElement("div");
-  filePreview.id = "file-preview";
-  filePreview.style.display = "none";
-  inputArea.appendChild(filePreview);
+// — Ajuster la hauteur du textarea en fonction des sauts de ligne
+function adjustTextareaHeight() {
+  const lines = userInput.value.split("\n").length;
+  userInput.rows = lines < 1 ? 1 : lines;
+}
+userInput.addEventListener("input", adjustTextareaHeight);
 
-  // — Récupérer le bouton “+” et le input type="file”
+// 6) Lancer au démarrage
+loadHistory();
+
+// — File preview container INSIDE input-area
+let pendingFiles = [];
+const filePreview = document.createElement("div");
+filePreview.id = "file-preview";
+filePreview.style.display = "none";
+inputArea.appendChild(filePreview);
+
+  // — Récupérer le bouton “+” et le input type="file"
 const attachBtn = wrapper.querySelector("#attachBtn");
 const fileInput = wrapper.querySelector("#fileInput");
 
@@ -481,7 +525,7 @@ fileInput.addEventListener("change", e => {
     filePreview.appendChild(item);
   });
 
-  // Si le bouton global “×” n’est pas encore présent, l’ajouter
+  // Si le bouton “×” n’est pas encore présent, l’ajouter
   if (!filePreview.querySelector(".file-clear")) {
     const clearBtn = document.createElement("div");
     clearBtn.className = "file-clear";
@@ -506,184 +550,204 @@ fileInput.addEventListener("change", e => {
   fileInput.value = "";
 });
 
+// — sidebar toggles & prompts
+toggleHistory.addEventListener("click", () => historyPanel.classList.toggle("open"));
+togglePrompt .addEventListener("click", () => promptPanel.classList.toggle("open"));
+prompts.forEach(p => p.addEventListener("click", () => {
+  userInput.value = p.textContent;
+  promptPanel.classList.remove("open");
+  userInput.focus();
+}));
 
-  // — sidebar toggles & prompts
-  toggleHistory.addEventListener("click", () => historyPanel.classList.toggle("open"));
-  togglePrompt.addEventListener("click", () => promptPanel.classList.toggle("open"));
-  prompts.forEach(p => p.addEventListener("click", () => {
-    userInput.value = p.textContent;
-    promptPanel.classList.remove("open");
-    userInput.focus();
-  }));
-
-  // — Drag & Drop visual (éviter le “clignotement”)
-  let dragCounter = 0;
-  ["dragenter", "dragover"].forEach(evt =>
-    document.addEventListener(evt, e => {
-      e.preventDefault();
-      dragCounter++;
-      dropZone.style.display = "block";
-      dropZone.style.opacity = "1";
-    })
-  );
-  ["dragleave"].forEach(evt =>
-    document.addEventListener(evt, e => {
-      e.preventDefault();
-      dragCounter--;
-      if (dragCounter === 0) {
-        dropZone.style.opacity = "0";
-        setTimeout(() => (dropZone.style.display = "none"), 300);
-      }
-    })
-  );
-  // Masquer la dropZone si on lâche en dehors
-  document.addEventListener("drop", e => {
+// — Drag & Drop visual (éviter le “clignotement”)
+let dragCounter = 0;
+["dragenter", "dragover"].forEach(evt =>
+  document.addEventListener(evt, e => {
     e.preventDefault();
-    dragCounter = 0;
-    dropZone.style.opacity = "0";
-    setTimeout(() => (dropZone.style.display = "none"), 300);
+    dragCounter++;
+    dropZone.style.display = "block";
+    dropZone.style.opacity = "1";
+  })
+);
+["dragleave"].forEach(evt =>
+  document.addEventListener(evt, e => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter === 0) {
+      dropZone.style.opacity = "0";
+      setTimeout(() => (dropZone.style.display = "none"), 300);
+    }
+  })
+);
+document.addEventListener("drop", e => {
+  e.preventDefault();
+  dragCounter = 0;
+  dropZone.style.opacity = "0";
+  setTimeout(() => (dropZone.style.display = "none"), 300);
+});
+
+// — Handle file drop with miniatures + bouton “fermer”
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dragCounter = 0;
+  dropZone.style.opacity = "0";
+  setTimeout(() => (dropZone.style.display = "none"), 300);
+
+  const files = Array.from(e.dataTransfer.files);
+  pendingFiles.push(...files);
+
+  filePreview.innerHTML = "";
+  filePreview.style.display = "flex";
+
+  files.forEach(file => {
+    const item = document.createElement("div");
+    item.className = "file-item";
+
+    if (file.type.startsWith("image/")) {
+      const img = document.createElement("img");
+      const objectUrl = URL.createObjectURL(file);
+      file._objectUrl = objectUrl;
+      img.src = objectUrl;
+      img.addEventListener("load", () => URL.revokeObjectURL(objectUrl), { once: true });
+      item.appendChild(img);
+    } else {
+      const ico = document.createElement("div");
+      ico.className = "file-icon";
+      ico.textContent = file.name.split(".").pop().toUpperCase();
+      item.appendChild(ico);
+    }
+
+    filePreview.appendChild(item);
   });
 
-  // — Handle file drop with miniatures + bouton “fermer”
-  dropZone.addEventListener("drop", e => {
-    e.preventDefault();
-    dragCounter = 0;
-    dropZone.style.opacity = "0";
-    setTimeout(() => (dropZone.style.display = "none"), 300);
-
-    const files = Array.from(e.dataTransfer.files);
-    pendingFiles.push(...files);
-
-    filePreview.innerHTML = "";
-    filePreview.style.display = "flex";
-
-    files.forEach(file => {
-      const item = document.createElement("div");
-      item.className = "file-item";
-
-      if (file.type.startsWith("image/")) {
-        const img = document.createElement("img");
-        const objectUrl = URL.createObjectURL(file);
-        file._objectUrl = objectUrl;
-        img.src = objectUrl;
-        img.addEventListener("load", () => URL.revokeObjectURL(objectUrl), { once: true });
-        item.appendChild(img);
-      } else {
-        const ico = document.createElement("div");
-        ico.className = "file-icon";
-        ico.textContent = file.name.split(".").pop().toUpperCase();
-        item.appendChild(ico);
+  const clearBtn = document.createElement("div");
+  clearBtn.className = "file-clear";
+  clearBtn.textContent = "×";
+  clearBtn.title = "Tout supprimer";
+  clearBtn.style.cursor = "pointer";
+  clearBtn.onclick = () => {
+    pendingFiles.forEach(f => {
+      if (f._objectUrl) {
+        URL.revokeObjectURL(f._objectUrl);
+        delete f._objectUrl;
       }
-
-      filePreview.appendChild(item);
     });
+    pendingFiles = [];
+    filePreview.innerHTML = "";
+    filePreview.style.display = "none";
+  };
+  filePreview.appendChild(clearBtn);
 
-    // — Bouton global “×” pour tout supprimer
-    const clearBtn = document.createElement("div");
-    clearBtn.className = "file-clear";
-    clearBtn.textContent = "×";
-    clearBtn.title = "Tout supprimer";
-    clearBtn.style.cursor = "pointer";
-    clearBtn.onclick = () => {
-      pendingFiles.forEach(f => {
-        if (f._objectUrl) {
-          URL.revokeObjectURL(f._objectUrl);
-          delete f._objectUrl;
-        }
+  console.log("📝 pendingFiles:", pendingFiles);
+});
+
+// — Append & save locally
+function appendMessage(html, cls) {
+  const m = document.createElement("div");
+  m.className = `message ${cls}`;
+  m.innerHTML = html;
+  const prev = chat.scrollHeight;
+  chat.appendChild(m);
+  chat.scrollTop = prev === 0
+    ? chat.scrollHeight
+    : chat.scrollTop + (chat.scrollHeight - prev);
+  saveLocal();
+}
+function saveLocal() {
+  const arr = Array.from(chat.querySelectorAll(".message")).map(d => ({
+    role: d.classList.contains("user-message") ? "user" : "bot",
+    content: d.innerHTML
+  }));
+  localStorage.setItem("chatHistory", JSON.stringify(arr));
+}
+
+// — Send logic (modifiée pour gérer AbortController)
+sendBtn.addEventListener("click", async () => {
+  const text = userInput.value.trim();
+  if (!text && pendingFiles.length === 0) return;
+
+  // Afficher le message utilisateur
+  if (text) appendMessage(text, "user-message");
+
+  // Création d’un loader
+  const loader = document.createElement("div");
+  loader.className = "message bot-message";
+  loader.innerHTML = "Je réfléchis…";
+  chat.appendChild(loader);
+  chat.scrollTop = chat.scrollHeight;
+
+  // Désactivation / réinitialisation de l’input
+  userInput.value = "";
+  userInput.rows = 1;
+  userInput.focus();
+
+  // Mise en place de l’AbortController
+  currentController = new AbortController();
+  const { signal } = currentController;
+  // Activer le bouton Stop
+  setStopEnabled(true);
+
+  try {
+    let res, data;
+    if (pendingFiles.length > 0) {
+      const fd = new FormData();
+      pendingFiles.forEach(f => fd.append("file", f, f.name));
+      fd.append("question", text);
+      fd.append("user_id", user_id);
+      fd.append("chat_id", chat_id);
+      fd.append("type", text ? "filesWithText" : "files");
+      for (let [k, v] of fd.entries()) console.log("📦", k, v);
+
+      res = await fetch(webhookURL, {
+        method: "POST",
+        body: fd,
+        signal
       });
+      data = await res.json();
       pendingFiles = [];
-      filePreview.innerHTML = "";
       filePreview.style.display = "none";
-    };
-    filePreview.appendChild(clearBtn);
+      filePreview.innerHTML = "";
+    } else {
+      res = await fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
+        signal
+      });
+      data = await res.json();
+    }
 
-    console.log("📝 pendingFiles:", pendingFiles);
-  });
-
-   // — Append & save locally
-  function appendMessage(html, cls) {
-    const m = document.createElement("div");
-    m.className = `message ${cls}`;
-    m.innerHTML = html;
-    const prev = chat.scrollHeight;
-    chat.appendChild(m);
-    chat.scrollTop = prev === 0
-      ? chat.scrollHeight
-      : chat.scrollTop + (chat.scrollHeight - prev);
-    saveLocal();
-  }
-  function saveLocal() {
-    const arr = Array.from(chat.querySelectorAll(".message")).map(d => ({
-      role: d.classList.contains("user-message") ? "user" : "bot",
-      content: d.innerHTML
-    }));
-    localStorage.setItem("chatHistory", JSON.stringify(arr));
-  }
-
-  // — Send logic
-  sendBtn.addEventListener("click", async () => {
-    const text = userInput.value.trim();
-    if (!text && pendingFiles.length === 0) return;
-    if (text) appendMessage(text, "user-message");
-
-    const loader = document.createElement("div");
-    loader.className = "message bot-message";
-    loader.innerHTML = "Je réfléchis…";
-    chat.appendChild(loader);
-    chat.scrollTop = chat.scrollHeight;
-
-    // Vider immédiatement le textarea et réinitialiser sa hauteur
-    userInput.value = "";
-    userInput.rows = 1;
-    userInput.focus();
-
-    try {
-      let res, data;
-      if (pendingFiles.length > 0) {
-        const fd = new FormData();
-        pendingFiles.forEach(f => fd.append("file", f, f.name));
-        fd.append("question", text);
-        fd.append("user_id", user_id);
-        fd.append("chat_id", chat_id);
-        fd.append("type", text ? "filesWithText" : "files");
-        for (let [k, v] of fd.entries()) console.log("📦", k, v);
-        res = await fetch(webhookURL, { method: "POST", body: fd });
-        data = await res.json();
-        pendingFiles = [];
-        filePreview.style.display = "none";
-        filePreview.innerHTML = "";
-      } else {
-        res = await fetch(webhookURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: text, user_id, chat_id, type: "text" })
-        });
-        data = await res.json();
-      }
-      loader.remove();
-      appendMessage(data.output || "Pas de réponse", "bot-message");
-      loadHistory();
-    } catch (err) {
-      loader.remove();
+    // Requête terminée normalement
+    loader.remove();
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+    loadHistory();
+  } catch (err) {
+    loader.remove();
+    if (err.name === "AbortError") {
+      appendMessage("⚠️ Requête interrompue.", "bot-message");
+    } else {
       appendMessage("❌ Erreur de connexion", "bot-message");
       console.error(err);
-    } finally {
-      // Le textarea a déjà été vidé avant l'envoi, on peut simplement redonner le focus
-      userInput.focus();
     }
-  });
+  } finally {
+    // À la fin (succès, erreur ou abort), on désactive Stop et on remet controller à null
+    setStopEnabled(false);
+    currentController = null;
+    userInput.focus();
+  }
+});
 
-  // — Enter vs Shift+Enter
-  userInput.addEventListener("keydown", e => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendBtn.click();
-    }
-  });
+// — Enter vs Shift+Enter
+userInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
 
-  // — Init
-  JSON.parse(localStorage.getItem("chatHistory") || "[]")
-    .forEach(m => appendMessage(m.content, m.role === "user" ? "user-message" : "bot-message"));
-  chat.scrollTop = 0;
+// — Init
+JSON.parse(localStorage.getItem("chatHistory") || "[]")
+  .forEach(m => appendMessage(m.content, m.role === "user" ? "user-message" : "bot-message"));
+chat.scrollTop = 0;
 });
 
