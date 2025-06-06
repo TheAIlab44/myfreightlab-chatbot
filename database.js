@@ -433,6 +433,8 @@ function renderFileItem(file) {
 
       if (error) throw error;
 
+      console.log("🏷️ rows reçues de Supabase :", rows);
+
       files = rows.map(item => {
         const existing = files.find(f => f.id === item.file_id);
         return {
