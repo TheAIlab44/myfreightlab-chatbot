@@ -126,7 +126,7 @@ wrapper.innerHTML = `
     #sendBtn::before {
       content: "▶";
       color: white;
-      font-size: 18px;
+      font-size: 14px;
       transform: translateX(2px);
     }
     #sendBtn:hover {
