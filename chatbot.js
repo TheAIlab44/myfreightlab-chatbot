@@ -110,33 +110,34 @@ wrapper.innerHTML = `
     }
 
     /* === Bouton “Envoyer” personnalisé === */
-    #sendBtn {
-      background: linear-gradient(135deg, #005a9c 0%, #0077c8 100%);
-      border: none;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
-    #sendBtn::before {
-      content: "▶";
-      color: white;
-      font-size: 14px;
-      transform: translateX(2px);
-    }
-    #sendBtn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-    }
-    #sendBtn:active {
-      transform: scale(0.98);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-    }
+/* === Bouton “Envoyer” personnalisé (taille réduite à 40×40) === */
+#sendBtn {
+  background: linear-gradient(135deg, #005a9c 0%, #0077c8 100%);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+#sendBtn::before {
+  content: "▶";
+  color: white;
+  font-size: 14px;       /* diminué pour rester centré dans 40×40 */
+  transform: translateX(1px);
+}
+#sendBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+#sendBtn:active {
+  transform: scale(0.98);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
 
     /* === Bouton “Stop” (interruption) === */
     #stopBtn {
