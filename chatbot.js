@@ -186,7 +186,7 @@ wrapper.innerHTML = `
       background: #f0f0f0;
     }
 
-    /* === Bouton “✚” (ajout de fichier) personnalisé === */
+    /* === Bouton “➕” (ajout de fichier) personnalisé === */
     #attachBtn {
       background: #0077c8;
       border: none;
