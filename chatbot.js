@@ -213,9 +213,9 @@ wrapper.innerHTML = `
 <button id="resetBtn">✨ Nouveau chat</button>
 <div id="chat"></div>
 <div id="input-area">
-  <textarea id="userInput" placeholder="Pose ta question ici…" rows="2"
-    style="resize:none; padding:10px; border-radius:8px; border:1px solid #ccc;
-           font-size:15px; flex:1; overflow-y:auto;"></textarea>
+<textarea id="userInput" placeholder="Pose ta question ici…" rows="1"
+  style="padding:10px; border-radius:8px; border:1px solid #ccc;
+         font-size:15px; flex:1; overflow-y:hidden; resize:none;"></textarea>
   <button id="sendBtn">▶</button>
   <div id="file-preview"></div>
 </div>
@@ -346,6 +346,16 @@ wrapper.innerHTML = `
     appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
     loadHistory();
   });
+  
+// — Ajuster la hauteur du textarea en fonction des sauts de ligne
+function adjustTextareaHeight() {
+  // Nombre de lignes = nombre de retours à la ligne + 1
+  const lines = userInput.value.split("\n").length;
+  userInput.rows = lines < 1 ? 1 : lines;
+}
+// Enregistrer l'écouteur UNE SEULE FOIS, en dehors de la fonction
+userInput.addEventListener("input", adjustTextareaHeight);
+
 
   // 6) Lancer au démarrage
   loadHistory();
@@ -472,53 +482,58 @@ dropZone.addEventListener("drop", e => {
     localStorage.setItem("chatHistory", JSON.stringify(arr));
   }
 
-  // — Send logic
-  sendBtn.addEventListener("click", async () => {
-    const text = userInput.value.trim();
-    if (!text && pendingFiles.length === 0) return;
-    if (text) appendMessage(text, "user-message");
+// — Send logic
+sendBtn.addEventListener("click", async () => {
+  const text = userInput.value.trim();
+  if (!text && pendingFiles.length === 0) return;
+  if (text) appendMessage(text, "user-message");
 
-    const loader = document.createElement("div");
-    loader.className = "message bot-message";
-    loader.innerHTML = "Je réfléchis…";
-    chat.appendChild(loader);
-    chat.scrollTop = chat.scrollHeight;
+  const loader = document.createElement("div");
+  loader.className = "message bot-message";
+  loader.innerHTML = "Je réfléchis…";
+  chat.appendChild(loader);
+  chat.scrollTop = chat.scrollHeight;
 
-    try {
-      let res, data;
-      if (pendingFiles.length > 0) {
-        const fd = new FormData();
-        pendingFiles.forEach(f => fd.append("file", f, f.name));
-        fd.append("question", text);
-        fd.append("user_id", user_id);
-        fd.append("chat_id", chat_id);
-        fd.append("type", text ? "filesWithText" : "files");
-        for (let [k,v] of fd.entries()) console.log("📦", k, v);
-        res = await fetch(webhookURL, { method: "POST", body: fd });
-        data = await res.json();
-        pendingFiles = [];
-        filePreview.style.display = "none";
-        filePreview.innerHTML = "";
-      } else {
-        res = await fetch(webhookURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: text, user_id, chat_id, type: "text" })
-        });
-        data = await res.json();
-      }
-      loader.remove();
-      appendMessage(data.output || "Pas de réponse", "bot-message");
-      loadHistory();
-    } catch (err) {
-      loader.remove();
-      appendMessage("❌ Erreur de connexion", "bot-message");
-      console.error(err);
-    } finally {
-      userInput.value = "";
-      userInput.focus();
+  // Vider immédiatement le textarea et réinitialiser sa hauteur
+  userInput.value = "";
+  userInput.rows = 1;
+  userInput.focus();
+
+  try {
+    let res, data;
+    if (pendingFiles.length > 0) {
+      const fd = new FormData();
+      pendingFiles.forEach(f => fd.append("file", f, f.name));
+      fd.append("question", text);
+      fd.append("user_id", user_id);
+      fd.append("chat_id", chat_id);
+      fd.append("type", text ? "filesWithText" : "files");
+      for (let [k,v] of fd.entries()) console.log("📦", k, v);
+      res = await fetch(webhookURL, { method: "POST", body: fd });
+      data = await res.json();
+      pendingFiles = [];
+      filePreview.style.display = "none";
+      filePreview.innerHTML = "";
+    } else {
+      res = await fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: text, user_id, chat_id, type: "text" })
+      });
+      data = await res.json();
     }
-  });
+    loader.remove();
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+    loadHistory();
+  } catch (err) {
+    loader.remove();
+    appendMessage("❌ Erreur de connexion", "bot-message");
+    console.error(err);
+  } finally {
+    // Le textarea a déjà été vidé avant l'envoi, on peut simplement redonner le focus
+    userInput.focus();
+  }
+});
 
   // — Enter vs Shift+Enter
   userInput.addEventListener("keydown", e => {
