@@ -137,11 +137,29 @@ wrapper.innerHTML = `
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
   }
 
+  /* === Bouton “Nouveau chat” (resetBtn) : style d’origine === */
+  #resetBtn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #333;
+    transition: background 0.1s ease, color 0.1s ease, box-shadow 0.1s ease;
+  }
+  #resetBtn:hover {
+    background: #f0f0f0;
+  }
+
   /* === Bouton “＋” (ajout de fichier) personnalisé === */
   #attachBtn {
-    background: #f0f0f0;
-    border: 2px solid #0077c8;
-    color: #0077c8;
+    background: #0077c8;
+    border: none;
+    color: white;
     border-radius: 8px;
     width: 40px;
     height: 40px;
@@ -151,15 +169,15 @@ wrapper.innerHTML = `
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, border 0.15s ease;
   }
   #attachBtn:hover {
-    background: #0077c8;
-    color: white;
+    background: white;
+    color: #0077c8;
+    border: 2px solid #0077c8;
   }
   #attachBtn:active {
-    background: #005a9c;
-    border-color: #005a9c;
+    transform: scale(0.95);
   }
 
   /* dropZone */
@@ -257,6 +275,7 @@ wrapper.innerHTML = `
   }
   #toggleHistory { top: 40%; }
 </style>
+
 
 <button id="resetBtn">✨ Nouveau chat</button>
 <div id="chat"></div>
