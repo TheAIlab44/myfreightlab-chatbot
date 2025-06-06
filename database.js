@@ -105,9 +105,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     text-align:center;
     white-space: normal;
     overflow-wrap: anywhere;
-    /* **AJOUT : 2 lignes + ellipsis** */
+    /* **AJOUT : 3 lignes + ellipsis** */
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
