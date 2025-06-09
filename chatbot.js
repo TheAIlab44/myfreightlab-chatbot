@@ -758,55 +758,42 @@ sendBtn.addEventListener("click", async () => {
   // 1) On affiche le message texte
   if (text) appendMessage(text, "user-message");
 
-  // 2) On affiche la bulle PJ pour **toutes** les pièces-jointes
-  if (pendingFiles.length > 0) {
-    const filesBubble = document.createElement("div");
-    filesBubble.className = "message user-message";
-    filesBubble.style.display = "flex";
-    filesBubble.style.flexDirection = "column";
-    filesBubble.style.gap = "6px";
+// — On affiche une bulle séparée pour chaque PJ —
+if (pendingFiles.length > 0) {
+  // on cache tout de suite la prévisualisation
+  filePreview.innerHTML = "";
+  filePreview.style.display = "none";
 
-    pendingFiles.forEach(f => {
-      const row = document.createElement("div");
-      row.style.display = "flex";
-      row.style.alignItems = "center";
-      row.style.gap = "8px";
+  pendingFiles.forEach(f => {
+    const fileMsg = document.createElement("div");
+    fileMsg.className = "message user-message";
+    fileMsg.style.display = "flex";
+    fileMsg.style.alignItems = "center";
+    fileMsg.style.gap = "8px";
 
-      // miniature ou icône
-      if (f.type.startsWith("image/")) {
-        const img = document.createElement("img");
-        img.src = f._objectUrl;
-        img.style.width = img.style.height = "24px";
-        img.style.objectFit = "cover";
-        row.appendChild(img);
-      } else {
-        const ico = document.createElement("span");
-        ico.textContent = "📎";
-        row.appendChild(ico);
-      }
+    // miniature ou icône
+    if (f.type.startsWith("image/")) {
+      const img = document.createElement("img");
+      img.src = f._objectUrl;
+      img.style.width = img.style.height = "24px";
+      img.style.objectFit = "cover";
+      fileMsg.appendChild(img);
+    } else {
+      const ico = document.createElement("span");
+      ico.textContent = "📎";
+      fileMsg.appendChild(ico);
+    }
 
-      // nom de fichier
-      const name = document.createElement("span");
-      name.textContent = f.name;
-      row.appendChild(name);
+    // nom du fichier
+    const name = document.createElement("span");
+    name.textContent = f.name;
+    fileMsg.appendChild(name);
 
-      filesBubble.appendChild(row);
-    });
+    chat.appendChild(fileMsg);
+  });
 
-    chat.appendChild(filesBubble);
-    chat.scrollTop = chat.scrollHeight;
-
-    // on cache tout de suite la prévisualisation
-    filePreview.innerHTML = "";
-    filePreview.style.display = "none";
-  }
-
-  // 3) On prépare et affiche le loader
-  const loader = document.createElement("div");
-  loader.className = "message bot-message";
-  loader.innerHTML = "Je réfléchis…";
-  chat.appendChild(loader);
   chat.scrollTop = chat.scrollHeight;
+}
 
   // 4) Reset de l’input
   userInput.value = "";
