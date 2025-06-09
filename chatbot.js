@@ -751,6 +751,57 @@ function saveLocal() {
   }));
   localStorage.setItem("chatHistory", JSON.stringify(arr));
 }
+// — SCROLL-TO-BOTTOM BUTTON —
+// 1) Création du bouton (hidden by default)
+const scrollBtn = document.createElement("button");
+scrollBtn.id = "scrollToBottomBtn";
+scrollBtn.innerHTML = "▼";
+Object.assign(scrollBtn.style, {
+  position: "absolute",
+  bottom: "60px",        // 60px au-dessus de l’input-area (ajuste si besoin)
+  right: "20px",         // à droite
+  width: "36px",
+  height: "36px",
+  borderRadius: "50%",
+  border: "none",
+  background: "#0077c8",
+  color: "white",
+  fontSize: "20px",
+  cursor: "pointer",
+  display: "none",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+  zIndex: 1000
+});
+wrapper.appendChild(scrollBtn);
+
+// 2) Comptage de roulés de molette
+let wheelCount = 0;
+const resetWheel = () => { wheelCount = 0; };
+
+// Sur le container principal (#chat)
+chat.addEventListener("wheel", e => {
+  // on n’intercepte rien, juste on compte
+  wheelCount++;
+  if (wheelCount === 2) {
+    scrollBtn.style.display = "block";
+  }
+  // au bout de 1s sans wheel, on remet à zéro
+  clearTimeout(chat._wheelTimeout);
+  chat._wheelTimeout = setTimeout(resetWheel, 1000);
+});
+
+// 3) Clic → scroll bottom + masque bouton
+scrollBtn.addEventListener("click", () => {
+  chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+  scrollBtn.style.display = "none";
+  resetWheel();
+});
+
+// 4) Masquer automatiquement si on est déjà tout en bas
+chat.addEventListener("scroll", () => {
+  const atBottom = chat.scrollHeight - chat.scrollTop <= chat.clientHeight + 10;
+  if (atBottom) scrollBtn.style.display = "none";
+});
 
 sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
