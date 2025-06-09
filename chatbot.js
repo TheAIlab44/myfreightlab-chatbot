@@ -863,61 +863,6 @@ sendBtn.addEventListener("click", async () => {
   }
 });
 
-  // — AbortController —
-  currentController = new AbortController();
-  const { signal } = currentController;
-  setStopEnabled(true);
-
-  try {
-    let res, data;
-
-    if (pendingFiles.length > 0) {
-      const fd = new FormData();
-      pendingFiles.forEach(f => fd.append("file", f, f.name));
-      fd.append("question", text);
-      fd.append("user_id", user_id);
-      fd.append("chat_id", chat_id);
-      fd.append("type", text ? "filesWithText" : "files");
-
-      res  = await fetch(webhookURL, { method: "POST", body: fd, signal });
-      data = await res.json();
-
-      // — On vide l’aperçu, car on l’a déjà envoyé dans le chat —
-      pendingFiles.forEach(f => {
-        if (f._objectUrl) URL.revokeObjectURL(f._objectUrl);
-      });
-      pendingFiles = [];
-      filePreview.innerHTML = "";
-      filePreview.style.display = "none";
-    } else {
-      res  = await fetch(webhookURL, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
-        signal
-      });
-      data = await res.json();
-    }
-
-    // — Affichage bot —
-    loader.remove();
-    appendMessage(data.output || "Pas de réponse", "bot-message");
-    loadHistory();
-
-  } catch (err) {
-    loader.remove();
-    if (err.name === "AbortError") {
-      appendMessage("⚠️ Requête interrompue.", "bot-message");
-    } else {
-      appendMessage("❌ Erreur de connexion", "bot-message");
-      console.error(err);
-    }
-  } finally {
-    setStopEnabled(false);
-    currentController = null;
-    userInput.focus();
-  }
-});
 
 // — Enter vs Shift+Enter
 userInput.addEventListener("keydown", e => {
