@@ -565,46 +565,57 @@ userInput.addEventListener("input", adjustTextareaHeight);
 // 6) Lancer au démarrage
 loadHistory();
 
-// — File preview container INSIDE input-area
+// — File preview container INSIDE input-area —
 let pendingFiles = [];
 const filePreview = document.createElement("div");
 filePreview.id = "file-preview";
 filePreview.style.display = "none";
 inputArea.appendChild(filePreview);
 
-  // — Récupérer le bouton “+” et le input type="file"
-const attachBtn = wrapper.querySelector("#attachBtn");
-const fileInput = wrapper.querySelector("#fileInput");
+// — Show/hide dropZone when on/exit drag —
+["dragenter", "dragover"].forEach(evt =>
+  document.addEventListener(evt, e => {
+    if (e.dataTransfer?.types.includes("Files")) {
+      e.preventDefault();
+      dropZone.style.display = "block";
+      dropZone.style.opacity = "1";
+    }
+  })
+);
+["dragleave", "drop"].forEach(evt =>
+  document.addEventListener(evt, e => {
+    if (e.dataTransfer?.types.includes("Files")) {
+      e.preventDefault();
+      dropZone.style.opacity = "0";
+      setTimeout(() => dropZone.style.display = "none", 300);
+    }
+  })
+);
 
-// — Ouvrir le sélecteur de fichiers au clic sur “+”
-attachBtn.addEventListener("click", () => {
-  fileInput.click();
-});
+// — Handle file drop with miniatures + global “×” clear button —
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  // 1) On collecte tous les fichiers
+  pendingFiles.push(...Array.from(e.dataTransfer.files));
 
-// — Lorsqu’on choisit un ou plusieurs fichiers dans le sélecteur…
-fileInput.addEventListener("change", e => {
-  const files = Array.from(e.target.files);
-  if (files.length === 0) return;
-
-  // Ajouter les fichiers à pendingFiles
-  pendingFiles.push(...files);
-
-  // Afficher le preview (vider l’ancien si nécessaire)
+  // 2) On reconstruit l’aperçu
   filePreview.innerHTML = "";
   filePreview.style.display = "flex";
 
-  files.forEach(file => {
+  pendingFiles.forEach(file => {
     const item = document.createElement("div");
     item.className = "file-item";
 
     if (file.type.startsWith("image/")) {
+      // thumbnail pour les images
       const img = document.createElement("img");
-      const objectUrl = URL.createObjectURL(file);
-      file._objectUrl = objectUrl;
-      img.src = objectUrl;
-      img.addEventListener("load", () => URL.revokeObjectURL(objectUrl), { once: true });
+      const url = URL.createObjectURL(file);
+      file._objectUrl = url;
+      img.src = url;
+      img.addEventListener("load", () => URL.revokeObjectURL(url), { once: true });
       item.appendChild(img);
     } else {
+      // icône d’extension pour les autres
       const ico = document.createElement("div");
       ico.className = "file-icon";
       ico.textContent = file.name.split(".").pop().toUpperCase();
@@ -614,66 +625,28 @@ fileInput.addEventListener("change", e => {
     filePreview.appendChild(item);
   });
 
-  // Si le bouton “×” n’est pas encore présent, l’ajouter
-  if (!filePreview.querySelector(".file-clear")) {
-    const clearBtn = document.createElement("div");
-    clearBtn.className = "file-clear";
-    clearBtn.textContent = "×";
-    clearBtn.title = "Tout supprimer";
-    clearBtn.style.cursor = "pointer";
-    clearBtn.onclick = () => {
-      pendingFiles.forEach(f => {
-        if (f._objectUrl) {
-          URL.revokeObjectURL(f._objectUrl);
-          delete f._objectUrl;
-        }
-      });
-      pendingFiles = [];
-      filePreview.innerHTML = "";
-      filePreview.style.display = "none";
-    };
-    filePreview.appendChild(clearBtn);
-  }
+  // 3) Bouton “×” pour tout vider
+  const clearBtn = document.createElement("div");
+  clearBtn.className = "file-clear";
+  clearBtn.textContent = "×";
+  clearBtn.title = "Tout supprimer";
+  clearBtn.onclick = () => {
+    pendingFiles.forEach(f => {
+      if (f._objectUrl) URL.revokeObjectURL(f._objectUrl);
+    });
+    pendingFiles = [];
+    filePreview.innerHTML = "";
+    filePreview.style.display = "none";
+  };
+  filePreview.appendChild(clearBtn);
 
-  // Réinitialiser fileInput pour pouvoir re-sélectionner les mêmes fichiers
-  fileInput.value = "";
-});
-
-// — sidebar toggles & prompts
-toggleHistory.addEventListener("click", () => historyPanel.classList.toggle("open"));
-togglePrompt .addEventListener("click", () => promptPanel.classList.toggle("open"));
-prompts.forEach(p => p.addEventListener("click", () => {
-  userInput.value = p.textContent;
-  promptPanel.classList.remove("open");
-  userInput.focus();
-}));
-
-// — Drag & Drop visual (éviter le “clignotement”)
-let dragCounter = 0;
-["dragenter", "dragover"].forEach(evt =>
-  document.addEventListener(evt, e => {
-    e.preventDefault();
-    dragCounter++;
-    dropZone.style.display = "block";
-    dropZone.style.opacity = "1";
-  })
-);
-["dragleave"].forEach(evt =>
-  document.addEventListener(evt, e => {
-    e.preventDefault();
-    dragCounter--;
-    if (dragCounter === 0) {
-      dropZone.style.opacity = "0";
-      setTimeout(() => (dropZone.style.display = "none"), 300);
-    }
-  })
-);
-document.addEventListener("drop", e => {
-  e.preventDefault();
-  dragCounter = 0;
+  // 4) On referme doucement la dropZone
   dropZone.style.opacity = "0";
-  setTimeout(() => (dropZone.style.display = "none"), 300);
+  setTimeout(() => dropZone.style.display = "none", 300);
+
+  console.log("📝 pendingFiles:", pendingFiles);
 });
+
 
 // — Handle file drop with miniatures + bouton “fermer”
 dropZone.addEventListener("drop", e => {
