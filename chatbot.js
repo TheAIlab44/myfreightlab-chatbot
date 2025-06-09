@@ -755,47 +755,49 @@ sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
   if (!text && pendingFiles.length === 0) return;
 
-  // Afficher le message utilisateur
+  // — 1) Afficher le(s) message(s) utilisateur
   if (text) appendMessage(text, "user-message");
+  // — Afficher chaque PJ dans le chat
+  pendingFiles.forEach(f => {
+    appendMessage(`📎 ${f.name}`, "user-message");
+  });
 
-  // Création d’un loader
+  // — loader…
   const loader = document.createElement("div");
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis…";
   chat.appendChild(loader);
   chat.scrollTop = chat.scrollHeight;
 
-  // Désactivation / réinitialisation de l’input
+  // — reset input…
   userInput.value = "";
   userInput.rows = 1;
   userInput.focus();
 
-  // Mise en place de l’AbortController
+  // — AbortController…
   currentController = new AbortController();
   const { signal } = currentController;
-  // Activer le bouton Stop
   setStopEnabled(true);
 
   try {
     let res, data;
     if (pendingFiles.length > 0) {
+      // **vider la preview visuelle**
+      pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
+      pendingFiles = [];
+      filePreview.style.display = "none";
+      filePreview.innerHTML = "";
+
+      // — construire le FormData
       const fd = new FormData();
       pendingFiles.forEach(f => fd.append("file", f, f.name));
       fd.append("question", text);
       fd.append("user_id", user_id);
       fd.append("chat_id", chat_id);
       fd.append("type", text ? "filesWithText" : "files");
-      for (let [k, v] of fd.entries()) console.log("📦", k, v);
 
-      res = await fetch(webhookURL, {
-        method: "POST",
-        body: fd,
-        signal
-      });
+      res = await fetch(webhookURL, { method: "POST", body: fd, signal });
       data = await res.json();
-      pendingFiles = [];
-      filePreview.style.display = "none";
-      filePreview.innerHTML = "";
     } else {
       res = await fetch(webhookURL, {
         method: "POST",
@@ -806,10 +808,11 @@ sendBtn.addEventListener("click", async () => {
       data = await res.json();
     }
 
-    // Requête terminée normalement
+    // — 3) Afficher la réponse
     loader.remove();
     appendMessage(data.output || "Pas de réponse", "bot-message");
     loadHistory();
+
   } catch (err) {
     loader.remove();
     if (err.name === "AbortError") {
@@ -819,12 +822,12 @@ sendBtn.addEventListener("click", async () => {
       console.error(err);
     }
   } finally {
-    // À la fin (succès, erreur ou abort), on désactive Stop et on remet controller à null
     setStopEnabled(false);
     currentController = null;
     userInput.focus();
   }
 });
+
 
 // — Enter vs Shift+Enter
 userInput.addEventListener("keydown", e => {
