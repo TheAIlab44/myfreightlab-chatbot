@@ -793,16 +793,20 @@ sendBtn.addEventListener("click", async () => {
       filesBubble.appendChild(row);
     });
 
-    chat.appendChild(filesBubble);
-    chat.scrollTop = chat.scrollHeight;
-  }
+    // … après avoir ajouté filesBubble
+chat.appendChild(filesBubble);
+chat.scrollTop = chat.scrollHeight;
 
-  // — Loader bot —
-  const loader = document.createElement("div");
-  loader.className = "message bot-message";
-  loader.innerHTML = "Je réfléchis…";
-  chat.appendChild(loader);
-  chat.scrollTop = chat.scrollHeight;
+// ** on vide tout de suite la prévisualisation **
+filePreview.innerHTML = "";
+filePreview.style.display = "none";
+
+// puis le loader
+const loader = document.createElement("div");
+loader.className = "message bot-message";
+loader.innerHTML = "Je réfléchis…";
+chat.appendChild(loader);
+chat.scrollTop = chat.scrollHeight;
 
   // — Reset input —
   userInput.value = "";
