@@ -419,7 +419,7 @@ async function loadHistory() {
   const lasts  = getLastSessions(all);
   const titles = getSessionTitles();
 
-  // Génération de titres par défaut
+  // 1) Génération de titres par défaut si nécessaire
   lasts.forEach(({ session_id, message }) => {
     if (!(session_id in titles)) {
       const parsed = typeof message === "string" ? JSON.parse(message) : message;
@@ -431,26 +431,87 @@ async function loadHistory() {
   });
   saveSessionTitles(titles);
 
+  // 2) Vider la liste avant rendu
   historyList.innerHTML = "";
 
-  // Affichage de chaque session avec menu contextuel
+  // 3) Pour chaque session, créer une ligne avec titre + menu
   lasts.forEach(({ session_id }) => {
+    // Conteneur flex
     const entry = document.createElement("div");
     entry.className = "prompt";
     entry.dataset.id = session_id;
+    Object.assign(entry.style, {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      position: "relative",
+      padding: "8px"
+    });
 
-    // Label cliquable pour charger la session
+    // a) Titre cliquable
     const label = document.createElement("span");
     label.textContent = titles[session_id];
+    Object.assign(label.style, {
+      flex: "1",
+      cursor: "pointer"
+    });
     entry.appendChild(label);
 
-    // Bouton “⋮” pour ouvrir le menu
+    // b) Bouton “⋮”
     const menuBtn = document.createElement("span");
-    menuBtn.className = "menu-button";
     menuBtn.textContent = "⋮";
+    Object.assign(menuBtn.style, {
+      cursor: "pointer",
+      padding: "0 8px",
+      userSelect: "none"
+    });
     entry.appendChild(menuBtn);
 
-    // Clic sur le label → chargement de la session
+    // c) Menu caché
+    const menu = document.createElement("div");
+    menu.className = "context-menu";
+    Object.assign(menu.style, {
+      position: "absolute",
+      top: "100%",
+      right: "0",
+      background: "#fff",
+      border: "1px solid #ccc",
+      borderRadius: "6px",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      display: "none",
+      zIndex: "999"
+    });
+
+    // Option Renommer
+    const renameOption = document.createElement("div");
+    renameOption.textContent = "Renommer";
+    Object.assign(renameOption.style, { padding: "8px", cursor: "pointer" });
+    renameOption.addEventListener("click", () => {
+      const newName = prompt("Nouveau titre :", label.textContent);
+      if (newName) {
+        label.textContent = newName;
+        titles[session_id] = newName;
+        saveSessionTitles(titles);
+      }
+      menu.style.display = "none";
+    });
+    menu.appendChild(renameOption);
+
+    // Option Supprimer
+    const deleteOption = document.createElement("div");
+    deleteOption.textContent = "Supprimer";
+    Object.assign(deleteOption.style, { padding: "8px", cursor: "pointer" });
+    deleteOption.addEventListener("click", () => {
+      delete titles[session_id];
+      saveSessionTitles(titles);
+      historyList.removeChild(entry);
+    });
+    menu.appendChild(deleteOption);
+
+    entry.appendChild(menu);
+
+    // 4) Événements
+    // a) Clic sur le titre → charger la session
     label.addEventListener("click", async () => {
       localStorage.setItem("chat_id", session_id);
       chat.innerHTML = "";
@@ -467,44 +528,21 @@ async function loadHistory() {
       historyPanel.classList.remove("open");
     });
 
-    // Clic sur “⋮” → renommer / supprimer
+    // b) Toggle menu
     menuBtn.addEventListener("click", e => {
       e.stopPropagation();
-      // Fermer les autres menus
-      document.querySelectorAll(".context-menu").forEach(m => m.remove());
-
-      const menu = document.createElement("div");
-      menu.className = "context-menu";
-
-      // Renommer
-      const ren = document.createElement("div");
-      ren.textContent = "Renommer";
-      ren.onclick = () => {
-        const nm = prompt("Nouveau titre", titles[session_id]);
-        if (nm) {
-          titles[session_id] = nm;
-          saveSessionTitles(titles);
-          label.textContent = nm;
-        }
-        menu.remove();
-      };
-
-      // Supprimer
-      const del = document.createElement("div");
-      del.textContent = "Supprimer";
-      del.onclick = () => {
-        delete titles[session_id];
-        saveSessionTitles(titles);
-        historyList.removeChild(entry);
-      };
-
-      menu.append(ren, del);
-      entry.appendChild(menu);
+      document.querySelectorAll(".context-menu").forEach(m => m.style.display = "none");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
     });
 
+    // c) Clic en dehors → fermer
+    document.addEventListener("click", () => menu.style.display = "none");
+
+    // 5) Ajout dans la sidebar
     historyList.appendChild(entry);
   });
 }
+
 
 
 resetBtn.addEventListener("click", () => {
