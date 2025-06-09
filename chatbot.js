@@ -755,40 +755,31 @@ sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
   if (!text && pendingFiles.length === 0) return;
 
-  // — 1) Afficher le(s) message(s) utilisateur
+  // Afficher le message utilisateur
   if (text) appendMessage(text, "user-message");
-  // — Afficher chaque PJ dans le chat
-  pendingFiles.forEach(f => {
-    appendMessage(`📎 ${f.name}`, "user-message");
-  });
 
-  // — loader…
+  // Création d’un loader
   const loader = document.createElement("div");
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis…";
   chat.appendChild(loader);
   chat.scrollTop = chat.scrollHeight;
 
-  // — reset input…
+  // Désactivation / réinitialisation de l’input
   userInput.value = "";
   userInput.rows = 1;
   userInput.focus();
 
-  // — AbortController…
+  // Mise en place de l’AbortController
   currentController = new AbortController();
   const { signal } = currentController;
   setStopEnabled(true);
 
   try {
     let res, data;
-    if (pendingFiles.length > 0) {
-      // **vider la preview visuelle**
-      pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
-      pendingFiles = [];
-      filePreview.style.display = "none";
-      filePreview.innerHTML = "";
 
-      // — construire le FormData
+    if (pendingFiles.length > 0) {
+      // 1) Construire le FormData AVANT de vider pendingFiles
       const fd = new FormData();
       pendingFiles.forEach(f => fd.append("file", f, f.name));
       fd.append("question", text);
@@ -796,9 +787,26 @@ sendBtn.addEventListener("click", async () => {
       fd.append("chat_id", chat_id);
       fd.append("type", text ? "filesWithText" : "files");
 
-      res = await fetch(webhookURL, { method: "POST", body: fd, signal });
+      // 2) Envoyer la requête
+      res = await fetch(webhookURL, {
+        method: "POST",
+        body: fd,
+        signal
+      });
       data = await res.json();
+
+      // 3) Puis vider la preview VISUELLE et le tableau pendingFiles
+      pendingFiles.forEach(f => {
+        if (f._objectUrl) {
+          URL.revokeObjectURL(f._objectUrl);
+          delete f._objectUrl;
+        }
+      });
+      pendingFiles = [];
+      filePreview.style.display = "none";
+      filePreview.innerHTML = "";
     } else {
+      // envoi classique JSON
       res = await fetch(webhookURL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -808,11 +816,10 @@ sendBtn.addEventListener("click", async () => {
       data = await res.json();
     }
 
-    // — 3) Afficher la réponse
+    // Requête terminée normalement
     loader.remove();
     appendMessage(data.output || "Pas de réponse", "bot-message");
     loadHistory();
-
   } catch (err) {
     loader.remove();
     if (err.name === "AbortError") {
@@ -827,6 +834,7 @@ sendBtn.addEventListener("click", async () => {
     userInput.focus();
   }
 });
+
 
 
 // — Enter vs Shift+Enter
