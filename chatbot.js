@@ -1,4 +1,4 @@
-// === ChatBot MyFreightLab avec historique, prompts, sidebar, multi-PJ et édition avant envoi ===
+  // === ChatBot MyFreightLab avec historique, prompts, sidebar, multi-PJ et édition avant envoi ===
 document.addEventListener("DOMContentLoaded", () => {
   const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
   const user_id    = new URLSearchParams(location.search).get("user_id");
@@ -754,12 +754,11 @@ sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
   if (!text && pendingFiles.length === 0) return;
 
-  // — On prépare la bulle texte —
+  // 1) Affiche la bulle texte
   if (text) appendMessage(text, "user-message");
 
-  // — On prépare la bulle fichiers (avant de vider pendingFiles) —
+  // 2) Affiche la bulle fichiers jointes
   if (pendingFiles.length > 0) {
-    // Crée un conteneur pour tous les fichiers joints
     const filesBubble = document.createElement("div");
     filesBubble.className = "message user-message";
     filesBubble.style.display = "flex";
@@ -772,7 +771,6 @@ sendBtn.addEventListener("click", async () => {
       row.style.alignItems = "center";
       row.style.gap = "8px";
 
-      // Icône ou miniature
       if (f.type.startsWith("image/")) {
         const img = document.createElement("img");
         img.src = f._objectUrl;
@@ -785,7 +783,6 @@ sendBtn.addEventListener("click", async () => {
         row.appendChild(ico);
       }
 
-      // Nom du fichier
       const name = document.createElement("span");
       name.textContent = f.name;
       row.appendChild(name);
@@ -793,78 +790,76 @@ sendBtn.addEventListener("click", async () => {
       filesBubble.appendChild(row);
     });
 
-    // → On affiche la bulle de fichiers
     chat.appendChild(filesBubble);
     chat.scrollTop = chat.scrollHeight;
 
-    // → On vide tout de suite la prévisualisation
+    // Vide immédiatement la prévisualisation
     filePreview.innerHTML = "";
     filePreview.style.display = "none";
+  }
 
-    // → Puis on crée le loader
-    const loader = document.createElement("div");
-    loader.className = "message bot-message";
-    loader.innerHTML = "Je réfléchis…";
-    chat.appendChild(loader);
-    chat.scrollTop = chat.scrollHeight;
+  // 3) Crée et affiche le loader
+  const loader = document.createElement("div");
+  loader.className = "message bot-message";
+  loader.innerHTML = "Je réfléchis…";
+  chat.appendChild(loader);
+  chat.scrollTop = chat.scrollHeight;
 
-    // — Reset input —
-    userInput.value = "";
-    userInput.rows  = 1;
-    userInput.focus();
+  // 4) Réinitialise l’input
+  userInput.value = "";
+  userInput.rows  = 1;
+  userInput.focus();
 
-    // — AbortController —
-    currentController = new AbortController();
-    const { signal } = currentController;
-    setStopEnabled(true);
+  // 5) Prépare l'AbortController
+  currentController = new AbortController();
+  const { signal } = currentController;
+  setStopEnabled(true);
 
-    try {
-      let res, data;
+  try {
+    let res, data;
+    if (pendingFiles.length > 0) {
+      const fd = new FormData();
+      pendingFiles.forEach(f => fd.append("file", f, f.name));
+      fd.append("question", text);
+      fd.append("user_id", user_id);
+      fd.append("chat_id", chat_id);
+      fd.append("type", text ? "filesWithText" : "files");
 
-      if (pendingFiles.length > 0) {
-        const fd = new FormData();
-        pendingFiles.forEach(f => fd.append("file", f, f.name));
-        fd.append("question", text);
-        fd.append("user_id", user_id);
-        fd.append("chat_id", chat_id);
-        fd.append("type", text ? "filesWithText" : "files");
+      res  = await fetch(webhookURL, { method: "POST", body: fd, signal });
+      data = await res.json();
 
-        res  = await fetch(webhookURL, { method: "POST", body: fd, signal });
-        data = await res.json();
-
-        // — On révoque les URLs et vide pendingFiles
-        pendingFiles.forEach(f => {
-          if (f._objectUrl) URL.revokeObjectURL(f._objectUrl);
-        });
-        pendingFiles = [];
-      } else {
-        res  = await fetch(webhookURL, {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
-          signal
-        });
-        data = await res.json();
-      }
-
-      // — Requête terminée normalement
-      loader.remove();
-      appendMessage(data.output || "Pas de réponse", "bot-message");
-      loadHistory();
-
-    } catch (err) {
-      loader.remove();
-      if (err.name === "AbortError") {
-        appendMessage("⚠️ Requête interrompue.", "bot-message");
-      } else {
-        appendMessage("❌ Erreur de connexion", "bot-message");
-        console.error(err);
-      }
-    } finally {
-      setStopEnabled(false);
-      currentController = null;
-      userInput.focus();
+      // Révoque les objectURLs et vide pendingFiles
+      pendingFiles.forEach(f => {
+        if (f._objectUrl) URL.revokeObjectURL(f._objectUrl);
+      });
+      pendingFiles = [];
+    } else {
+      res  = await fetch(webhookURL, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
+        signal
+      });
+      data = await res.json();
     }
+
+    // 6) Affiche la réponse du bot
+    loader.remove();
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+    loadHistory();
+
+  } catch (err) {
+    loader.remove();
+    if (err.name === "AbortError") {
+      appendMessage("⚠️ Requête interrompue.", "bot-message");
+    } else {
+      appendMessage("❌ Erreur de connexion", "bot-message");
+      console.error(err);
+    }
+  } finally {
+    setStopEnabled(false);
+    currentController = null;
+    userInput.focus();
   }
 });
 
