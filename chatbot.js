@@ -754,12 +754,13 @@ function saveLocal() {
 
 sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
+  // Si ni texte ni fichiers → on ne fait rien
   if (!text && pendingFiles.length === 0) return;
 
-  // 1) Affiche d’abord ce que tape l’utilisateur
+  // 1) Affiche le texte utilisateur
   if (text) appendMessage(text, "user-message");
 
-  // 2) Si des fichiers sont en attente, on crée leur bulle avant le loader
+  // 2) Affiche toutes les PJ dans le chat avant d'envoyer
   if (pendingFiles.length > 0) {
     const filesBubble = document.createElement("div");
     filesBubble.className = "message user-message";
@@ -773,7 +774,7 @@ sendBtn.addEventListener("click", async () => {
       row.style.alignItems = "center";
       row.style.gap = "8px";
 
-      // mini-thumbnail ou icône
+      // miniature ou icône
       if (f._objectUrl) {
         const img = document.createElement("img");
         img.src = f._objectUrl;
@@ -786,7 +787,7 @@ sendBtn.addEventListener("click", async () => {
         row.appendChild(ico);
       }
 
-      // nom
+      // nom du fichier
       const nm = document.createElement("span");
       nm.textContent = f.name;
       row.appendChild(nm);
@@ -797,12 +798,12 @@ sendBtn.addEventListener("click", async () => {
     chat.appendChild(filesBubble);
     chat.scrollTop = chat.scrollHeight;
 
-    // on vide la prévisualisation
+    // on masque la preview sous l'input
     filePreview.innerHTML = "";
     filePreview.style.display = "none";
   }
 
-  // 3) On crée **une seule fois** le loader
+  // 3) On prépare UN seul loader
   const loader = document.createElement("div");
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis…";
@@ -814,14 +815,14 @@ sendBtn.addEventListener("click", async () => {
   userInput.rows  = 1;
   userInput.focus();
 
-  // AbortController
+  // AbortController pour Stop
   currentController = new AbortController();
   const { signal } = currentController;
   setStopEnabled(true);
 
   try {
+    // 4) Construction du payload (FormData ou JSON)
     let res, data;
-
     if (pendingFiles.length > 0) {
       const fd = new FormData();
       pendingFiles.forEach(f => fd.append("file", f, f.name));
@@ -830,23 +831,24 @@ sendBtn.addEventListener("click", async () => {
       fd.append("chat_id", chat_id);
       fd.append("type", text ? "filesWithText" : "files");
 
-      res  = await fetch(webhookURL, { method: "POST", body: fd, signal });
-      data = await res.json();
-
-      // après envoi, on révoque les URLs et vide l’array
-      pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
-      pendingFiles = [];
+      res = await fetch(webhookURL, { method: "POST", body: fd, signal });
     } else {
-      res  = await fetch(webhookURL, {
-        method:  "POST",
+      res = await fetch(webhookURL, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
+        body: JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
         signal
       });
-      data = await res.json();
     }
 
-    // 4) on supprime le loader et on affiche la réponse
+    // 5) Toujours parser la réponse une seule fois
+    data = await res.json();
+
+    // 6) On vide pendingFiles (et on révoque les blob URLs)
+    pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
+    pendingFiles = [];
+
+    // 7) Remove loader + afficher la réponse
     loader.remove();
     appendMessage(data.output || "Pas de réponse", "bot-message");
     loadHistory();
