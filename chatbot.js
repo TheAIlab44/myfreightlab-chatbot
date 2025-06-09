@@ -758,8 +758,9 @@ scrollBtn.id = "scrollToBottomBtn";
 scrollBtn.innerHTML = "▼";
 Object.assign(scrollBtn.style, {
   position: "absolute",
-  bottom: "60px",        // 60px au-dessus de l’input-area (ajuste si besoin)
-  right: "20px",         // à droite
+  bottom: "60px",              // à 60px du bas
+  left: "50%",                 // milieu de l’écran
+  transform: "translateX(-50%)", // décale de moitié de sa largeur
   width: "36px",
   height: "36px",
   borderRadius: "50%",
