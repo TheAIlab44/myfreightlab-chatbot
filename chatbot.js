@@ -750,27 +750,66 @@ function saveLocal() {
   localStorage.setItem("chatHistory", JSON.stringify(arr));
 }
 
-// — Send logic (modifiée pour gérer AbortController)
 sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
   if (!text && pendingFiles.length === 0) return;
 
-  // Afficher le message utilisateur
+  // — On prépare la bulle texte —
   if (text) appendMessage(text, "user-message");
 
-  // Création d’un loader
+  // — On prépare la bulle fichiers (avant de vider pendingFiles) —
+  if (pendingFiles.length > 0) {
+    // Crée un conteneur pour tous les fichiers joints
+    const filesBubble = document.createElement("div");
+    filesBubble.className = "message user-message";
+    filesBubble.style.display = "flex";
+    filesBubble.style.flexDirection = "column";
+    filesBubble.style.gap = "6px";
+
+    pendingFiles.forEach(f => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+
+      // Icône générique ou thumbnail
+      if (f.type.startsWith("image/")) {
+        const img = document.createElement("img");
+        img.src = f._objectUrl;
+        img.style.width = img.style.height = "24px";
+        img.style.objectFit = "cover";
+        row.appendChild(img);
+      } else {
+        const ico = document.createElement("span");
+        ico.textContent = "📎";
+        row.appendChild(ico);
+      }
+
+      // Nom
+      const name = document.createElement("span");
+      name.textContent = f.name;
+      row.appendChild(name);
+
+      filesBubble.appendChild(row);
+    });
+
+    chat.appendChild(filesBubble);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  // — Loader bot —
   const loader = document.createElement("div");
   loader.className = "message bot-message";
   loader.innerHTML = "Je réfléchis…";
   chat.appendChild(loader);
   chat.scrollTop = chat.scrollHeight;
 
-  // Désactivation / réinitialisation de l’input
+  // — Reset input —
   userInput.value = "";
-  userInput.rows = 1;
+  userInput.rows  = 1;
   userInput.focus();
 
-  // Mise en place de l’AbortController
+  // — AbortController —
   currentController = new AbortController();
   const { signal } = currentController;
   setStopEnabled(true);
@@ -779,7 +818,6 @@ sendBtn.addEventListener("click", async () => {
     let res, data;
 
     if (pendingFiles.length > 0) {
-      // 1) Construire le FormData AVANT de vider pendingFiles
       const fd = new FormData();
       pendingFiles.forEach(f => fd.append("file", f, f.name));
       fd.append("question", text);
@@ -787,39 +825,31 @@ sendBtn.addEventListener("click", async () => {
       fd.append("chat_id", chat_id);
       fd.append("type", text ? "filesWithText" : "files");
 
-      // 2) Envoyer la requête
-      res = await fetch(webhookURL, {
-        method: "POST",
-        body: fd,
-        signal
-      });
+      res  = await fetch(webhookURL, { method: "POST", body: fd, signal });
       data = await res.json();
 
-      // 3) Puis vider la preview VISUELLE et le tableau pendingFiles
+      // — On vide l’aperçu, car on l’a déjà envoyé dans le chat —
       pendingFiles.forEach(f => {
-        if (f._objectUrl) {
-          URL.revokeObjectURL(f._objectUrl);
-          delete f._objectUrl;
-        }
+        if (f._objectUrl) URL.revokeObjectURL(f._objectUrl);
       });
       pendingFiles = [];
-      filePreview.style.display = "none";
       filePreview.innerHTML = "";
+      filePreview.style.display = "none";
     } else {
-      // envoi classique JSON
-      res = await fetch(webhookURL, {
-        method: "POST",
+      res  = await fetch(webhookURL, {
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
+        body:    JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
         signal
       });
       data = await res.json();
     }
 
-    // Requête terminée normalement
+    // — Affichage bot —
     loader.remove();
     appendMessage(data.output || "Pas de réponse", "bot-message");
     loadHistory();
+
   } catch (err) {
     loader.remove();
     if (err.name === "AbortError") {
@@ -834,8 +864,6 @@ sendBtn.addEventListener("click", async () => {
     userInput.focus();
   }
 });
-
-
 
 // — Enter vs Shift+Enter
 userInput.addEventListener("keydown", e => {
