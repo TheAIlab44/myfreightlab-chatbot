@@ -754,74 +754,89 @@ function saveLocal() {
 
 sendBtn.addEventListener("click", async () => {
   const text = userInput.value.trim();
-  // rien à envoyer ?
   if (!text && pendingFiles.length === 0) return;
 
-  // 1) On affiche le message texte
+  // 1) Affiche d’abord ce que tape l’utilisateur
   if (text) appendMessage(text, "user-message");
 
-// — On affiche une bulle séparée pour chaque PJ —
-if (pendingFiles.length > 0) {
-  // on cache tout de suite la prévisualisation
-  filePreview.innerHTML = "";
-  filePreview.style.display = "none";
+  // 2) Si des fichiers sont en attente, on crée leur bulle avant le loader
+  if (pendingFiles.length > 0) {
+    const filesBubble = document.createElement("div");
+    filesBubble.className = "message user-message";
+    filesBubble.style.display = "flex";
+    filesBubble.style.flexDirection = "column";
+    filesBubble.style.gap = "6px";
 
-  pendingFiles.forEach(f => {
-    const fileMsg = document.createElement("div");
-    fileMsg.className = "message user-message";
-    fileMsg.style.display = "flex";
-    fileMsg.style.alignItems = "center";
-    fileMsg.style.gap = "8px";
+    pendingFiles.forEach(f => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
 
-    // miniature ou icône
-    if (f.type.startsWith("image/")) {
-      const img = document.createElement("img");
-      img.src = f._objectUrl;
-      img.style.width = img.style.height = "24px";
-      img.style.objectFit = "cover";
-      fileMsg.appendChild(img);
-    } else {
-      const ico = document.createElement("span");
-      ico.textContent = "📎";
-      fileMsg.appendChild(ico);
-    }
+      // mini-thumbnail ou icône
+      if (f._objectUrl) {
+        const img = document.createElement("img");
+        img.src = f._objectUrl;
+        img.style.width = img.style.height = "24px";
+        img.style.objectFit = "cover";
+        row.appendChild(img);
+      } else {
+        const ico = document.createElement("span");
+        ico.textContent = "📎";
+        row.appendChild(ico);
+      }
 
-    // nom du fichier
-    const name = document.createElement("span");
-    name.textContent = f.name;
-    fileMsg.appendChild(name);
+      // nom
+      const nm = document.createElement("span");
+      nm.textContent = f.name;
+      row.appendChild(nm);
 
-    chat.appendChild(fileMsg);
-  });
+      filesBubble.appendChild(row);
+    });
 
+    chat.appendChild(filesBubble);
+    chat.scrollTop = chat.scrollHeight;
+
+    // on vide la prévisualisation
+    filePreview.innerHTML = "";
+    filePreview.style.display = "none";
+  }
+
+  // 3) On crée **une seule fois** le loader
+  const loader = document.createElement("div");
+  loader.className = "message bot-message";
+  loader.innerHTML = "Je réfléchis…";
+  chat.appendChild(loader);
   chat.scrollTop = chat.scrollHeight;
-}
 
-  // 4) Reset de l’input
+  // reset input
   userInput.value = "";
   userInput.rows  = 1;
   userInput.focus();
 
-  // 5) AbortController + envoi
+  // AbortController
   currentController = new AbortController();
   const { signal } = currentController;
   setStopEnabled(true);
 
   try {
     let res, data;
+
     if (pendingFiles.length > 0) {
-      // formData avec **toutes** les PJ
       const fd = new FormData();
-      pendingFiles.forEach(f => fd.append("files", f, f.name));
+      pendingFiles.forEach(f => fd.append("file", f, f.name));
       fd.append("question", text);
-      fd.append("user_id",   user_id);
-      fd.append("chat_id",   chat_id);
-      fd.append("type",      text ? "filesWithText" : "files");
+      fd.append("user_id", user_id);
+      fd.append("chat_id", chat_id);
+      fd.append("type", text ? "filesWithText" : "files");
 
       res  = await fetch(webhookURL, { method: "POST", body: fd, signal });
       data = await res.json();
+
+      // après envoi, on révoque les URLs et vide l’array
+      pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
+      pendingFiles = [];
     } else {
-      // envoi texte seulement
       res  = await fetch(webhookURL, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -831,11 +846,7 @@ if (pendingFiles.length > 0) {
       data = await res.json();
     }
 
-    // 6) On nettoie les objectURLs et le tableau
-    pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
-    pendingFiles = [];
-
-    // 7) On retire le loader et on affiche la réponse
+    // 4) on supprime le loader et on affiche la réponse
     loader.remove();
     appendMessage(data.output || "Pas de réponse", "bot-message");
     loadHistory();
@@ -854,6 +865,7 @@ if (pendingFiles.length > 0) {
     userInput.focus();
   }
 });
+
 
 // — Enter vs Shift+Enter
 userInput.addEventListener("keydown", e => {
