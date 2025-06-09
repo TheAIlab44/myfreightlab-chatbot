@@ -581,28 +581,29 @@ attachBtn.addEventListener("click", () => {
   fileInput.click();
 });
 
-// — Lorsqu’on choisit un ou plusieurs fichiers dans le sélecteur…
+// Lorsqu’on choisit des fichiers via l’input “+”
 fileInput.addEventListener("change", e => {
   const files = Array.from(e.target.files);
-  if (files.length === 0) return;
+  if (!files.length) return;
 
-  // Ajouter les fichiers à pendingFiles
+  // On ajoute à la liste existante
   pendingFiles.push(...files);
 
-  // Afficher le preview (vider l’ancien si nécessaire)
+  // On vide l’ancien aperçu et on l’affiche
   filePreview.innerHTML = "";
   filePreview.style.display = "flex";
 
-  files.forEach(file => {
+  // Pour chaque fichier, on crée sa vignette
+  pendingFiles.forEach(file => {
     const item = document.createElement("div");
     item.className = "file-item";
 
     if (file.type.startsWith("image/")) {
       const img = document.createElement("img");
-      const objectUrl = URL.createObjectURL(file);
-      file._objectUrl = objectUrl;
-      img.src = objectUrl;
-      img.addEventListener("load", () => URL.revokeObjectURL(objectUrl), { once: true });
+      const url = URL.createObjectURL(file);
+      file._objectUrl = url;
+      img.src = url;
+      img.addEventListener("load", () => URL.revokeObjectURL(url), { once: true });
       item.appendChild(img);
     } else {
       const ico = document.createElement("div");
@@ -611,23 +612,23 @@ fileInput.addEventListener("change", e => {
       item.appendChild(ico);
     }
 
+    // Nom du fichier en dessous
+    const name = document.createElement("div");
+    name.className = "file-name";
+    name.textContent = file.name;
+    item.appendChild(name);
+
     filePreview.appendChild(item);
   });
 
-  // Si le bouton “×” n’est pas encore présent, l’ajouter
+  // On remet le bouton “×” pour tout vider
   if (!filePreview.querySelector(".file-clear")) {
     const clearBtn = document.createElement("div");
     clearBtn.className = "file-clear";
     clearBtn.textContent = "×";
     clearBtn.title = "Tout supprimer";
-    clearBtn.style.cursor = "pointer";
     clearBtn.onclick = () => {
-      pendingFiles.forEach(f => {
-        if (f._objectUrl) {
-          URL.revokeObjectURL(f._objectUrl);
-          delete f._objectUrl;
-        }
-      });
+      pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
       pendingFiles = [];
       filePreview.innerHTML = "";
       filePreview.style.display = "none";
@@ -635,9 +636,10 @@ fileInput.addEventListener("change", e => {
     filePreview.appendChild(clearBtn);
   }
 
-  // Réinitialiser fileInput pour pouvoir re-sélectionner les mêmes fichiers
+  // Réinitialiser l’input pour pouvoir re-sélectionner les mêmes fichiers
   fileInput.value = "";
 });
+
 
 // — sidebar toggles & prompts
 toggleHistory.addEventListener("click", () => historyPanel.classList.toggle("open"));
