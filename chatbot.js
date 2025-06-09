@@ -419,6 +419,7 @@ async function loadHistory() {
   const lasts  = getLastSessions(all);
   const titles = getSessionTitles();
 
+  // Génération de titres par défaut
   lasts.forEach(({ session_id, message }) => {
     if (!(session_id in titles)) {
       const parsed = typeof message === "string" ? JSON.parse(message) : message;
@@ -432,14 +433,27 @@ async function loadHistory() {
 
   historyList.innerHTML = "";
 
+  // Affichage de chaque session avec menu contextuel
   lasts.forEach(({ session_id }) => {
     const entry = document.createElement("div");
     entry.className = "prompt";
-    entry.textContent = titles[session_id];
-    entry.addEventListener("click", async () => {
+    entry.dataset.id = session_id;
+
+    // Label cliquable pour charger la session
+    const label = document.createElement("span");
+    label.textContent = titles[session_id];
+    entry.appendChild(label);
+
+    // Bouton “⋮” pour ouvrir le menu
+    const menuBtn = document.createElement("span");
+    menuBtn.className = "menu-button";
+    menuBtn.textContent = "⋮";
+    entry.appendChild(menuBtn);
+
+    // Clic sur le label → chargement de la session
+    label.addEventListener("click", async () => {
       localStorage.setItem("chat_id", session_id);
       chat.innerHTML = "";
-
       (await fetchUserMessages(user_id))
         .filter(m => m.session_id === session_id)
         .forEach(m => {
@@ -449,13 +463,49 @@ async function loadHistory() {
           d.innerHTML = js.content;
           chat.appendChild(d);
         });
-
       chat.scrollTop = 0;
       historyPanel.classList.remove("open");
     });
+
+    // Clic sur “⋮” → renommer / supprimer
+    menuBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      // Fermer les autres menus
+      document.querySelectorAll(".context-menu").forEach(m => m.remove());
+
+      const menu = document.createElement("div");
+      menu.className = "context-menu";
+
+      // Renommer
+      const ren = document.createElement("div");
+      ren.textContent = "Renommer";
+      ren.onclick = () => {
+        const nm = prompt("Nouveau titre", titles[session_id]);
+        if (nm) {
+          titles[session_id] = nm;
+          saveSessionTitles(titles);
+          label.textContent = nm;
+        }
+        menu.remove();
+      };
+
+      // Supprimer
+      const del = document.createElement("div");
+      del.textContent = "Supprimer";
+      del.onclick = () => {
+        delete titles[session_id];
+        saveSessionTitles(titles);
+        historyList.removeChild(entry);
+      };
+
+      menu.append(ren, del);
+      entry.appendChild(menu);
+    });
+
     historyList.appendChild(entry);
   });
 }
+
 
 resetBtn.addEventListener("click", () => {
   localStorage.removeItem("chat_id");
