@@ -528,7 +528,7 @@ el.addEventListener("click", e => {
 })(); // ← fermeture du IIFE DOMContentLoaded
 
 // ✅ FONCTION À AJOUTER EN DEHORS de DOMContentLoaded :
-export async function getUserDocuments(userId, fileId = null) {
+async function getUserDocuments(userId, fileId = null) {
   let query = supabase
     .from("documents")
     .select("*")
