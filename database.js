@@ -525,10 +525,10 @@ el.addEventListener("click", e => {
     clearAndRender();
   });
 
-})(); // ← fermeture du IIFE DOMContentLoaded
+}); // ← fermeture du IIFE DOMContentLoaded
 
 // ✅ FONCTION À AJOUTER EN DEHORS de DOMContentLoaded :
-async function getUserDocuments(userId, fileId = null) {
+window.getUserDocuments = async function(userId, fileId = null) {
   let query = supabase
     .from("documents")
     .select("*")
@@ -543,5 +543,6 @@ async function getUserDocuments(userId, fileId = null) {
 
   console.log("📄 Documents récupérés :", data);
   return data;
-}
+};
+
 
