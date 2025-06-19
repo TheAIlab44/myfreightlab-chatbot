@@ -456,7 +456,7 @@ el.addEventListener("click", e => {
   loadFiles();
   clearAndRender();
 
-  // 1) Charger les fichiers de l’utilisateur depuis Supabase
+   // 1) Charger les fichiers de l’utilisateur depuis Supabase
   async function loadUserFiles() {
     try {
       const { data: rows, error } = await sb
@@ -484,7 +484,7 @@ el.addEventListener("click", e => {
       saveFiles();
       clearAndRender();
     } catch (err) {
-      console.error("❌ Impossible de charger les fichiers Supab ase :", err);
+      console.error("❌ Impossible de charger les fichiers Supabase :", err);
       clearAndRender();
     }
   } // ← Fin de loadUserFiles
@@ -524,4 +524,24 @@ el.addEventListener("click", e => {
     saveFiles();
     clearAndRender();
   });
-});
+
+})(); // ← fermeture du IIFE DOMContentLoaded
+
+// ✅ FONCTION À AJOUTER EN DEHORS de DOMContentLoaded :
+export async function getUserDocuments(userId, fileId = null) {
+  let query = supabase
+    .from("documents")
+    .select("*")
+    .filter("metadata->>user_id", "eq", userId);
+
+  if (fileId) {
+    query = query.filter("metadata->>file_id", "eq", fileId);
+  }
+
+  const { data, error } = await query.limit(50);
+  if (error) throw new Error(error.message);
+
+  console.log("📄 Documents récupérés :", data);
+  return data;
+}
+
