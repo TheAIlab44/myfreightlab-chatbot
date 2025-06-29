@@ -206,36 +206,6 @@ document.addEventListener("drop", e => {
   }
 });
 
-// ————— Drag & Drop pour l’upload —————
-dropZone.addEventListener("dragover", e => {
-  e.preventDefault();
-  dropZone.classList.add("dragover");
-});
-dropZone.addEventListener("dragleave", () => {
-  dropZone.classList.remove("dragover");
-});
-dropZone.addEventListener("drop", async e => {
-  e.preventDefault();
-  dropZone.classList.remove("dragover");
-
-  for (const f of e.dataTransfer.files) {
-    const fd = new FormData();
-    fd.append("file", f);
-    fd.append("user_id", user_id);
-    try {
-      await fetch(
-        "https://myfreightlab.app.n8n.cloud/webhook/34e003f9-99db-4b40-a513-9304c01a1182",
-        { method: "POST", body: fd }
-      );
-      const id = crypto.randomUUID();
-      files.push({ id, name: f.name, folderId: null });
-    } catch {
-      alert("Erreur upload fichier");
-    }
-  }
-  saveFiles();
-  clearAndRender();
-});
 
   // ————— Context menu helper —————
   function closeMenus() {
