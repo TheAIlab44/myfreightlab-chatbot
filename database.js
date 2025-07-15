@@ -431,7 +431,7 @@ el.addEventListener("click", e => {
     try {
       const { data: rows, error } = await sb
         .from("documents")
-        .select("file_id, title, storage_key")
+        .select("file_id, title")
         .eq("user_id", user_id)
         .order("uploaded_at", { ascending: false });
 
@@ -447,7 +447,7 @@ el.addEventListener("click", e => {
                 ? existing.name
                 : (item.title || item.file_id),
           folderId: existing ? existing.folderId : null,
-          url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.storage_key}`
+          url: `${SUPABASE_URL}/storage/v1/object/public/user-files/${item.file_id}`
         };
       });
 
