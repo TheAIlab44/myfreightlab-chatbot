@@ -430,7 +430,7 @@ el.addEventListener("click", e => {
   async function loadUserFiles() {
     try {
       const { data: rows, error } = await sb
-        .from("files_metadata")
+        .from("documents")
         .select("id as file_id, original_name as file_name, storage_key")
         .eq("user_id", user_id)
         .order("uploaded_at", { ascending: false });
