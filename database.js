@@ -431,7 +431,7 @@ el.addEventListener("click", e => {
     try {
       const { data: rows, error } = await sb
         .from("documents")
-        .select("id as file_id, title as file_name, storage_key")
+        .select("file_id, title as file_name, storage_key")
         .eq("user_id", user_id)
         .order("uploaded_at", { ascending: false });
 
