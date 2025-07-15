@@ -428,7 +428,6 @@ el.addEventListener("click", e => {
 
    // 1) Charger les fichiers de l’utilisateur depuis Supabase
   async function loadUserFiles() {
-    console.log ("lol",user_id)
     try {
       const { data: rows, error } = await sb
         .from("documents")
@@ -479,6 +478,7 @@ el.addEventListener("click", e => {
       const fd = new FormData();
       fd.append("file", f);
       fd.append("user_id", user_id);
+      console.log("lol",f) 
 
       try {
         await fetch(
