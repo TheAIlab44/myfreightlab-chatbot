@@ -433,7 +433,7 @@ el.addEventListener("click", e => {
         .from("documents")
         .select("file_id, title")
         .eq("user_id", user_id)
-        .order("uploaded_at", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
