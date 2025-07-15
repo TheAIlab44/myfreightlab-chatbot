@@ -478,7 +478,7 @@ el.addEventListener("click", e => {
       const fd = new FormData();
       fd.append("file", f);
       fd.append("user_id", user_id);
-      console.log("lol",f) 
+      fd.append("filename", f.name);
 
       try {
         await fetch(
