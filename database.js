@@ -398,6 +398,10 @@ el.addEventListener("click", e => {
     const del = document.createElement("div");
     del.textContent = "Supprimer";
     del.onclick = () => {
+      await fetch(
+          "https://myfreightlab.app.n8n.cloud/webhook/d9d6dd4e-ec3d-4b14-97a5-89f7d5770f9c",
+          { method: "DELETE", body: { fileId: file.id }
+        );
       files = files.filter(x => x.id !== file.id);
       saveFiles();
       clearAndRender();
