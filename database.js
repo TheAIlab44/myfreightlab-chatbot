@@ -400,7 +400,7 @@ el.addEventListener("click", e => {
     del.onclick = async () => {
       await fetch(
           "https://myfreightlab.app.n8n.cloud/webhook/d9d6dd4e-ec3d-4b14-97a5-89f7d5770f9c",
-          { method: "DELETE", body: { fileId: file.id }}
+          { method: "DELETE", body: JSON.stringify({ fileId: file.id })}
         );
       files = files.filter(x => x.id !== file.id);
       saveFiles();
