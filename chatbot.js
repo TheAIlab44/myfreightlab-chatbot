@@ -1,612 +1,32 @@
-// === ChatBot MyFreightLab avec historique, prompts, sidebar, multi-PJ et édition avant envoi ===
+  // === ChatBot MyFreightLab avec historique, prompts, sidebar, multi-PJ et édition avant envoi ===
+document.addEventListener("DOMContentLoaded", () => {
+  const webhookURL = "https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68";
+  const user_id    = new URLSearchParams(location.search).get("user_id");
 
-// Configuration
-const webhookURL = 'https://myfreightlab.app.n8n.cloud/webhook/0503eb30-8f11-4294-b879-f3823c3faa68';
-
-// — Session utilities
-function generateSessionID (userId) {
-  return `${userId}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-}
-
-function saveSessionID (userId) {
-  if (!localStorage.getItem('chat_id')) {
-    localStorage.setItem('chat_id', generateSessionID(userId));
+  // — Session utilities
+  function generateSessionID() {
+    return `${user_id}-${Date.now()}-${Math.floor(Math.random()*10000)}`;
   }
-}
-
-function loadSessionID (userId) {
-  let id = localStorage.getItem('chat_id');
-  if (!id) {
-    id = generateSessionID(userId);
-    localStorage.setItem('chat_id', id);
-  }
-  return id;
-}
-
-// — History utilities
-async function fetchUserMessages (userId) {
-  try {
-    const res = await fetch('https://myfreightlab.app.n8n.cloud/webhook/fetchmessagehistory', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId })
-    });
-    if (!res.ok) throw new Error('Erreur fetch messages');
-    return await res.json();
-  } catch (err) {
-    console.error('fetchUserMessages :', err);
-    return [];
-  }
-}
-
-function getLastSessions (messages) {
-  const map = new Map();
-  messages.forEach(m => {
-    if (!map.has(m.session_id) || m.id > map.get(m.session_id).id) {
-      map.set(m.session_id, m);
+  function saveSessionID() {
+    if (!localStorage.getItem("chat_id")) {
+      localStorage.setItem("chat_id", generateSessionID());
     }
-  });
-  return Array.from(map.values()).sort((a, b) => b.id - a.id);
-}
-
-function getSessionTitles () {
-  return JSON.parse(localStorage.getItem('sessionTitles') || '{}');
-}
-
-function saveSessionTitles (titles) {
-  localStorage.setItem('sessionTitles', JSON.stringify(titles));
-}
-
-// — UI utilities
-function adjustTextareaHeight (textarea) {
-  const lines = textarea.value.split('\n').length;
-  textarea.rows = lines < 1 ? 1 : lines;
-}
-
-function appendMessage (chat, html, cls) {
-  const m = document.createElement('div');
-  m.className = `message ${cls}`;
-  m.innerHTML = html;
-  const prev = chat.scrollHeight;
-  chat.appendChild(m);
-  chat.scrollTop = prev === 0 ? chat.scrollHeight : chat.scrollTop + (chat.scrollHeight - prev);
-  saveLocal(chat);
-}
-
-function saveLocal (chat) {
-  const arr = Array.from(chat.querySelectorAll('.message')).map(d => ({
-    role: d.classList.contains('user-message') ? 'user' : 'bot',
-    content: d.innerHTML
-  }));
-  localStorage.setItem('chatHistory', JSON.stringify(arr));
-}
-
-// — File utilities
-function createFilePreview (file) {
-  const item = document.createElement('div');
-  item.className = 'file-item';
-
-  if (file.type.startsWith('image/')) {
-    const img = document.createElement('img');
-    const url = URL.createObjectURL(file);
-    file._objectUrl = url;
-    img.src = url;
-    img.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
-    item.appendChild(img);
-  } else {
-    const ico = document.createElement('div');
-    ico.className = 'file-icon';
-    ico.textContent = file.name.split('.').pop().toUpperCase();
-    item.appendChild(ico);
   }
-
-  return item;
-}
-
-function cleanupFileUrls (files) {
-  files.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
-}
-
-// — Message utilities
-async function sendMessage (text, files, userId, chatId, webhookUrl = webhookURL) {
-  let res;
-
-  if (files.length > 0) {
-    const fd = new FormData();
-    files.forEach(f => fd.append('file', f, f.name));
-    fd.append('question', text);
-    fd.append('user_id', userId);
-    fd.append('chat_id', chatId);
-    fd.append('type', text ? 'filesWithText' : 'files');
-
-    res = await fetch(webhookUrl, { method: 'POST', body: fd });
-  } else {
-    res = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: text, user_id: userId, chat_id: chatId, type: 'text' })
-    });
+  function loadSessionID() {
+    let id = localStorage.getItem("chat_id");
+    if (!id) {
+      id = generateSessionID();
+      localStorage.setItem("chat_id", id);
+    }
+    return id;
   }
-
-  const data = await res.json();
-  return data;
-}
-
-// — Utility functions
-function setStopEnabled (stopBtn, enabled) {
-  if (enabled) {
-    stopBtn.disabled = false;
-    stopBtn.classList.add('enabled');
-    stopBtn.style.cursor = 'pointer';
-  } else {
-    stopBtn.disabled = true;
-    stopBtn.classList.remove('enabled');
-    stopBtn.style.cursor = 'not-allowed';
-  }
-}
-
-function createScrollButton () {
-  const scrollBtn = document.createElement('button');
-  scrollBtn.id = 'scrollToBottomBtn';
-  scrollBtn.innerHTML = '▼';
-  Object.assign(scrollBtn.style, {
-    position: 'absolute',
-    bottom: '60px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
-    border: 'none',
-    background: '#0077c8',
-    color: 'white',
-    fontSize: '20px',
-    cursor: 'pointer',
-    display: 'none',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-    zIndex: 1000
-  });
-  return scrollBtn;
-}
-
-// Export des fonctions pour les tests
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    generateSessionID,
-    saveSessionID,
-    loadSessionID,
-    fetchUserMessages,
-    getLastSessions,
-    getSessionTitles,
-    saveSessionTitles,
-    adjustTextareaHeight,
-    appendMessage,
-    saveLocal,
-    createFilePreview,
-    cleanupFileUrls,
-    sendMessage,
-    setStopEnabled,
-    createScrollButton
-  };
-}
-
-// Initialisation du chatbot
-document.addEventListener('DOMContentLoaded', () => {
-  const user_id = new URLSearchParams(location.search).get('user_id');
-
-  // Initialisation des sessions
-  saveSessionID(user_id);
-  let chat_id = loadSessionID(user_id);
+  saveSessionID();
+  let chat_id = loadSessionID();
 
   // — Build UI
-  const wrapper = document.createElement('div');
-  wrapper.id = 'chat-wrapper';
-  wrapper.innerHTML = `
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-    * {
-      font-family: 'Inter', sans-serif;
-    }
-
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    #chat-wrapper {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      height: 90vh;
-      width: 80vw;
-      margin: 5vh auto;
-      background: #f9fbfc;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #d3dce6;
-      position: relative;
-    }
-
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      align-items: center;
-      height: calc(90vh - 100px);
-    }
-
-    .message {
-      padding: 14px 18px;
-      border-radius: 18px;
-      max-width: 80%;
-      font-size: 15px;
-      line-height: 1.6;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-      animation: fadeInUp 0.4s ease-out;
-    }
-
-    .user-message {
-      align-self: flex-start;
-      background: #e6f0ff;
-      color: #003366;
-      border-bottom-right-radius: 0;
-    }
-
-    .bot-message {
-      align-self: flex-end;
-      background: #fff;
-      color: #222;
-      border-bottom-left-radius: 0;
-    }
-
-    /* on rend input-area relatif pour le file-preview absolu */
-    #input-area {
-      position: relative;
-      display: flex;
-      padding: 12px 16px;
-      border-top: 1px solid #ccc;
-      gap: 8px; /* espacement réduit pour accueillir 3 boutons */
-      background: white;
-      align-items: center;
-    }
-
-    #userInput {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      outline: none;
-      font-size: 15px;
-      overflow-y: hidden;
-      resize: none;
-    }
-
-    /* === Bouton "Envoyer" personnalisé === */
-    #sendBtn {
-      background: linear-gradient(135deg, #005a9c 0%, #0077c8 100%);
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      transition:
-        transform 0.1s ease,
-        box-shadow 0.1s ease;
-    }
-
-    #sendBtn::before {
-      content: '▶';
-      color: white;
-      font-size: 14px; /* diminué pour rester centré dans 40×40 */
-      transform: translateX(1px);
-    }
-
-    #sendBtn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-    }
-
-    #sendBtn:active {
-      transform: scale(0.98);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    /* === Bouton "Stop" (interruption) === */
-    #stopBtn {
-      background: #d3d3d3; /* gris clair */
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: not-allowed; /* désactivé par défaut */
-      color: #666;
-      font-size: 18px;
-      opacity: 0.6;
-      transition:
-        background 0.15s ease,
-        color 0.15s ease,
-        opacity 0.15s ease;
-    }
-
-    #stopBtn.enabled {
-      background: #ff953d;
-      color: white;
-      cursor: pointer;
-      opacity: 1;
-    }
-
-    #stopBtn.enabled:hover {
-      background: #cc7731; /* rouge plus foncé */
-    }
-
-    #stopBtn.enabled:active {
-      transform: scale(0.95);
-    }
-
-    /* === Bouton "Nouveau chat" (resetBtn) : style d'origine === */
-    #resetBtn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: white;
-      border: 1px solid #ccc;
-      padding: 4px 8px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 13px;
-      color: #333;
-      transition:
-        background 0.1s ease,
-        color 0.1s ease,
-        box-shadow 0.1s ease;
-    }
-
-    #resetBtn:hover {
-      background: #f0f0f0;
-    }
-
-    /* === Bouton "➕" (ajout de fichier) personnalisé === */
-    #attachBtn {
-      background: #0077c8;
-      border: none;
-      color: white;
-      border-radius: 8px;
-      width: 40px;
-      height: 40px;
-      font-size: 20px;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition:
-        background 0.15s ease,
-        color 0.15s ease,
-        border 0.15s ease;
-    }
-
-    #attachBtn:hover {
-      background: white;
-      color: #0077c8;
-      border: 2px solid #0077c8;
-    }
-
-    #attachBtn:active {
-      transform: scale(0.95);
-    }
-
-    /* dropZone */
-    #drop-zone {
-      border: 2px dashed #ccc;
-      padding: 40px;
-      text-align: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 255, 255, 0.95);
-      display: none;
-      z-index: 9999;
-      font-size: 24px;
-      color: #666;
-    }
-
-    #drop-zone.dragover {
-      background: rgba(0, 119, 200, 0.1);
-      border-color: #0077c8;
-      color: #0077c8;
-    }
-
-    /* file preview */
-    #file-preview {
-      position: absolute;
-      top: -60px;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 8px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      max-height: 120px;
-      overflow-y: auto;
-    }
-
-    .file-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 8px;
-      background: #f5f5f5;
-      border-radius: 4px;
-      font-size: 12px;
-      max-width: 200px;
-    }
-
-    .file-item img {
-      width: 24px;
-      height: 24px;
-      object-fit: cover;
-      border-radius: 2px;
-    }
-
-    .file-icon {
-      width: 24px;
-      height: 24px;
-      background: #0077c8;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 2px;
-      font-size: 10px;
-      font-weight: bold;
-    }
-
-    .file-name {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 150px;
-    }
-
-    .file-clear {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      width: 20px;
-      height: 20px;
-      background: #ff4444;
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    /* sidebar */
-    .floating-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      background: #0077c8;
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 20px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transition: transform 0.2s ease;
-      z-index: 1000;
-    }
-
-    .floating-toggle:hover {
-      transform: scale(1.1);
-    }
-
-    .dynamic-sidebar {
-      position: fixed;
-      top: 0;
-      right: -300px;
-      width: 300px;
-      height: 100vh;
-      background: white;
-      border-left: 1px solid #ccc;
-      transition: right 0.3s ease;
-      z-index: 999;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .dynamic-sidebar.open {
-      right: 0;
-    }
-
-    .sidebar-header {
-      padding: 20px;
-      background: #f5f5f5;
-      border-bottom: 1px solid #ccc;
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    .sidebar-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-    }
-
-    .prompt {
-      padding: 10px;
-      margin: 5px 0;
-      background: #f9f9f9;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .prompt:hover {
-      background: #e9e9e9;
-    }
-
-    /* animations */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* scroll button */
-    #scrollToBottomBtn {
-      position: absolute;
-      bottom: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: none;
-      background: #0077c8;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-      display: none;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-      z-index: 1000;
-    }
-
-    #scrollToBottomBtn:hover {
-      background: #005a9c;
-    }
-  </style>
+const wrapper = document.createElement("div");
+wrapper.id = "chat-wrapper";
+wrapper.innerHTML = `
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
     * { font-family: 'Inter', sans-serif; }
@@ -920,542 +340,597 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 `;
 
-  document.getElementById('chat-container').appendChild(wrapper);
+ document.getElementById("chat-container").appendChild(wrapper);
 
-  // — Key elements
-  const chat = wrapper.querySelector('#chat');
-  const inputArea = wrapper.querySelector('#input-area');
-  const userInput = wrapper.querySelector('#userInput');
-  const sendBtn = wrapper.querySelector('#sendBtn');
-  const stopBtn = wrapper.querySelector('#stopBtn');
-  let currentController = null;
-  const resetBtn = wrapper.querySelector('#resetBtn');
-  const dropZone = wrapper.querySelector('#drop-zone');
-  const toggleHistory = wrapper.querySelector('#toggleHistory');
-  const historyPanel = wrapper.querySelector('#historyPanel');
-  const historyList = wrapper.querySelector('#historyList');
-  const togglePrompt = wrapper.querySelector('#togglePrompt');
-  const promptPanel = wrapper.querySelector('#promptPanel');
-  const prompts = wrapper.querySelectorAll('.prompt');
+// — Key elements
+const chat         = wrapper.querySelector("#chat");
+const inputArea    = wrapper.querySelector("#input-area");
+const userInput    = wrapper.querySelector("#userInput");
+const sendBtn      = wrapper.querySelector("#sendBtn");
+const stopBtn      = wrapper.querySelector("#stopBtn");
+let currentController = null;
+const resetBtn     = wrapper.querySelector("#resetBtn");
+const dropZone     = wrapper.querySelector("#drop-zone");
+const toggleHistory= wrapper.querySelector("#toggleHistory");
+const historyPanel = wrapper.querySelector("#historyPanel");
+const historyList  = wrapper.querySelector("#historyList");
+const togglePrompt = wrapper.querySelector("#togglePrompt");
+const promptPanel  = wrapper.querySelector("#promptPanel");
+const prompts      = wrapper.querySelectorAll(".prompt");
 
-  // — Fonction pour (dé)bloquer le bouton Stop
-  function setStopEnabledLocal (enabled) {
-    setStopEnabled(stopBtn, enabled);
+// — Fonction pour (dé)bloquer le bouton Stop
+function setStopEnabled(enabled) {
+  if (enabled) {
+    stopBtn.disabled = false;
+    stopBtn.classList.add("enabled");
+    stopBtn.style.cursor = "pointer";
+  } else {
+    stopBtn.disabled = true;
+    stopBtn.classList.remove("enabled");
+    stopBtn.style.cursor = "not-allowed";
   }
+}
 
-  // — Lorsque l’on clique sur Stop, on annule la requête en cours
-  stopBtn.addEventListener('click', () => {
-    if (currentController) {
-      currentController.abort();
-      setStopEnabledLocal(false);
+// — Lorsque l’on clique sur Stop, on annule la requête en cours
+stopBtn.addEventListener("click", () => {
+  if (currentController) {
+    currentController.abort();
+    setStopEnabled(false);
+  }
+});
+
+// --- HISTORIQUE DE CONVERSATION ---
+// (reste inchangé)
+async function fetchUserMessages(userId) {
+  try {
+    const res = await fetch("https://myfreightlab.app.n8n.cloud/webhook/fetchmessagehistory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId })
+    });
+    if (!res.ok) throw new Error("Erreur fetch messages");
+    return await res.json();
+  } catch (err) {
+    console.error("fetchUserMessages :", err);
+    return [];
+  }
+}
+
+function getLastSessions(messages) {
+  const map = new Map();
+  messages.forEach(m => {
+    if (!map.has(m.session_id) || m.id > map.get(m.session_id).id) {
+      map.set(m.session_id, m);
     }
   });
+  return Array.from(map.values())
+    .sort((a, b) => b.id - a.id);
+}
 
-  // --- HISTORIQUE DE CONVERSATION ---
-  // (reste inchangé)
+function getSessionTitles() {
+  return JSON.parse(localStorage.getItem("sessionTitles") || "{}");
+}
+function saveSessionTitles(titles) {
+  localStorage.setItem("sessionTitles", JSON.stringify(titles));
+}
 
-  async function loadHistory () {
-    const all = await fetchUserMessages(user_id);
-    const lasts = getLastSessions(all);
-    const titles = getSessionTitles();
+async function loadHistory() {
+  const all    = await fetchUserMessages(user_id);
+  const lasts  = getLastSessions(all);
+  const titles = getSessionTitles();
 
-    // 1) Génération de titres par défaut si nécessaire
-    lasts.forEach(({ session_id, message }) => {
-      if (!(session_id in titles)) {
-        const parsed = typeof message === 'string' ? JSON.parse(message) : message;
-        const tmp = document.createElement('div');
-        tmp.innerHTML = parsed.content || '';
-        const txt = (tmp.textContent || '').slice(0, 30);
-        titles[session_id] = txt + (txt.length === 30 ? '…' : '');
-      }
-    });
-    saveSessionTitles(titles);
-
-    // 2) Vider la liste avant rendu
-    historyList.innerHTML = '';
-
-    // 3) Pour chaque session, créer une ligne avec titre + menu
-    lasts.forEach(({ session_id }) => {
-      // Conteneur flex
-      const entry = document.createElement('div');
-      entry.className = 'prompt';
-      entry.dataset.id = session_id;
-      Object.assign(entry.style, {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'relative',
-        padding: '8px'
-      });
-
-      // a) Titre cliquable
-      const label = document.createElement('span');
-      label.textContent = titles[session_id];
-      Object.assign(label.style, {
-        flex: '1',
-        cursor: 'pointer'
-      });
-      entry.appendChild(label);
-
-      // b) Bouton “⋮”
-      const menuBtn = document.createElement('span');
-      menuBtn.textContent = '⋮';
-      Object.assign(menuBtn.style, {
-        cursor: 'pointer',
-        padding: '0 8px',
-        userSelect: 'none'
-      });
-      entry.appendChild(menuBtn);
-
-      // c) Menu caché
-      const menu = document.createElement('div');
-      menu.className = 'context-menu';
-      Object.assign(menu.style, {
-        position: 'absolute',
-        top: '100%',
-        right: '0',
-        background: '#fff',
-        border: '1px solid #ccc',
-        borderRadius: '6px',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-        display: 'none',
-        zIndex: '999'
-      });
-
-      // Option Renommer
-      const renameOption = document.createElement('div');
-      renameOption.textContent = 'Renommer';
-      Object.assign(renameOption.style, { padding: '8px', cursor: 'pointer' });
-      renameOption.addEventListener('click', () => {
-        const newName = prompt('Nouveau titre :', label.textContent);
-        if (newName) {
-          label.textContent = newName;
-          titles[session_id] = newName;
-          saveSessionTitles(titles);
-        }
-        menu.style.display = 'none';
-      });
-      menu.appendChild(renameOption);
-
-      // Option Supprimer
-      const deleteOption = document.createElement('div');
-      deleteOption.textContent = 'Supprimer';
-      Object.assign(deleteOption.style, { padding: '8px', cursor: 'pointer' });
-      deleteOption.addEventListener('click', () => {
-        delete titles[session_id];
-        saveSessionTitles(titles);
-        historyList.removeChild(entry);
-      });
-      menu.appendChild(deleteOption);
-
-      entry.appendChild(menu);
-
-      // 4) Événements
-      // a) Clic sur le titre → charger la session
-      label.addEventListener('click', async () => {
-        localStorage.setItem('chat_id', session_id);
-        chat.innerHTML = '';
-        (await fetchUserMessages(user_id))
-          .filter(m => m.session_id === session_id)
-          .forEach(m => {
-            const js = typeof m.message === 'string' ? JSON.parse(m.message) : m.message;
-            const d = document.createElement('div');
-            d.className = `message ${js.type === 'human' ? 'user-message' : 'bot-message'}`;
-            d.innerHTML = js.content;
-            chat.appendChild(d);
-          });
-        chat.scrollTop = 0;
-        historyPanel.classList.remove('open');
-      });
-
-      // b) Toggle menu
-      menuBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        document.querySelectorAll('.context-menu').forEach(m => {
-          m.style.display = 'none';
-        });
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-      });
-
-      // c) Clic en dehors → fermer
-      document.addEventListener('click', () => {
-        menu.style.display = 'none';
-      });
-
-      // 5) Ajout dans la sidebar
-      historyList.appendChild(entry);
-    });
-  }
-
-  resetBtn.addEventListener('click', () => {
-    localStorage.removeItem('chat_id');
-    localStorage.removeItem('chatHistory');
-    saveSessionID();
-    chat_id = loadSessionID();
-    chat.innerHTML = '';
-    appendMessageLocal('Que puis-je faire pour vous aujourd\'hui ?', 'bot-message');
-    loadHistory();
+  // 1) Génération de titres par défaut si nécessaire
+  lasts.forEach(({ session_id, message }) => {
+    if (!(session_id in titles)) {
+      const parsed = typeof message === "string" ? JSON.parse(message) : message;
+      const tmp    = document.createElement("div");
+      tmp.innerHTML = parsed.content || "";
+      const txt = (tmp.textContent || "").slice(0, 30);
+      titles[session_id] = txt + (txt.length === 30 ? "…" : "");
+    }
   });
+  saveSessionTitles(titles);
 
-  // — Ajuster la hauteur du textarea en fonction des sauts de ligne
-  userInput.addEventListener('input', () => adjustTextareaHeight(userInput));
+  // 2) Vider la liste avant rendu
+  historyList.innerHTML = "";
 
-  // 6) Lancer au démarrage
+  // 3) Pour chaque session, créer une ligne avec titre + menu
+  lasts.forEach(({ session_id }) => {
+    // Conteneur flex
+    const entry = document.createElement("div");
+    entry.className = "prompt";
+    entry.dataset.id = session_id;
+    Object.assign(entry.style, {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      position: "relative",
+      padding: "8px"
+    });
+
+    // a) Titre cliquable
+    const label = document.createElement("span");
+    label.textContent = titles[session_id];
+    Object.assign(label.style, {
+      flex: "1",
+      cursor: "pointer"
+    });
+    entry.appendChild(label);
+
+    // b) Bouton “⋮”
+    const menuBtn = document.createElement("span");
+    menuBtn.textContent = "⋮";
+    Object.assign(menuBtn.style, {
+      cursor: "pointer",
+      padding: "0 8px",
+      userSelect: "none"
+    });
+    entry.appendChild(menuBtn);
+
+    // c) Menu caché
+    const menu = document.createElement("div");
+    menu.className = "context-menu";
+    Object.assign(menu.style, {
+      position: "absolute",
+      top: "100%",
+      right: "0",
+      background: "#fff",
+      border: "1px solid #ccc",
+      borderRadius: "6px",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      display: "none",
+      zIndex: "999"
+    });
+
+    // Option Renommer
+    const renameOption = document.createElement("div");
+    renameOption.textContent = "Renommer";
+    Object.assign(renameOption.style, { padding: "8px", cursor: "pointer" });
+    renameOption.addEventListener("click", () => {
+      const newName = prompt("Nouveau titre :", label.textContent);
+      if (newName) {
+        label.textContent = newName;
+        titles[session_id] = newName;
+        saveSessionTitles(titles);
+      }
+      menu.style.display = "none";
+    });
+    menu.appendChild(renameOption);
+
+    // Option Supprimer
+    const deleteOption = document.createElement("div");
+    deleteOption.textContent = "Supprimer";
+    Object.assign(deleteOption.style, { padding: "8px", cursor: "pointer" });
+    deleteOption.addEventListener("click", () => {
+      delete titles[session_id];
+      saveSessionTitles(titles);
+      historyList.removeChild(entry);
+    });
+    menu.appendChild(deleteOption);
+
+    entry.appendChild(menu);
+
+    // 4) Événements
+    // a) Clic sur le titre → charger la session
+    label.addEventListener("click", async () => {
+      localStorage.setItem("chat_id", session_id);
+      chat.innerHTML = "";
+      (await fetchUserMessages(user_id))
+        .filter(m => m.session_id === session_id)
+        .forEach(m => {
+          const js = typeof m.message === "string" ? JSON.parse(m.message) : m.message;
+          const d  = document.createElement("div");
+          d.className = `message ${js.type === "human" ? "user-message" : "bot-message"}`;
+          d.innerHTML = js.content;
+          chat.appendChild(d);
+        });
+      chat.scrollTop = 0;
+      historyPanel.classList.remove("open");
+    });
+
+    // b) Toggle menu
+    menuBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      document.querySelectorAll(".context-menu").forEach(m => m.style.display = "none");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    });
+
+    // c) Clic en dehors → fermer
+    document.addEventListener("click", () => menu.style.display = "none");
+
+    // 5) Ajout dans la sidebar
+    historyList.appendChild(entry);
+  });
+}
+
+
+
+resetBtn.addEventListener("click", () => {
+  localStorage.removeItem("chat_id");
+  localStorage.removeItem("chatHistory");
+  saveSessionID();
+  chat_id = loadSessionID();
+  chat.innerHTML = "";
+  appendMessage("Que puis-je faire pour vous aujourd'hui ?", "bot-message");
   loadHistory();
+});
 
-  // — File preview container INSIDE input-area
-  let pendingFiles = [];
-  const filePreview = document.createElement('div');
-  filePreview.id = 'file-preview';
-  filePreview.style.display = 'none';
-  inputArea.appendChild(filePreview);
+// — Ajuster la hauteur du textarea en fonction des sauts de ligne
+function adjustTextareaHeight() {
+  const lines = userInput.value.split("\n").length;
+  userInput.rows = lines < 1 ? 1 : lines;
+}
+userInput.addEventListener("input", adjustTextareaHeight);
+
+// 6) Lancer au démarrage
+loadHistory();
+
+// — File preview container INSIDE input-area
+let pendingFiles = [];
+const filePreview = document.createElement("div");
+filePreview.id = "file-preview";
+filePreview.style.display = "none";
+inputArea.appendChild(filePreview);
 
   // — Récupérer le bouton “+” et le input type="file"
-  const attachBtn = wrapper.querySelector('#attachBtn');
-  const fileInput = wrapper.querySelector('#fileInput');
+const attachBtn = wrapper.querySelector("#attachBtn");
+const fileInput = wrapper.querySelector("#fileInput");
 
-  // — Ouvrir le sélecteur de fichiers au clic sur “+”
-  attachBtn.addEventListener('click', () => {
-    fileInput.click();
-  });
+// — Ouvrir le sélecteur de fichiers au clic sur “+”
+attachBtn.addEventListener("click", () => {
+  fileInput.click();
+});
 
-  // Lorsqu’on choisit des fichiers via l’input “+”
-  fileInput.addEventListener('change', e => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
+// Lorsqu’on choisit des fichiers via l’input “+”
+fileInput.addEventListener("change", e => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
 
-    // On ajoute à la liste existante
-    pendingFiles.push(...files);
+  // On ajoute à la liste existante
+  pendingFiles.push(...files);
 
-    // On vide l’ancien aperçu et on l’affiche
-    filePreview.innerHTML = '';
-    filePreview.style.display = 'flex';
+  // On vide l’ancien aperçu et on l’affiche
+  filePreview.innerHTML = "";
+  filePreview.style.display = "flex";
 
-    // Pour chaque fichier, on crée sa vignette
-    pendingFiles.forEach(file => {
-      const item = document.createElement('div');
-      item.className = 'file-item';
+  // Pour chaque fichier, on crée sa vignette
+  pendingFiles.forEach(file => {
+    const item = document.createElement("div");
+    item.className = "file-item";
 
-      if (file.type.startsWith('image/')) {
-        const img = document.createElement('img');
-        const url = URL.createObjectURL(file);
-        file._objectUrl = url;
-        img.src = url;
-        img.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
-        item.appendChild(img);
-      } else {
-        const ico = document.createElement('div');
-        ico.className = 'file-icon';
-        ico.textContent = file.name.split('.').pop().toUpperCase();
-        item.appendChild(ico);
-      }
-
-      // Nom du fichier en dessous
-      const name = document.createElement('div');
-      name.className = 'file-name';
-      name.textContent = file.name;
-      item.appendChild(name);
-
-      filePreview.appendChild(item);
-    });
-
-    // On remet le bouton “×” pour tout vider
-    if (!filePreview.querySelector('.file-clear')) {
-      const clearBtn = document.createElement('div');
-      clearBtn.className = 'file-clear';
-      clearBtn.textContent = '×';
-      clearBtn.title = 'Tout supprimer';
-      clearBtn.onclick = () => {
-        pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
-        pendingFiles = [];
-        filePreview.innerHTML = '';
-        filePreview.style.display = 'none';
-      };
-      filePreview.appendChild(clearBtn);
+    if (file.type.startsWith("image/")) {
+      const img = document.createElement("img");
+      const url = URL.createObjectURL(file);
+      file._objectUrl = url;
+      img.src = url;
+      img.addEventListener("load", () => URL.revokeObjectURL(url), { once: true });
+      item.appendChild(img);
+    } else {
+      const ico = document.createElement("div");
+      ico.className = "file-icon";
+      ico.textContent = file.name.split(".").pop().toUpperCase();
+      item.appendChild(ico);
     }
 
-    // Réinitialiser l’input pour pouvoir re-sélectionner les mêmes fichiers
-    fileInput.value = '';
+    // Nom du fichier en dessous
+    const name = document.createElement("div");
+    name.className = "file-name";
+    name.textContent = file.name;
+    item.appendChild(name);
+
+    filePreview.appendChild(item);
   });
 
-  // — sidebar toggles & prompts
-  toggleHistory.addEventListener('click', () => historyPanel.classList.toggle('open'));
-  togglePrompt.addEventListener('click', () => promptPanel.classList.toggle('open'));
-  prompts.forEach(p =>
-    p.addEventListener('click', () => {
-      userInput.value = p.textContent;
-      promptPanel.classList.remove('open');
-      userInput.focus();
-    })
-  );
-
-  // — Drag & Drop visual (éviter le “clignotement”)
-  let dragCounter = 0;
-  ['dragenter', 'dragover'].forEach(evt =>
-    document.addEventListener(evt, e => {
-      e.preventDefault();
-      dragCounter++;
-      dropZone.style.display = 'block';
-      dropZone.style.opacity = '1';
-    })
-  );
-  ['dragleave'].forEach(evt =>
-    document.addEventListener(evt, e => {
-      e.preventDefault();
-      dragCounter--;
-      if (dragCounter === 0) {
-        dropZone.style.opacity = '0';
-        setTimeout(() => (dropZone.style.display = 'none'), 300);
-      }
-    })
-  );
-  document.addEventListener('drop', e => {
-    e.preventDefault();
-    dragCounter = 0;
-    dropZone.style.opacity = '0';
-    setTimeout(() => (dropZone.style.display = 'none'), 300);
-  });
-
-  // — Handle file drop with miniatures + bouton “fermer”
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dragCounter = 0;
-    dropZone.style.opacity = '0';
-    setTimeout(() => (dropZone.style.display = 'none'), 300);
-
-    const files = Array.from(e.dataTransfer.files);
-    pendingFiles.push(...files);
-
-    filePreview.innerHTML = '';
-    filePreview.style.display = 'flex';
-
-    files.forEach(file => {
-      const item = document.createElement('div');
-      item.className = 'file-item';
-
-      if (file.type.startsWith('image/')) {
-        const img = document.createElement('img');
-        const objectUrl = URL.createObjectURL(file);
-        file._objectUrl = objectUrl;
-        img.src = objectUrl;
-        img.addEventListener('load', () => URL.revokeObjectURL(objectUrl), { once: true });
-        item.appendChild(img);
-      } else {
-        const ico = document.createElement('div');
-        ico.className = 'file-icon';
-        ico.textContent = file.name.split('.').pop().toUpperCase();
-        item.appendChild(ico);
-      }
-
-      filePreview.appendChild(item);
-    });
-
-    const clearBtn = document.createElement('div');
-    clearBtn.className = 'file-clear';
-    clearBtn.textContent = '×';
-    clearBtn.title = 'Tout supprimer';
-    clearBtn.style.cursor = 'pointer';
+  // On remet le bouton “×” pour tout vider
+  if (!filePreview.querySelector(".file-clear")) {
+    const clearBtn = document.createElement("div");
+    clearBtn.className = "file-clear";
+    clearBtn.textContent = "×";
+    clearBtn.title = "Tout supprimer";
     clearBtn.onclick = () => {
-      pendingFiles.forEach(f => {
-        if (f._objectUrl) {
-          URL.revokeObjectURL(f._objectUrl);
-          delete f._objectUrl;
-        }
-      });
-      pendingFiles = [];
-      filePreview.innerHTML = '';
-      filePreview.style.display = 'none';
-    };
-    filePreview.appendChild(clearBtn);
-
-    console.log('📝 pendingFiles:', pendingFiles);
-  });
-
-  // — Append & save locally
-  function appendMessageLocal (html, cls) {
-    appendMessage(chat, html, cls);
-  }
-  // — SCROLL-TO-BOTTOM BUTTON —
-  // 1) Création du bouton (hidden by default)
-  const scrollBtn = document.createElement('button');
-  scrollBtn.id = 'scrollToBottomBtn';
-  scrollBtn.innerHTML = '▼';
-  Object.assign(scrollBtn.style, {
-    position: 'absolute',
-    bottom: '60px', // à 60px du bas
-    left: '50%', // milieu de l’écran
-    transform: 'translateX(-50%)', // décale de moitié de sa largeur
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
-    border: 'none',
-    background: '#0077c8',
-    color: 'white',
-    fontSize: '20px',
-    cursor: 'pointer',
-    display: 'none',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-    zIndex: 1000
-  });
-  wrapper.appendChild(scrollBtn);
-
-  // 2) Comptage de roulés de molette
-  let wheelCount = 0;
-  const resetWheel = () => {
-    wheelCount = 0;
-  };
-
-  // Sur le container principal (#chat)
-  chat.addEventListener('wheel', () => {
-    // on n’intercepte rien, juste on compte
-    wheelCount++;
-    if (wheelCount === 2) {
-      scrollBtn.style.display = 'block';
-    }
-    // au bout de 1s sans wheel, on remet à zéro
-    clearTimeout(chat._wheelTimeout);
-    chat._wheelTimeout = setTimeout(resetWheel, 1000);
-  });
-
-  // 3) Clic → scroll bottom + masque bouton
-  scrollBtn.addEventListener('click', () => {
-    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
-    scrollBtn.style.display = 'none';
-    resetWheel();
-  });
-
-  // 4) Masquer automatiquement si on est déjà tout en bas
-  chat.addEventListener('scroll', () => {
-    const atBottom = chat.scrollHeight - chat.scrollTop <= chat.clientHeight + 10;
-    if (atBottom) scrollBtn.style.display = 'none';
-  });
-
-  sendBtn.addEventListener('click', async () => {
-    const text = userInput.value.trim();
-    // Si ni texte ni fichiers → on ne fait rien
-    if (!text && pendingFiles.length === 0) return;
-
-    // 1) Affiche le texte utilisateur
-    if (text) appendMessageLocal(text, 'user-message');
-
-    // 2) Affiche toutes les PJ dans le chat avant d'envoyer
-    if (pendingFiles.length > 0) {
-      const filesBubble = document.createElement('div');
-      filesBubble.className = 'message user-message';
-      filesBubble.style.display = 'flex';
-      filesBubble.style.flexDirection = 'column';
-      filesBubble.style.gap = '6px';
-
-      pendingFiles.forEach(f => {
-        const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '8px';
-
-        // miniature ou icône
-        if (f._objectUrl) {
-          const img = document.createElement('img');
-          img.src = f._objectUrl;
-          img.style.width = img.style.height = '24px';
-          img.style.objectFit = 'cover';
-          row.appendChild(img);
-        } else {
-          const ico = document.createElement('span');
-          ico.textContent = '📎';
-          row.appendChild(ico);
-        }
-
-        // nom du fichier
-        const nm = document.createElement('span');
-        nm.textContent = f.name;
-        row.appendChild(nm);
-
-        filesBubble.appendChild(row);
-      });
-
-      chat.appendChild(filesBubble);
-      chat.scrollTop = chat.scrollHeight;
-
-      // on masque la preview sous l'input
-      filePreview.innerHTML = '';
-      filePreview.style.display = 'none';
-    }
-
-    // 3) On prépare UN seul loader
-    const loader = document.createElement('div');
-    loader.className = 'message bot-message';
-    loader.innerHTML = 'Je réfléchis…';
-    chat.appendChild(loader);
-    chat.scrollTop = chat.scrollHeight;
-
-    // reset input
-    userInput.value = '';
-    userInput.rows = 1;
-    userInput.focus();
-
-    // AbortController pour Stop
-    currentController = new AbortController();
-    const { signal } = currentController;
-    setStopEnabled(true);
-
-    try {
-      // 4) Construction du payload (FormData ou JSON)
-      let res;
-      if (pendingFiles.length > 0) {
-        const fd = new FormData();
-        pendingFiles.forEach(f => fd.append('file', f, f.name));
-        fd.append('question', text);
-        fd.append('user_id', user_id);
-        fd.append('chat_id', chat_id);
-        fd.append('type', text ? 'filesWithText' : 'files');
-
-        res = await fetch(webhookURL, { method: 'POST', body: fd, signal });
-      } else {
-        res = await fetch(webhookURL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: text, user_id, chat_id, type: 'text' }),
-          signal
-        });
-      }
-
-      // 5) Toujours parser la réponse une seule fois
-      const data = await res.json();
-
-      // 6) On vide pendingFiles (et on révoque les blob URLs)
       pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
       pendingFiles = [];
+      filePreview.innerHTML = "";
+      filePreview.style.display = "none";
+    };
+    filePreview.appendChild(clearBtn);
+  }
 
-      // 7) Remove loader + afficher la réponse
-      loader.remove();
-      appendMessageLocal(data.output || 'Pas de réponse', 'bot-message');
-      loadHistory();
-    } catch (err) {
-      loader.remove();
-      if (err.name === 'AbortError') {
-        appendMessageLocal('⚠️ Requête interrompue.', 'bot-message');
-      } else {
-        appendMessageLocal('❌ Erreur de connexion', 'bot-message');
-        console.error(err);
+  // Réinitialiser l’input pour pouvoir re-sélectionner les mêmes fichiers
+  fileInput.value = "";
+});
+
+
+// — sidebar toggles & prompts
+toggleHistory.addEventListener("click", () => historyPanel.classList.toggle("open"));
+togglePrompt .addEventListener("click", () => promptPanel.classList.toggle("open"));
+prompts.forEach(p => p.addEventListener("click", () => {
+  userInput.value = p.textContent;
+  promptPanel.classList.remove("open");
+  userInput.focus();
+}));
+
+// — Drag & Drop visual (éviter le “clignotement”)
+let dragCounter = 0;
+["dragenter", "dragover"].forEach(evt =>
+  document.addEventListener(evt, e => {
+    e.preventDefault();
+    dragCounter++;
+    dropZone.style.display = "block";
+    dropZone.style.opacity = "1";
+  })
+);
+["dragleave"].forEach(evt =>
+  document.addEventListener(evt, e => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter === 0) {
+      dropZone.style.opacity = "0";
+      setTimeout(() => (dropZone.style.display = "none"), 300);
+    }
+  })
+);
+document.addEventListener("drop", e => {
+  e.preventDefault();
+  dragCounter = 0;
+  dropZone.style.opacity = "0";
+  setTimeout(() => (dropZone.style.display = "none"), 300);
+});
+
+// — Handle file drop with miniatures + bouton “fermer”
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dragCounter = 0;
+  dropZone.style.opacity = "0";
+  setTimeout(() => (dropZone.style.display = "none"), 300);
+
+  const files = Array.from(e.dataTransfer.files);
+  pendingFiles.push(...files);
+
+  filePreview.innerHTML = "";
+  filePreview.style.display = "flex";
+
+  files.forEach(file => {
+    const item = document.createElement("div");
+    item.className = "file-item";
+
+    if (file.type.startsWith("image/")) {
+      const img = document.createElement("img");
+      const objectUrl = URL.createObjectURL(file);
+      file._objectUrl = objectUrl;
+      img.src = objectUrl;
+      img.addEventListener("load", () => URL.revokeObjectURL(objectUrl), { once: true });
+      item.appendChild(img);
+    } else {
+      const ico = document.createElement("div");
+      ico.className = "file-icon";
+      ico.textContent = file.name.split(".").pop().toUpperCase();
+      item.appendChild(ico);
+    }
+
+    filePreview.appendChild(item);
+  });
+
+  const clearBtn = document.createElement("div");
+  clearBtn.className = "file-clear";
+  clearBtn.textContent = "×";
+  clearBtn.title = "Tout supprimer";
+  clearBtn.style.cursor = "pointer";
+  clearBtn.onclick = () => {
+    pendingFiles.forEach(f => {
+      if (f._objectUrl) {
+        URL.revokeObjectURL(f._objectUrl);
+        delete f._objectUrl;
       }
-    } finally {
-      setStopEnabled(false);
-      currentController = null;
-      userInput.focus();
-    }
-  });
+    });
+    pendingFiles = [];
+    filePreview.innerHTML = "";
+    filePreview.style.display = "none";
+  };
+  filePreview.appendChild(clearBtn);
 
-  // — Enter vs Shift+Enter
-  userInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendBtn.click();
-    }
-  });
+  console.log("📝 pendingFiles:", pendingFiles);
+});
 
-  // — Init
-  JSON.parse(localStorage.getItem('chatHistory') || '[]').forEach(m =>
-    appendMessageLocal(m.content, m.role === 'user' ? 'user-message' : 'bot-message')
-  );
-  chat.scrollTop = 0;
+// — Append & save locally
+function appendMessage(html, cls) {
+  const m = document.createElement("div");
+  m.className = `message ${cls}`;
+  m.innerHTML = html;
+  const prev = chat.scrollHeight;
+  chat.appendChild(m);
+  chat.scrollTop = prev === 0
+    ? chat.scrollHeight
+    : chat.scrollTop + (chat.scrollHeight - prev);
+  saveLocal();
+}
+function saveLocal() {
+  const arr = Array.from(chat.querySelectorAll(".message")).map(d => ({
+    role: d.classList.contains("user-message") ? "user" : "bot",
+    content: d.innerHTML
+  }));
+  localStorage.setItem("chatHistory", JSON.stringify(arr));
+}
+// — SCROLL-TO-BOTTOM BUTTON —
+// 1) Création du bouton (hidden by default)
+const scrollBtn = document.createElement("button");
+scrollBtn.id = "scrollToBottomBtn";
+scrollBtn.innerHTML = "▼";
+Object.assign(scrollBtn.style, {
+  position: "absolute",
+  bottom: "60px",              // à 60px du bas
+  left: "50%",                 // milieu de l’écran
+  transform: "translateX(-50%)", // décale de moitié de sa largeur
+  width: "36px",
+  height: "36px",
+  borderRadius: "50%",
+  border: "none",
+  background: "#0077c8",
+  color: "white",
+  fontSize: "20px",
+  cursor: "pointer",
+  display: "none",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+  zIndex: 1000
+});
+wrapper.appendChild(scrollBtn);
+
+// 2) Comptage de roulés de molette
+let wheelCount = 0;
+const resetWheel = () => { wheelCount = 0; };
+
+// Sur le container principal (#chat)
+chat.addEventListener("wheel", e => {
+  // on n’intercepte rien, juste on compte
+  wheelCount++;
+  if (wheelCount === 2) {
+    scrollBtn.style.display = "block";
+  }
+  // au bout de 1s sans wheel, on remet à zéro
+  clearTimeout(chat._wheelTimeout);
+  chat._wheelTimeout = setTimeout(resetWheel, 1000);
+});
+
+// 3) Clic → scroll bottom + masque bouton
+scrollBtn.addEventListener("click", () => {
+  chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+  scrollBtn.style.display = "none";
+  resetWheel();
+});
+
+// 4) Masquer automatiquement si on est déjà tout en bas
+chat.addEventListener("scroll", () => {
+  const atBottom = chat.scrollHeight - chat.scrollTop <= chat.clientHeight + 10;
+  if (atBottom) scrollBtn.style.display = "none";
+});
+
+sendBtn.addEventListener("click", async () => {
+  const text = userInput.value.trim();
+  // Si ni texte ni fichiers → on ne fait rien
+  if (!text && pendingFiles.length === 0) return;
+
+  // 1) Affiche le texte utilisateur
+  if (text) appendMessage(text, "user-message");
+
+  // 2) Affiche toutes les PJ dans le chat avant d'envoyer
+  if (pendingFiles.length > 0) {
+    const filesBubble = document.createElement("div");
+    filesBubble.className = "message user-message";
+    filesBubble.style.display = "flex";
+    filesBubble.style.flexDirection = "column";
+    filesBubble.style.gap = "6px";
+
+    pendingFiles.forEach(f => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+
+      // miniature ou icône
+      if (f._objectUrl) {
+        const img = document.createElement("img");
+        img.src = f._objectUrl;
+        img.style.width = img.style.height = "24px";
+        img.style.objectFit = "cover";
+        row.appendChild(img);
+      } else {
+        const ico = document.createElement("span");
+        ico.textContent = "📎";
+        row.appendChild(ico);
+      }
+
+      // nom du fichier
+      const nm = document.createElement("span");
+      nm.textContent = f.name;
+      row.appendChild(nm);
+
+      filesBubble.appendChild(row);
+    });
+
+    chat.appendChild(filesBubble);
+    chat.scrollTop = chat.scrollHeight;
+
+    // on masque la preview sous l'input
+    filePreview.innerHTML = "";
+    filePreview.style.display = "none";
+  }
+
+  // 3) On prépare UN seul loader
+  const loader = document.createElement("div");
+  loader.className = "message bot-message";
+  loader.innerHTML = "Je réfléchis…";
+  chat.appendChild(loader);
+  chat.scrollTop = chat.scrollHeight;
+
+  // reset input
+  userInput.value = "";
+  userInput.rows  = 1;
+  userInput.focus();
+
+  // AbortController pour Stop
+  currentController = new AbortController();
+  const { signal } = currentController;
+  setStopEnabled(true);
+
+  try {
+    // 4) Construction du payload (FormData ou JSON)
+    let res, data;
+    if (pendingFiles.length > 0) {
+      const fd = new FormData();
+      pendingFiles.forEach(f => fd.append("file", f, f.name));
+      fd.append("question", text);
+      fd.append("user_id", user_id);
+      fd.append("chat_id", chat_id);
+      fd.append("type", text ? "filesWithText" : "files");
+
+      res = await fetch(webhookURL, { method: "POST", body: fd, signal });
+    } else {
+      res = await fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
+        signal
+      });
+    }
+
+    // 5) Toujours parser la réponse une seule fois
+    data = await res.json();
+
+    // 6) On vide pendingFiles (et on révoque les blob URLs)
+    pendingFiles.forEach(f => f._objectUrl && URL.revokeObjectURL(f._objectUrl));
+    pendingFiles = [];
+
+    // 7) Remove loader + afficher la réponse
+    loader.remove();
+    appendMessage(data.output || "Pas de réponse", "bot-message");
+    loadHistory();
+
+  } catch (err) {
+    loader.remove();
+    if (err.name === "AbortError") {
+      appendMessage("⚠️ Requête interrompue.", "bot-message");
+    } else {
+      appendMessage("❌ Erreur de connexion", "bot-message");
+      console.error(err);
+    }
+  } finally {
+    setStopEnabled(false);
+    currentController = null;
+    userInput.focus();
+  }
+});
+
+
+// — Enter vs Shift+Enter
+userInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+
+// — Init
+JSON.parse(localStorage.getItem("chatHistory") || "[]")
+  .forEach(m => appendMessage(m.content, m.role === "user" ? "user-message" : "bot-message"));
+chat.scrollTop = 0;
 });
