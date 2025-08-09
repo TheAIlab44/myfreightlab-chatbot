@@ -878,7 +878,7 @@ sendBtn.addEventListener("click", async () => {
     if (pendingFiles.length > 0) {
       const fd = new FormData();
       pendingFiles.forEach(f => fd.append("file", f, f.name));
-      fd.append("question", text);
+      fd.append("chatInput", text);
       fd.append("user_id", user_id);
       fd.append("chat_id", chat_id);
       fd.append("type", text ? "filesWithText" : "files");
@@ -888,7 +888,7 @@ sendBtn.addEventListener("click", async () => {
       res = await fetch(webhookURL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, user_id, chat_id, type: "text" }),
+        body: JSON.stringify({ chatInput: text, user_id, chat_id, type: "text" }),
         signal
       });
     }
