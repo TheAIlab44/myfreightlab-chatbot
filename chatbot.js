@@ -921,22 +921,16 @@ sendBtn.addEventListener("click", async () => {
 });
 
 
-// — Ajuster la hauteur du textarea
-function adjustTextareaHeight() {
-  userInput.style.height = "auto"; // reset pour recalculer
-  userInput.style.height = userInput.scrollHeight + "px";
-}
-
-// — Gestion Enter / Shift+Enter
+// — Enter vs Shift+Enter
 userInput.addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     sendBtn.click();
   }
-  // On ajuste aussi la hauteur pendant la frappe
-  setTimeout(adjustTextareaHeight, 0);
 });
 
-// On ajuste aussi sur changement de texte
-userInput.addEventListener("input", adjustTextareaHeight);
+// — Init
+JSON.parse(localStorage.getItem("chatHistory") || "[]")
+  .forEach(m => appendMessage(m.content, m.role === "user" ? "user-message" : "bot-message"));
+chat.scrollTop = 0;
 });
